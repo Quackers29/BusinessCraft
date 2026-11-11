@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.util;
 
+import com.quackers29.businesscraft.ui.theme.UiTheme;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
 
@@ -8,14 +9,13 @@ import net.minecraft.client.gui.Font;
  * Provides reusable methods for drawing inventory slots, borders, and other common UI elements.
  */
 public class InventoryRenderer {
-    // Common UI color constants
-    public static final int PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
-    public static final int SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
-    public static final int BACKGROUND_COLOR = 0x80222222;    // Semi-transparent dark gray
-    public static final int BORDER_COLOR = 0xA0AAAAAA;        // Light gray
-    public static final int BUTTON_COLOR = 0xA0446688;        // Button blue
-    public static final int BUTTON_HOVER_COLOR = 0xA066AADD;  // Button hover blue
-    public static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
+    public static final int PRIMARY_COLOR = UiTheme.BUTTON;
+    public static final int SECONDARY_COLOR = UiTheme.BUTTON;
+    public static final int BACKGROUND_COLOR = UiTheme.PANEL;
+    public static final int BORDER_COLOR = UiTheme.BORDER;
+    public static final int BUTTON_COLOR = UiTheme.BUTTON;
+    public static final int BUTTON_HOVER_COLOR = UiTheme.BUTTON_HOVER;
+    public static final int TEXT_COLOR = UiTheme.TEXT;
     public static final int TEXT_SHADOW_COLOR = 0xFF000000;   // Black text shadow
     public static final int LABEL_BG_COLOR = 0x80000000;      // Semi-transparent black for text background
     public static final int SLOT_BORDER_COLOR = 0xFF555555;   // Darker gray for slot borders
@@ -168,7 +168,7 @@ public class InventoryRenderer {
         guiGraphics.fill(x, y, x + width, y + height, buttonColor);
         
         // Draw button border
-        drawBorder(guiGraphics, x, y, width, height, TEXT_COLOR, 1);
+        drawBorder(guiGraphics, x, y, width, height, UiTheme.LINE, 1);
         
         // Draw centered text
         drawCenteredString(guiGraphics, font, text, x + width / 2, y + (height - 8) / 2, TEXT_COLOR, true);
@@ -196,7 +196,7 @@ public class InventoryRenderer {
         guiGraphics.fill(x, y, x + width, y + height, buttonColor);
         
         // Draw button border
-        drawBorder(guiGraphics, x, y, width, height, TEXT_COLOR, 1);
+        drawBorder(guiGraphics, x, y, width, height, UiTheme.LINE, 1);
         
         // Draw centered text
         drawCenteredString(guiGraphics, font, text, x + width / 2, y + (height - 8) / 2, TEXT_COLOR, true);

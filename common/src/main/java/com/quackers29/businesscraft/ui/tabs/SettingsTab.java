@@ -34,9 +34,6 @@ public class SettingsTab extends BaseTownTab {
     
     @Override
     public void init(Consumer<Button> registerWidget) {
-        // Add title first (like other tabs)
-        panel.addChild(createHeaderLabel("SETTINGS"));
-        
         // Create standardized content component
         contentComponent = createStandardContent(
             StandardTabContent.ContentType.BUTTON_GRID, 

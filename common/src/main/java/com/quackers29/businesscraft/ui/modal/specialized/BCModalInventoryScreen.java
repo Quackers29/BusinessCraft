@@ -40,17 +40,9 @@ import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
  * within a modal overlay, rather than opening a separate screen.
  * This provides a consistent UI experience with other modal components.
  * 
- * @deprecated This class has been refactored into component-based architecture.
- *             Use BCModalInventoryScreenV2 instead, which provides the same
- *             functionality
- *             with improved maintainability through focused components:
- *             - ModalRenderingEngine: Handles all rendering operations
- *             - TradeOperationsManager: Manages trade-specific functionality
- *             - StorageOperationsManager: Manages storage-specific
- *             functionality
- *             - ModalEventHandler: Handles mouse events and user interactions
+ * Live trade screen. Storage mode on this class is still wired for the communal
+ * and personal buffers.
  */
-@Deprecated
 public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(BCModalInventoryScreen.class);
 
@@ -59,16 +51,16 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
     private final Consumer<BCModalInventoryScreen<T>> onCloseCallback;
 
     // Colors (with defaults)
-    private int backgroundColor = 0xD0000000; // Darker semi-transparent black
-    private int borderColor = 0xFFDDDDDD; // Light gray
-    private int titleColor = 0xFFFFFFFF; // White
+    private int backgroundColor = com.quackers29.businesscraft.ui.theme.UiTheme.PANEL;
+    private int borderColor = com.quackers29.businesscraft.ui.theme.UiTheme.BORDER;
+    private int titleColor = com.quackers29.businesscraft.ui.theme.UiTheme.GOLD;
 
     // Button properties
     private Button closeButton;
     private String backButtonText = "Back";
 
     // Title scale factor
-    private float titleScale = 1.5f;
+    private float titleScale = 1.0f;
 
     // Storage mode labels
     private static final String COMMUNAL_LABEL = "Communal";
@@ -280,21 +272,18 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
         int inputX = this.leftPos + TradeMenu.SLOT_INPUT_X;
         int inputY = this.topPos + TradeMenu.SLOT_INPUT_Y;
 
-        // Draw input section background with gradient effect
-        guiGraphics.fill(inputX - 8, inputY - 8, inputX + 24, inputY + 24, 0x40336699);
-        guiGraphics.fill(inputX - 7, inputY - 7, inputX + 23, inputY + 23, 0x20FFFFFF);
-
-        // Draw input label with better styling - positioned above the slot
         String inputLabel = "Sell";
         int labelWidth = this.font.width(inputLabel);
-        int labelX = inputX + 8 - (labelWidth / 2); // Center the label above the slot
-        guiGraphics.drawString(this.font, inputLabel, labelX, inputY - 10, 0xFFFFAA00, true);
+        int labelX = inputX + 8 - (labelWidth / 2);
+        guiGraphics.drawString(this.font, inputLabel, labelX, inputY - 12,
+                com.quackers29.businesscraft.ui.theme.UiTheme.GOLD, false);
 
         // Draw helpful hint below input slot - positioned below the slot
         String hintText = "Items";
         int hintWidth = this.font.width(hintText);
         int hintX = inputX + 8 - (hintWidth / 2); // Center the hint below the slot
-        guiGraphics.drawString(this.font, hintText, hintX, inputY + 18, 0xFFAAAAAA, false);
+        guiGraphics.drawString(this.font, hintText, hintX, inputY + 18,
+                com.quackers29.businesscraft.ui.theme.UiTheme.MUTED, false);
     }
 
     /**
@@ -304,15 +293,11 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
         int outputX = this.leftPos + TradeMenu.SLOT_OUTPUT_X;
         int outputY = this.topPos + TradeMenu.SLOT_OUTPUT_Y;
 
-        // Draw output section background with different color
-        guiGraphics.fill(outputX - 8, outputY - 8, outputX + 24, outputY + 24, 0x40669933);
-        guiGraphics.fill(outputX - 7, outputY - 7, outputX + 23, outputY + 23, 0x20FFFFFF);
-
-        // Draw output label - positioned above the slot
         String outputLabel = "Earn";
         int labelWidth = this.font.width(outputLabel);
-        int labelX = outputX + 8 - (labelWidth / 2); // Center the label above the slot
-        guiGraphics.drawString(this.font, outputLabel, labelX, outputY - 10, 0xFF00FF00, true);
+        int labelX = outputX + 8 - (labelWidth / 2);
+        guiGraphics.drawString(this.font, outputLabel, labelX, outputY - 12,
+                com.quackers29.businesscraft.ui.theme.UiTheme.ON_BG, false);
 
         // Draw helpful hint below output slot - positioned below the slot
         String hintText = "Currency";
@@ -322,19 +307,16 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
         }
         int hintWidth = this.font.width(hintText);
         int hintX = outputX + 8 - (hintWidth / 2); // Center the hint below the slot
-        guiGraphics.drawString(this.font, hintText, hintX, outputY + 18, 0xFFAAAAAA, false);
+        guiGraphics.drawString(this.font, hintText, hintX, outputY + 18,
+                com.quackers29.businesscraft.ui.theme.UiTheme.MUTED, false);
     }
 
     /**
      * Render the enhanced trade processing area
      */
     private void renderTradeProcessingArea(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        int centerX = this.leftPos + 88; // Center of the screen
-        int centerY = this.topPos + 65; // Below the slots
-
-        // Draw enhanced trade button centered below the slots
         boolean isTradeButtonHovered = isMouseOverTradeButton(mouseX, mouseY);
-        renderEnhancedTradeButton(guiGraphics, centerX - 16, centerY, isTradeButtonHovered);
+        renderEnhancedTradeButton(guiGraphics, tradeButtonX(), tradeButtonY(), isTradeButtonHovered);
     }
 
     /**
@@ -347,56 +329,41 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             hasItemsToTrade = !tradeMenu.getSlot(0).getItem().isEmpty();
         }
 
-        // Calculate pulsing effect for when items are ready
-        float pulseIntensity = 1.0f;
-        if (hasItemsToTrade) {
-            long time = System.currentTimeMillis();
-            pulseIntensity = 1.0f + 0.2f * (float) Math.sin(time * 0.005);
-        }
+        int buttonWidth = tradeButtonWidth();
+        int buttonHeight = tradeButtonHeight();
+        int buttonColor = !hasItemsToTrade
+                ? com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON
+                : (isHovered ? com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON_HOVER
+                        : com.quackers29.businesscraft.ui.theme.UiTheme.ON_BG);
+        int labelColor = !hasItemsToTrade
+                ? com.quackers29.businesscraft.ui.theme.UiTheme.MUTED
+                : com.quackers29.businesscraft.ui.theme.UiTheme.ON_FG;
 
-        int buttonColor = isHovered ? 0xFF66AA44 : 0xFF448822;
-        int borderColor = isHovered ? 0xFF88CC66 : 0xFF66AA44;
-
-        // Apply pulse effect to colors when items are ready
-        if (hasItemsToTrade && !isHovered) {
-            int pulseGreen = (int) (0x44 + (0x22 * pulseIntensity));
-            buttonColor = 0xFF000000 | (pulseGreen << 8) | 0x22;
-            borderColor = 0xFF000000 | (Math.min(255, pulseGreen + 0x22) << 8) | 0x44;
-        }
-
-        // Make button appropriately sized
-        int buttonWidth = 32;
-        int buttonHeight = 16;
-
-        // Draw button background with gradient
         guiGraphics.fill(x, y, x + buttonWidth, y + buttonHeight, buttonColor);
-        guiGraphics.fill(x + 1, y + 1, x + buttonWidth - 1, y + buttonHeight / 2, 0x40FFFFFF);
+        InventoryRenderer.drawBorder(guiGraphics, x, y, buttonWidth, buttonHeight,
+                com.quackers29.businesscraft.ui.theme.UiTheme.LINE, 1);
 
-        // Draw button border
-        InventoryRenderer.drawBorder(guiGraphics, x, y, buttonWidth, buttonHeight, borderColor, 1);
-
-        // Draw button text centered
         String buttonText = "TRADE";
         int textWidth = this.font.width(buttonText);
-        int textX = x + (buttonWidth - textWidth) / 2; // Center horizontally
-        int textY = y + (buttonHeight - 8) / 2; // Center vertically
+        int textX = x + (buttonWidth - textWidth) / 2;
+        int textY = y + (buttonHeight - 8) / 2;
+        guiGraphics.drawString(this.font, buttonText, textX, textY, labelColor, false);
+    }
 
-        if (hasItemsToTrade) {
-            guiGraphics.drawString(this.font, buttonText, textX, textY, 0xFFFFFFFF, true);
-        } else {
-            guiGraphics.drawString(this.font, buttonText, textX, textY, 0xFF999999, true);
-        }
+    private int tradeButtonWidth() {
+        return com.quackers29.businesscraft.ui.theme.UiTheme.buttonWidth(this.font.width("TRADE"));
+    }
 
-        // Add hover glow effect
-        if (isHovered) {
-            guiGraphics.fill(x - 1, y - 1, x + buttonWidth + 1, y + buttonHeight + 1, 0x20FFFFFF);
-        }
+    private int tradeButtonHeight() {
+        return com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON_HEIGHT;
+    }
 
-        // Add ready-to-trade glow effect
-        if (hasItemsToTrade && !isHovered) {
-            int glowAlpha = (int) (0x10 + (0x10 * pulseIntensity));
-            guiGraphics.fill(x - 2, y - 2, x + buttonWidth + 2, y + buttonHeight + 2, (glowAlpha << 24) | 0x00FF00);
-        }
+    private int tradeButtonX() {
+        return this.leftPos + 88 - tradeButtonWidth() / 2;
+    }
+
+    private int tradeButtonY() {
+        return this.topPos + 65;
     }
 
     /**
@@ -510,12 +477,10 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
      * Check if mouse is over the enhanced trade button
      */
     private boolean isMouseOverTradeButton(int mouseX, int mouseY) {
-        int centerX = this.leftPos + 88; // Center of the screen
-        int centerY = this.topPos + 65; // Below the slots
-        int buttonX = centerX - 16;
-        int buttonY = centerY;
-        int buttonWidth = 32;
-        int buttonHeight = 16;
+        int buttonX = tradeButtonX();
+        int buttonY = tradeButtonY();
+        int buttonWidth = tradeButtonWidth();
+        int buttonHeight = tradeButtonHeight();
 
         return mouseX >= buttonX && mouseX < buttonX + buttonWidth &&
                 mouseY >= buttonY && mouseY < buttonY + buttonHeight;
@@ -1519,7 +1484,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 InventoryType.TRADE,
                 onCloseCallback)
                 .withBackButtonText("Back")
-                .withTitleScale(1.5f);
+                .withTitleScale(1.0f);
     }
 
     /**
@@ -1540,6 +1505,6 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 InventoryType.STORAGE,
                 onCloseCallback)
                 .withBackButtonText("Back")
-                .withTitleScale(1.5f);
+                .withTitleScale(1.0f);
     }
 }

@@ -24,23 +24,23 @@ import java.util.List;
  * Trades sit in a list that scrolls when the window is too short to show them all.
  */
 public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
-    private static final int PANEL = 0xF014161C;
-    private static final int BORDER = 0xFFD7B56D;
-    private static final int ROW = 0xFF181C24;
-    private static final int ROW_ALT = 0xFF1E2430;
+    private static final int PANEL = com.quackers29.businesscraft.ui.theme.UiTheme.PANEL;
+    private static final int BORDER = com.quackers29.businesscraft.ui.theme.UiTheme.BORDER;
+    private static final int ROW = com.quackers29.businesscraft.ui.theme.UiTheme.ROW;
+    private static final int ROW_ALT = com.quackers29.businesscraft.ui.theme.UiTheme.ROW_ALT;
     private static final int ROW_HOVER = 0xFF2A3548;
-    private static final int BAR_BG = 0xFF2A3140;
+    private static final int BAR_BG = com.quackers29.businesscraft.ui.theme.UiTheme.TRACK;
     private static final int BAR_FILL = 0xFF5BD07A;
-    private static final int WHITE = 0xFFFFFFFF;
-    private static final int RANK = 0xFF7DFF7D;
-    private static final int MUTED = 0xFFC2C6CE;
-    private static final int GOLD = 0xFFFFD56A;
-    private static final int AQUA = 0xFF8FDBFF;
+    private static final int WHITE = com.quackers29.businesscraft.ui.theme.UiTheme.TEXT;
+    private static final int RANK = com.quackers29.businesscraft.ui.theme.UiTheme.ON_BG;
+    private static final int MUTED = com.quackers29.businesscraft.ui.theme.UiTheme.MUTED;
+    private static final int GOLD = com.quackers29.businesscraft.ui.theme.UiTheme.GOLD;
+    private static final int AQUA = com.quackers29.businesscraft.ui.theme.UiTheme.AQUA;
     private static final int YELLOW = 0xFFFFE38A;
-    private static final int NEED = 0xFFFFA3A3;
+    private static final int NEED = com.quackers29.businesscraft.ui.theme.UiTheme.OFF_BG;
     private static final int LOCKED = 0xFFAEB4BE;
-    private static final int TRACK = 0xFF2A3140;
-    private static final int THUMB = 0xFFD7B56D;
+    private static final int TRACK = com.quackers29.businesscraft.ui.theme.UiTheme.TRACK;
+    private static final int THUMB = com.quackers29.businesscraft.ui.theme.UiTheme.BORDER;
 
     private TouristScreenLayout layout = TouristScreenLayout.choose(420, 800, 6);
     private final List<Button> tradeButtons = new ArrayList<>();
@@ -476,30 +476,21 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
         int boxH = lines.size() * 10 + 8;
         int rightX = this.leftPos + this.imageWidth + gap;
         int leftX = this.leftPos - gap - boxW;
-        int x = rightX + boxW <= this.width - 2 ? rightX : (leftX >= 2 ? leftX : 4);
-        int y = this.topPos + this.layout.rowsTop;
-        if (x + boxW > this.width - 2) {
-            x = Math.max(2, this.width - 2 - boxW);
-        }
-        if (y + boxH > this.height - 2) {
-            y = Math.max(2, this.height - 2 - boxH);
-        }
+        int preferX = rightX + boxW <= this.width - 2 ? rightX : (leftX >= 2 ? leftX : 4);
+        int preferY = this.topPos + this.layout.rowsTop;
+        com.quackers29.businesscraft.ui.theme.UiTooltip.Box box =
+                com.quackers29.businesscraft.ui.theme.UiTooltip.place(this.width, this.height, preferX, preferY, boxW, boxH);
+        int x = box.x();
+        int y = box.y();
         int textX = x + 4;
         int textY = y + 4;
         graphics.pose().pushPose();
         graphics.pose().translate(0.0, 0.0, 400.0);
-        graphics.fill(textX - 4, textY - 4, textX + textW + 4, textY - 3, 0xF0100010);
-        graphics.fill(textX - 4, textY + lines.size() * 10 + 3, textX + textW + 4, textY + lines.size() * 10 + 4, 0xF0100010);
-        graphics.fill(textX - 4, textY - 3, textX + textW + 4, textY + lines.size() * 10 + 3, 0xF0100010);
-        graphics.fill(textX - 5, textY - 3, textX - 4, textY + lines.size() * 10 + 3, 0xF0100010);
-        graphics.fill(textX + textW + 4, textY - 3, textX + textW + 5, textY + lines.size() * 10 + 3, 0xF0100010);
-        int borderTop = 0x505000FF;
-        int borderBottom = 0x5028007F;
-        int innerBottom = textY + lines.size() * 10 + 3;
-        graphics.fillGradient(textX - 4, textY - 2, textX - 3, innerBottom - 1, borderTop, borderBottom);
-        graphics.fillGradient(textX + textW + 3, textY - 2, textX + textW + 4, innerBottom - 1, borderTop, borderBottom);
-        graphics.fillGradient(textX - 4, textY - 3, textX + textW + 4, textY - 2, borderTop, borderTop);
-        graphics.fillGradient(textX - 4, innerBottom - 1, textX + textW + 4, innerBottom, borderBottom, borderBottom);
+        graphics.fill(x, y, x + boxW, y + boxH, PANEL);
+        graphics.fill(x, y, x + boxW, y + 1, BORDER);
+        graphics.fill(x, y + boxH - 1, x + boxW, y + boxH, BORDER);
+        graphics.fill(x, y, x + 1, y + boxH, BORDER);
+        graphics.fill(x + boxW - 1, y, x + boxW, y + boxH, BORDER);
         for (int i = 0; i < lines.size(); i++) {
             graphics.drawString(this.font, lines.get(i), textX, textY + i * 10, 0xFFFFFFFF, false);
         }

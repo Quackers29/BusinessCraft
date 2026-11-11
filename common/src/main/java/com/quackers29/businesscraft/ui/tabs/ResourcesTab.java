@@ -2,7 +2,6 @@ package com.quackers29.businesscraft.ui.tabs;
 
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.layout.BCFlowLayout;
-import com.quackers29.businesscraft.ui.components.basic.BCLabel;
 import com.quackers29.businesscraft.ui.components.containers.StandardTabContent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.world.item.Item;
@@ -47,10 +46,6 @@ public class ResourcesTab extends BaseTownTab {
 
     @Override
     public void init(Consumer<Button> registerWidget) {
-        // Add title
-        BCLabel titleLabel = createHeaderLabel("RESOURCES");
-        panel.addChild(titleLabel);
-
         // Create standardized content component for item list display
         contentComponent = createStandardContent(StandardTabContent.ContentType.ITEM_LIST, "RESOURCES");
 

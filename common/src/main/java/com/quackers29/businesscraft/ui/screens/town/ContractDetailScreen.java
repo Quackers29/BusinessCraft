@@ -8,8 +8,11 @@ import com.quackers29.businesscraft.contract.viewmodel.ContractDetailViewModel;
 import com.quackers29.businesscraft.contract.viewmodel.ContractSummaryViewModel;
 import com.quackers29.businesscraft.network.packets.ui.BidContractPacket;
 import com.quackers29.businesscraft.network.packets.ui.RequestContractDetailPacket;
+import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
+import com.quackers29.businesscraft.ui.theme.UiTheme;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
+import com.quackers29.businesscraft.ui.util.UiTextWrap;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -36,12 +39,44 @@ public class ContractDetailScreen extends Screen {
 
     private static final int WINDOW_WIDTH = 280;
     private static final int WINDOW_HEIGHT = 300;
+    private int frameHeight = WINDOW_HEIGHT;
 
     private EditBox bidInput;
     private boolean showBidInput = false;
 
     private int scrollOffset = 0;
-    private static final int MAX_VISIBLE_BIDS = 2;
+
+    private int visibleBids() {
+        return Math.max(1, ConfigLoader.contractVisibleBids);
+    }
+
+    private void placeFrame() {
+        int available = Math.max(120, this.height - 16);
+        frameHeight = Math.min(available, Math.max(188, estimateHeight()));
+        int y = (this.height - frameHeight) / 2;
+        int footer = y + frameHeight - 28;
+        for (net.minecraft.client.gui.components.events.GuiEventListener child : this.children()) {
+            if (child instanceof Button button) {
+                button.setY(footer);
+            }
+        }
+    }
+
+    private int estimateHeight() {
+        int height = 48 + 15 * 7 + 48;
+        if (detailViewModel != null) {
+            if (detailViewModel.getDestinationTownName() != null) {
+                height += 30;
+            }
+            var bids = detailViewModel.getBids();
+            int shown = bids == null ? 1 : Math.min(visibleBids(), Math.max(1, bids.size()));
+            height += shown * 12;
+            if (detailViewModel.isAuctionClosed() && detailViewModel.getWinningBidderName() != null) {
+                height += 120;
+            }
+        }
+        return height;
+    }
 
     /**
      * Legacy constructor using Contract object.
@@ -91,6 +126,7 @@ public class ContractDetailScreen extends Screen {
         // For view-model path, buttons are added after detail is received
         if (summaryViewModel != null) {
             addViewModelButtons(x, y);
+            placeFrame();
             return;
         }
 
@@ -268,18 +304,19 @@ public class ContractDetailScreen extends Screen {
     public void render(GuiGraphics g, int mx, int my, float pt) {
         // Phase 5: Check for detail update
         checkDetailCache();
+        placeFrame();
 
         renderBackground(g);
 
         int x = (width - WINDOW_WIDTH) / 2;
-        int y = (height - WINDOW_HEIGHT) / 2;
+        int y = (height - frameHeight) / 2;
 
         // Background
-        g.fill(x, y, x + WINDOW_WIDTH, y + WINDOW_HEIGHT, InventoryRenderer.BACKGROUND_COLOR);
-        InventoryRenderer.drawBorder(g, x, y, WINDOW_WIDTH, WINDOW_HEIGHT, InventoryRenderer.BORDER_COLOR, 2);
+        g.fill(x, y, x + WINDOW_WIDTH, y + frameHeight, InventoryRenderer.BACKGROUND_COLOR);
+        InventoryRenderer.drawBorder(g, x, y, WINDOW_WIDTH, frameHeight, InventoryRenderer.BORDER_COLOR, 1);
 
-        // Title
-        g.drawCenteredString(font, "Contract Details", width / 2, y + 10, 0xFFFCB821);
+        int titleW = font.width("Contract Details");
+        g.drawString(font, "Contract Details", width / 2 - titleW / 2, y + 8, UiTheme.GOLD, false);
 
         // Phase 5: Use view-model path if available
         if (summaryViewModel != null) {
@@ -296,9 +333,9 @@ public class ContractDetailScreen extends Screen {
 
         // Details
         int textY = y + 30;
-        int labelColor = 0xFFAAAAAA;
+        int labelColor = UiTheme.MUTED;
         int valueColor = 0xFFFFFFFF;
-        int headerColor = 0xFFFCB821;
+        int headerColor = UiTheme.GOLD;
 
         // Type
         g.drawString(font, "Type:", x + 10, textY, labelColor);
@@ -334,19 +371,19 @@ public class ContractDetailScreen extends Screen {
             textY += 15;
 
             g.drawString(font, "Reward:", x + 10, textY, labelColor);
-            g.drawString(font, String.format("%.1f ◎", cc.getReward()), x + 80, textY, 0xFF55FF55);
+            g.drawString(font, String.format("%.1f ◎", cc.getReward()), x + 80, textY, UiTheme.ON_BG);
             textY += 15;
 
             if (cc.isAccepted()) {
                 g.drawString(font, "Courier:", x + 10, textY, labelColor);
                 // We don't have courier name cached, so use ID for now or "Player"
-                g.drawString(font, "Assigned", x + 80, textY, 0xFF55FF55);
+                g.drawString(font, "Assigned", x + 80, textY, UiTheme.ON_BG);
                 textY += 15;
 
                 // Delivery Progress
                 g.drawString(font, "Delivered:", x + 10, textY, labelColor);
                 String progress = cc.getDeliveredAmount() + " / " + cc.getQuantity();
-                int progressColor = cc.isDelivered() ? 0xFF55FF55 : 0xFFFFAA00;
+                int progressColor = cc.isDelivered() ? UiTheme.ON_BG : UiTheme.GOLD;
                 g.drawString(font, progress, x + 80, textY, progressColor);
                 textY += 15;
             }
@@ -367,7 +404,7 @@ public class ContractDetailScreen extends Screen {
         long currentTime = System.currentTimeMillis();
         long timeLeft = contract.getExpiryTime() - currentTime;
         String time = timeLeft > 0 ? formatDuration(timeLeft) : "Expired";
-        int timeColor = timeLeft > 0 ? valueColor : 0xFFFF5555;
+        int timeColor = timeLeft > 0 ? valueColor : UiTheme.OFF_BG;
         g.drawString(font, time, x + 80, textY, timeColor);
         textY += 18;
 
@@ -377,7 +414,7 @@ public class ContractDetailScreen extends Screen {
 
         Map<UUID, Float> bids = contract.getBids();
         if (bids.isEmpty()) {
-            g.drawString(font, "No bids yet", x + 20, textY, 0xFF888888);
+            g.drawString(font, "No bids yet", x + 20, textY, UiTheme.MUTED);
             textY += 12;
         } else {
             // Sort bids by amount (highest first)
@@ -389,9 +426,9 @@ public class ContractDetailScreen extends Screen {
 
             int count = 0;
             for (Map.Entry<UUID, Float> entry : sortedBids) {
-                if (count >= MAX_VISIBLE_BIDS && count < sortedBids.size()) {
-                    g.drawString(font, "... +" + (sortedBids.size() - MAX_VISIBLE_BIDS) + " more",
-                            x + 20, textY, 0xFF888888);
+                if (count >= visibleBids() && count < sortedBids.size()) {
+                    g.drawString(font, "... +" + (sortedBids.size() - visibleBids()) + " more",
+                            x + 20, textY, UiTheme.MUTED);
                     textY += 12;
                     break;
                 }
@@ -403,7 +440,7 @@ public class ContractDetailScreen extends Screen {
                 String bidText = truncate(bidderName, 15) + ": " + amount + " ◎";
                 if (isHighest) {
                     bidText += " ⭐";
-                    g.drawString(font, bidText, x + 20, textY, 0xFF55FF55);
+                    g.drawString(font, bidText, x + 20, textY, UiTheme.ON_BG);
                 } else {
                     g.drawString(font, bidText, x + 20, textY, valueColor);
                 }
@@ -426,11 +463,11 @@ public class ContractDetailScreen extends Screen {
 
             String winnerName = getTownName(sc.getWinningTownId(), sc.getWinningTownName());
             g.drawString(font, "Buyer:", x + 20, textY, labelColor);
-            g.drawString(font, truncate(winnerName, 18), x + 90, textY, 0xFF55FF55);
+            g.drawString(font, truncate(winnerName, 18), x + 90, textY, UiTheme.ON_BG);
             textY += 12;
 
             g.drawString(font, "Price:", x + 20, textY, labelColor);
-            g.drawString(font, String.format("%.1f ◎", sc.getAcceptedBid()), x + 90, textY, 0xFF55FF55);
+            g.drawString(font, String.format("%.1f ◎", sc.getAcceptedBid()), x + 90, textY, UiTheme.ON_BG);
             textY += 15;
 
             // Courier Info for SellContract
@@ -438,28 +475,28 @@ public class ContractDetailScreen extends Screen {
             textY += 12;
 
             g.drawString(font, "Reward:", x + 20, textY, labelColor);
-            g.drawString(font, String.format("%.1f ◎", sc.getCourierReward()), x + 90, textY, 0xFF55FF55);
+            g.drawString(font, String.format("%.1f ◎", sc.getCourierReward()), x + 90, textY, UiTheme.ON_BG);
             textY += 12;
 
             g.drawString(font, "Status:", x + 20, textY, labelColor);
             if (sc.isCourierAssigned()) {
                 String courierName = sc.isSnailMail() ? "Snail Mail" : "Assigned";
-                g.drawString(font, courierName, x + 90, textY, 0xFF55FF55);
+                g.drawString(font, courierName, x + 90, textY, UiTheme.ON_BG);
                 textY += 12;
 
                 g.drawString(font, "Progress:", x + 20, textY, labelColor);
                 String progress = sc.getDeliveredAmount() + " / " + sc.getQuantity();
-                int progressColor = sc.isDeliveryComplete() ? 0xFF55FF55 : 0xFFFFAA00;
+                int progressColor = sc.isDeliveryComplete() ? UiTheme.ON_BG : UiTheme.GOLD;
                 g.drawString(font, progress, x + 90, textY, progressColor);
             } else {
-                g.drawString(font, "Waiting for Courier", x + 90, textY, 0xFFFFAA00);
+                g.drawString(font, "Waiting for Courier", x + 90, textY, UiTheme.GOLD);
             }
             textY += 12;
             textY += 12;
 
             g.drawString(font, "Status:", x + 20, textY, labelColor);
             String status = sc.isDelivered() ? "Delivered ✓" : "Pending";
-            int statusColor = sc.isDelivered() ? 0xFF55FF55 : 0xFFFFAA00;
+            int statusColor = sc.isDelivered() ? UiTheme.ON_BG : UiTheme.GOLD;
             g.drawString(font, status, x + 90, textY, statusColor);
         }
 
@@ -472,9 +509,9 @@ public class ContractDetailScreen extends Screen {
      */
     private void renderViewModelDetails(GuiGraphics g, int x, int y) {
         int textY = y + 30;
-        int labelColor = 0xFFAAAAAA;
+        int labelColor = UiTheme.MUTED;
         int valueColor = 0xFFFFFFFF;
-        int headerColor = 0xFFFCB821;
+        int headerColor = UiTheme.GOLD;
 
         // Use detail view-model if available, otherwise fall back to summary
         boolean hasDetail = (detailViewModel != null);
@@ -506,7 +543,7 @@ public class ContractDetailScreen extends Screen {
 
             if (detailViewModel.getCourierRewardDisplay() != null) {
                 g.drawString(font, "Reward:", x + 10, textY, labelColor);
-                g.drawString(font, detailViewModel.getCourierRewardDisplay(), x + 80, textY, 0xFF55FF55);
+                g.drawString(font, detailViewModel.getCourierRewardDisplay(), x + 80, textY, UiTheme.ON_BG);
                 textY += 15;
             }
         }
@@ -526,7 +563,7 @@ public class ContractDetailScreen extends Screen {
         // Time Remaining
         String timeDisplay = hasDetail ? detailViewModel.getTimeRemainingDisplay() : summaryViewModel.getTimeRemainingDisplay();
         g.drawString(font, "Time Left:", x + 10, textY, labelColor);
-        int timeColor = timeDisplay.equals("Expired") ? 0xFFFF5555 : valueColor;
+        int timeColor = timeDisplay.equals("Expired") ? UiTheme.OFF_BG : valueColor;
         g.drawString(font, timeDisplay, x + 80, textY, timeColor);
         textY += 18;
 
@@ -537,14 +574,14 @@ public class ContractDetailScreen extends Screen {
         if (hasDetail) {
             List<ContractDetailViewModel.BidDisplayInfo> bids = detailViewModel.getBids();
             if (bids.isEmpty()) {
-                g.drawString(font, "No bids yet", x + 20, textY, 0xFF888888);
+                g.drawString(font, "No bids yet", x + 20, textY, UiTheme.MUTED);
                 textY += 12;
             } else {
                 int count = 0;
                 for (ContractDetailViewModel.BidDisplayInfo bid : bids) {
-                    if (count >= MAX_VISIBLE_BIDS && count < bids.size()) {
-                        g.drawString(font, "... +" + (bids.size() - MAX_VISIBLE_BIDS) + " more",
-                                x + 20, textY, 0xFF888888);
+                    if (count >= visibleBids() && count < bids.size()) {
+                        g.drawString(font, "... +" + (bids.size() - visibleBids()) + " more",
+                                x + 20, textY, UiTheme.MUTED);
                         textY += 12;
                         break;
                     }
@@ -552,7 +589,7 @@ public class ContractDetailScreen extends Screen {
                     String bidText = truncate(bid.bidderName(), 15) + ": " + bid.amountDisplay();
                     if (bid.isHighest()) {
                         bidText += " ⭐";
-                        g.drawString(font, bidText, x + 20, textY, 0xFF55FF55);
+                        g.drawString(font, bidText, x + 20, textY, UiTheme.ON_BG);
                     } else {
                         g.drawString(font, bidText, x + 20, textY, valueColor);
                     }
@@ -565,9 +602,9 @@ public class ContractDetailScreen extends Screen {
             // Summary only - show highest bid info
             String highestBidDisplay = summaryViewModel.getHighestBidDisplay();
             if (highestBidDisplay.equals("No bids")) {
-                g.drawString(font, "No bids yet", x + 20, textY, 0xFF888888);
+                g.drawString(font, "No bids yet", x + 20, textY, UiTheme.MUTED);
             } else {
-                g.drawString(font, "Highest: " + highestBidDisplay + " ⭐", x + 20, textY, 0xFF55FF55);
+                g.drawString(font, "Highest: " + highestBidDisplay + " ⭐", x + 20, textY, UiTheme.ON_BG);
             }
             textY += 12;
         }
@@ -584,11 +621,11 @@ public class ContractDetailScreen extends Screen {
             textY += 12;
 
             g.drawString(font, "Buyer:", x + 20, textY, labelColor);
-            g.drawString(font, truncate(detailViewModel.getWinningBidderName(), 18), x + 90, textY, 0xFF55FF55);
+            g.drawString(font, truncate(detailViewModel.getWinningBidderName(), 18), x + 90, textY, UiTheme.ON_BG);
             textY += 12;
 
             g.drawString(font, "Price:", x + 20, textY, labelColor);
-            g.drawString(font, detailViewModel.getAcceptedBidDisplay(), x + 90, textY, 0xFF55FF55);
+            g.drawString(font, detailViewModel.getAcceptedBidDisplay(), x + 90, textY, UiTheme.ON_BG);
             textY += 15;
 
             // Courier Info
@@ -597,24 +634,24 @@ public class ContractDetailScreen extends Screen {
 
             if (detailViewModel.getCourierRewardDisplay() != null) {
                 g.drawString(font, "Reward:", x + 20, textY, labelColor);
-                g.drawString(font, detailViewModel.getCourierRewardDisplay(), x + 90, textY, 0xFF55FF55);
+                g.drawString(font, detailViewModel.getCourierRewardDisplay(), x + 90, textY, UiTheme.ON_BG);
                 textY += 12;
             }
 
             g.drawString(font, "Status:", x + 20, textY, labelColor);
             if (detailViewModel.getCourierName() != null) {
-                g.drawString(font, detailViewModel.getCourierName(), x + 90, textY, 0xFF55FF55);
+                g.drawString(font, detailViewModel.getCourierName(), x + 90, textY, UiTheme.ON_BG);
                 textY += 12;
 
                 if (detailViewModel.getDeliveryProgressDisplay() != null) {
                     g.drawString(font, "Progress:", x + 20, textY, labelColor);
                     String progress = detailViewModel.getDeliveryProgressDisplay();
                     int progressColor = progress.contains("/") && progress.split("/")[0].trim().equals(progress.split("/")[1].trim()) 
-                            ? 0xFF55FF55 : 0xFFFFAA00;
+                            ? UiTheme.ON_BG : UiTheme.GOLD;
                     g.drawString(font, progress, x + 90, textY, progressColor);
                 }
             } else {
-                g.drawString(font, "Waiting for Courier", x + 90, textY, 0xFFFFAA00);
+                g.drawString(font, "Waiting for Courier", x + 90, textY, UiTheme.GOLD);
             }
             textY += 12;
 
@@ -623,7 +660,7 @@ public class ContractDetailScreen extends Screen {
             g.drawString(font, "Status:", x + 20, textY, labelColor);
             String statusDisplay = detailViewModel.getStatusDisplay();
             String status = statusDisplay.contains("Delivered") ? "Delivered ✓" : "Pending";
-            int statusColor = statusDisplay.contains("Delivered") ? 0xFF55FF55 : 0xFFFFAA00;
+            int statusColor = statusDisplay.contains("Delivered") ? UiTheme.ON_BG : UiTheme.GOLD;
             g.drawString(font, status, x + 90, textY, statusColor);
         }
     }
@@ -671,9 +708,10 @@ public class ContractDetailScreen extends Screen {
     }
 
     private String truncate(String text, int maxChars) {
-        if (text == null || text.length() <= maxChars)
-            return text;
-        return text.substring(0, maxChars - 2) + "..";
+        if (text == null) {
+            return "";
+        }
+        return UiTextWrap.ellipsize(text, WINDOW_WIDTH - 100, this.font::width);
     }
 
     @Override

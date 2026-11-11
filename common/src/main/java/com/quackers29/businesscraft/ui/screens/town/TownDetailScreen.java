@@ -26,17 +26,19 @@ public class TownDetailScreen extends BCModalGridScreen<TownDetailEntry> {
         super(title, parentScreen, null);
 
         // Configure appearance
-        this.withPanelSize(0.6f, 0.5f)
+        this.withFitToRows(0.6f, 0.5f)
             .withRowHeight(20)
-            .withTitleScale(1.5f)
+            .withTitleScale(1.0f)
             .withColors(
                 TownInterfaceTheme.BACKGROUND_COLOR,
                 TownInterfaceTheme.BORDER_COLOR,
-                TownInterfaceTheme.TEXT_COLOR,
+                com.quackers29.businesscraft.ui.theme.UiTheme.GOLD,
                 TownInterfaceTheme.TEXT_HIGHLIGHT,
                 TownInterfaceTheme.TEXT_COLOR
             )
-            .withAlternatingRowColors(0x30FFFFFF, 0x20FFFFFF)
+            .withAlternatingRowColors(
+                com.quackers29.businesscraft.ui.theme.UiTheme.ROW,
+                com.quackers29.businesscraft.ui.theme.UiTheme.ROW_ALT)
             .withBackButtonText("Back to Leaderboard");
 
         // Add columns

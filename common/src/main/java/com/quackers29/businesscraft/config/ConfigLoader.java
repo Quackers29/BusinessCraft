@@ -98,6 +98,11 @@ public class ConfigLoader {
     public static double contractCourierAcceptanceMinutes = 2.0;
     public static double contractCourierDeliveryMinutesPerMeter = 0.05;
     public static double contractSnailMailDeliveryMinutesPerMeter = 0.1;
+    public static int contractPageSize = 20;
+    public static int contractHistoryLimit = 50;
+    public static int contractVisibleBids = 2;
+    public static int platformRadiusStep = 1;
+    public static int platformRadiusStepFast = 5;
 
     // Display Config
     public static String displayTimezone = "UTC";
@@ -198,6 +203,8 @@ public class ConfigLoader {
                 craftableTownInterface = config.getOrElse("general.craftableTownInterface", true);
                 int configuredMaxRadius = config.getIntOrElse("platforms.maxSearchRadius", 100);
                 maxPlatformSearchRadius = Math.max(1, configuredMaxRadius);
+                platformRadiusStep = Math.max(1, config.getIntOrElse("platforms.radiusStep", 1));
+                platformRadiusStepFast = Math.max(platformRadiusStep, config.getIntOrElse("platforms.radiusStepFast", 5));
                 townNames = config.getOrElse("general.townNames", getDefaultTownNames());
 
                 // Vehicle settings
@@ -261,6 +268,9 @@ public class ConfigLoader {
                 contractCourierDeliveryMinutesPerMeter = config.getOrElse("contracts.courierDeliveryMinutesPerMeter", 0.05);
                 contractSnailMailDeliveryMinutesPerMeter = config.getOrElse("contracts.snailMailDeliveryMinutesPerMeter", 0.1);
                 contractsEnabled = config.getOrElse("contracts.enabled", false);
+                contractPageSize = Math.max(1, config.getIntOrElse("contracts.pageSize", 20));
+                contractHistoryLimit = Math.max(1, config.getIntOrElse("contracts.historyLimit", 50));
+                contractVisibleBids = Math.max(1, config.getIntOrElse("contracts.visibleBids", 2));
 
                 // Production settings
                 productionEnabled = config.getOrElse("production.enabled", false);
@@ -379,6 +389,12 @@ public class ConfigLoader {
                         " Highest search radius a platform may use, in blocks. Default 100. "
                                 + "Each platform still starts at 10 with spread 0. "
                                 + "Spread cannot exceed that platform's own search radius.");
+                config.set("platforms.radiusStep", platformRadiusStep);
+                config.setComment("platforms.radiusStep",
+                        " Blocks added or removed per click on a platform radius or spread control. Default 1.");
+                config.set("platforms.radiusStepFast", platformRadiusStepFast);
+                config.setComment("platforms.radiusStepFast",
+                        " Blocks added or removed per click while Shift is held. Default 5.");
 
                 // Vehicle settings
                 config.set("vehicles.enableCreateTrains", enableCreateTrains);
@@ -504,6 +520,14 @@ public class ConfigLoader {
                 config.setComment("contracts.snailMailDeliveryMinutesPerMeter", " Snail mail delivery time per meter (minutes)");
                 config.set("contracts.enabled", contractsEnabled);
                 config.setComment("contracts.enabled", "Enable contract system (auction, bidding, delivery)");
+                config.set("contracts.pageSize", contractPageSize);
+                config.setComment("contracts.pageSize", " Contracts shown per page on the contract board. Default 20.");
+                config.set("contracts.historyLimit", contractHistoryLimit);
+                config.setComment("contracts.historyLimit",
+                        " History rows shown before Show All. Default 50.");
+                config.set("contracts.visibleBids", contractVisibleBids);
+                config.setComment("contracts.visibleBids",
+                        " Bid rows drawn on the contract detail screen before the remainder is summarised. Default 2.");
 
                 // Production settings
                 config.set("production.enabled", productionEnabled);

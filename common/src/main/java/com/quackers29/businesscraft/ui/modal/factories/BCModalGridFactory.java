@@ -28,11 +28,11 @@ public class BCModalGridFactory {
     public static class Themes {
         // BusinessCraft default theme (Bluish)
         public static final int[] BC_DEFAULT = {
-            0xFF000000,    // Background
-            0xFFDDDDDD,    // Border
-            0xFFFFFFFF,    // Title
-            0xFFDDFFFF,    // Header
-            0xFFFFFFFF     // Text
+            com.quackers29.businesscraft.ui.theme.UiTheme.PANEL,
+            com.quackers29.businesscraft.ui.theme.UiTheme.BORDER,
+            com.quackers29.businesscraft.ui.theme.UiTheme.GOLD,
+            com.quackers29.businesscraft.ui.theme.UiTheme.AQUA,
+            com.quackers29.businesscraft.ui.theme.UiTheme.TEXT
         };
         
         // Dark theme
@@ -125,8 +125,10 @@ public class BCModalGridFactory {
                   Themes.BC_DEFAULT[3],  // Header
                   Themes.BC_DEFAULT[4]   // Text
               )
-              .withAlternatingRowColors(0x30FFFFFF, 0x20FFFFFF)
-              .withPanelSize(0.72f, 0.62f);
+              .withAlternatingRowColors(
+                  com.quackers29.businesscraft.ui.theme.UiTheme.ROW,
+                  com.quackers29.businesscraft.ui.theme.UiTheme.ROW_ALT)
+              .withFitToRows(0.72f, 0.62f);
         
         return screen;
     }

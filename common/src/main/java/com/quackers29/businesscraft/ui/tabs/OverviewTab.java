@@ -6,7 +6,6 @@ import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import com.quackers29.businesscraft.ui.components.basic.BCComponent;
 import com.quackers29.businesscraft.ui.layout.BCFlowLayout;
-import com.quackers29.businesscraft.ui.components.basic.BCLabel;
 import com.quackers29.businesscraft.ui.builders.BCComponentFactory;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.components.containers.StandardTabContent;
@@ -40,10 +39,6 @@ public class OverviewTab extends BaseTownTab {
 
     @Override
     public void init(Consumer<Button> registerWidget) {
-        // Add title
-        BCLabel titleLabel = createHeaderLabel("TOWN OVERVIEW");
-        panel.addChild(titleLabel);
-
         // Create standardized content component for label-value display
         contentComponent = createStandardContent(StandardTabContent.ContentType.LABEL_VALUE_GRID, "TOWN OVERVIEW");
 

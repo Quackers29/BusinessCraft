@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.contract.viewmodel;
 
+import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.SellContract;
 import com.quackers29.businesscraft.util.BCTimeUtils;
@@ -14,7 +15,6 @@ import java.util.UUID;
 public class ContractSummaryViewModelBuilder {
 
     private static final DecimalFormat PRICE_FORMAT = new DecimalFormat("#,##0.##");
-    private static final int DEFAULT_PAGE_SIZE = 20;
 
     public enum Tab {
         AUCTION,
@@ -38,7 +38,7 @@ public class ContractSummaryViewModelBuilder {
             ServerPlayer player,
             long serverTime) {
 
-        if (pageSize <= 0) pageSize = DEFAULT_PAGE_SIZE;
+        if (pageSize <= 0) pageSize = Math.max(1, ConfigLoader.contractPageSize);
         if (page < 0) page = 0;
 
         List<Contract> filtered = filterByTab(allContracts, tab);
