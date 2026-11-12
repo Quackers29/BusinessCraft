@@ -3,13 +3,17 @@ package com.quackers29.businesscraft.client.showcase;
 import com.google.gson.GsonBuilder;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.PlatformInterfaceBlock;
+import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
 import com.quackers29.businesscraft.entity.TouristDisplayFormat;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import com.quackers29.businesscraft.entity.TouristNames;
 import com.quackers29.businesscraft.item.ConductorClipboardItem;
+import com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinationModePacket;
+import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
 import com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache;
 import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket;
 import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
+import com.quackers29.businesscraft.platform.DestinationMode;
 import com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -36,11 +40,17 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Client half of {@code tools/multiplayer-smoke.sh}. Joins the dedicated server, photographs
  * the tourists and the platform screen, and writes {@code multiplayer-smoke-observation.json}
  * from the data those screens are actually showing.
+ *
+ * <p>With {@code businesscraft.multiplayerSmoke.reach=true} (BC_Beta) the client then walks
+ * {@link MultiplayerSmokePlan#REACH_TEST_DISTANCE} blocks away, sends two platform packets for
+ * the Oakvale platform, walks back, and checks that the platform screen still shows the seeded
+ * state. The server must have refused both.
  */
 public final class MultiplayerSmokeClient {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/MpSmoke");
@@ -53,6 +63,10 @@ public final class MultiplayerSmokeClient {
         SHOOT_TAGS,
         SHOOT_TRACK,
         OPEN_PLATFORM,
+        REACH_AWAY,
+        REACH_SEND,
+        REACH_BACK,
+        REACH_VERIFY,
         WRITE,
         QUIT
     }
@@ -70,6 +84,16 @@ public final class MultiplayerSmokeClient {
     private static boolean shotsBegun;
     private static String lastScreen = "";
     private static int overlayTicks;
+
+    private static final boolean REACH_STAGE = Boolean.getBoolean(MultiplayerSmokePlan.REACH_PROPERTY);
+    /** Small enough that several moves landing in one server tick stay under the vanilla speed check. */
+    private static final double REACH_STEP = 4.0;
+    private static Vec3 reachHome;
+    private static BlockPos reachTown;
+    private static UUID reachPlatform;
+    private static double reachSentFrom;
+    private static boolean reachSent;
+    private static boolean reachHeld;
 
     private MultiplayerSmokeClient() {
     }
@@ -125,6 +149,10 @@ public final class MultiplayerSmokeClient {
             case SHOOT_TAGS -> shootTags(minecraft);
             case SHOOT_TRACK -> shootTrack(minecraft);
             case OPEN_PLATFORM -> openPlatform(minecraft);
+            case REACH_AWAY -> reachAway(minecraft);
+            case REACH_SEND -> reachSend(minecraft);
+            case REACH_BACK -> reachBack(minecraft);
+            case REACH_VERIFY -> reachVerify(minecraft);
             case WRITE -> write(minecraft);
             case QUIT -> shutdown(minecraft);
         }
@@ -199,9 +227,37 @@ public final class MultiplayerSmokeClient {
     }
 
     private static void openPlatform(Minecraft minecraft) {
+        PlatformInterfaceScreen screen = settledPlatformScreen(minecraft);
+        if (screen == null) {
+            return;
+        }
+        ShowcaseShotManifest.grab(minecraft, "mp_platform");
+        if (!REACH_STAGE) {
+            enter(Phase.WRITE);
+            return;
+        }
+        BlockPos kiosk = screen.getMenu().getBlockPos();
+        if (kiosk == null || !(minecraft.level.getBlockEntity(kiosk) instanceof PlatformInterfaceEntity entity)
+                || entity.getTownCentre() == null || entity.getPlatformId() == null) {
+            fail(minecraft, "reach stage could not read the platform kiosk");
+            return;
+        }
+        reachTown = entity.getTownCentre().immutable();
+        reachPlatform = entity.getPlatformId();
+        reachHome = minecraft.player.position();
+        minecraft.player.closeContainer();
+        LOGGER.info("MP_SMOKE_REACH_LEAVING town={} platform={}", reachTown, reachPlatform);
+        enter(Phase.REACH_AWAY);
+    }
+
+    /**
+     * Opens the nearest platform kiosk and returns its screen once the server data has been
+     * steady for 15 ticks. Returns null while waiting, and after reporting a failure.
+     */
+    private static PlatformInterfaceScreen settledPlatformScreen(Minecraft minecraft) {
         if (minecraft.player == null || minecraft.level == null || minecraft.gameMode == null) {
             fail(minecraft, "lost the world while opening the platform");
-            return;
+            return null;
         }
         aimAtTourists(minecraft);
         if (!(minecraft.screen instanceof PlatformInterfaceScreen screen)) {
@@ -212,7 +268,7 @@ public final class MultiplayerSmokeClient {
                     if (phaseTicks > SCENE_TIMEOUT_TICKS) {
                         fail(minecraft, "no platform interface block near the player");
                     }
-                    return;
+                    return null;
                 }
                 BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(pos), net.minecraft.core.Direction.UP, pos, false);
                 minecraft.gameMode.useItemOn(minecraft.player, InteractionHand.MAIN_HAND, hit);
@@ -221,7 +277,7 @@ public final class MultiplayerSmokeClient {
             if (phaseTicks > SCENE_TIMEOUT_TICKS) {
                 fail(minecraft, "platform screen did not open");
             }
-            return;
+            return null;
         }
         boolean ready = screen.smokeDataReceived()
                 && !screen.smokeLearnedRoutes().isEmpty()
@@ -229,14 +285,105 @@ public final class MultiplayerSmokeClient {
                 && !screen.smokeDestinationRows().isEmpty();
         stablePlatform = ready ? stablePlatform + 1 : 0;
         if (ready && stablePlatform >= 15) {
-            ShowcaseShotManifest.grab(minecraft, "mp_platform");
-            enter(Phase.WRITE);
-            return;
+            return screen;
         }
         if (phaseTicks > SCENE_TIMEOUT_TICKS) {
             minecraft.setScreen(null);
             fail(minecraft, "platform screen did not receive destination data");
         }
+        return null;
+    }
+
+    private static void reachAway(Minecraft minecraft) {
+        Vec3 far = reachHome.add(MultiplayerSmokePlan.REACH_TEST_DISTANCE, 0, 0);
+        if (stepToward(minecraft, far) && phaseTicks > 20) {
+            enter(Phase.REACH_SEND);
+            return;
+        }
+        if (phaseTicks > SCENE_TIMEOUT_TICKS) {
+            fail(minecraft, "reach stage did not get away from the town");
+        }
+    }
+
+    private static void reachSend(Minecraft minecraft) {
+        if (minecraft.player == null) {
+            fail(minecraft, "lost the player during the reach stage");
+            return;
+        }
+        if (!reachSent) {
+            reachSent = true;
+            reachSentFrom = Math.sqrt(minecraft.player.distanceToSqr(Vec3.atCenterOf(reachTown)));
+            PlatformAccess.getNetworkMessages().sendToServer(
+                    new SetPlatformEnabledPacket(reachTown, reachPlatform, false));
+            PlatformAccess.getNetworkMessages().sendToServer(
+                    new SetPlatformDestinationModePacket(reachTown, reachPlatform, DestinationMode.SPECIFIC));
+            LOGGER.info("MP_SMOKE_REACH_SENT distance={}", Math.round(reachSentFrom));
+        }
+        // Long enough for the server to have handled both packets before the walk back.
+        if (phaseTicks > 40) {
+            enter(Phase.REACH_BACK);
+        }
+    }
+
+    private static void reachBack(Minecraft minecraft) {
+        if (stepToward(minecraft, reachHome) && phaseTicks > 20) {
+            minecraft.player.setYRot(180f);
+            minecraft.player.setYHeadRot(180f);
+            enter(Phase.REACH_VERIFY);
+            return;
+        }
+        if (phaseTicks > SCENE_TIMEOUT_TICKS) {
+            fail(minecraft, "reach stage did not get back to the platform");
+        }
+    }
+
+    private static void reachVerify(Minecraft minecraft) {
+        PlatformInterfaceScreen screen = settledPlatformScreen(minecraft);
+        if (screen == null) {
+            return;
+        }
+        // The first observation needs both tourists back in view, same as before the walk.
+        if (visibleTourists(minecraft).size() < 2) {
+            if (phaseTicks > SCENE_TIMEOUT_TICKS) {
+                fail(minecraft, "tourists were not visible after the reach stage");
+            }
+            return;
+        }
+        boolean stillEnabled = Boolean.TRUE.equals(screen.smokePlatformEnabled());
+        boolean stillAuto = screen.smokeDestinationMode() == DestinationMode.AUTO;
+        reachHeld = stillEnabled && stillAuto;
+        LOGGER.info("MP_SMOKE_REACH_RESULT enabled={} mode={}", stillEnabled, screen.smokeDestinationMode());
+        if (!reachHeld) {
+            fail(minecraft, "a platform packet sent from " + Math.round(reachSentFrom)
+                    + " blocks away was applied (enabled=" + stillEnabled
+                    + ", mode=" + screen.smokeDestinationMode().toConfigValue() + ")");
+            return;
+        }
+        enter(Phase.WRITE);
+    }
+
+    /**
+     * Moves the player up to {@link #REACH_STEP} blocks toward {@code target} and reports whether
+     * it has arrived. Waits when the next chunk has not reached this client yet, because a local
+     * player outside loaded chunks stops sending its position.
+     */
+    private static boolean stepToward(Minecraft minecraft, Vec3 target) {
+        if (minecraft.player == null || minecraft.level == null) {
+            return false;
+        }
+        Vec3 here = minecraft.player.position();
+        Vec3 gap = new Vec3(target.x - here.x, 0, target.z - here.z);
+        double left = gap.length();
+        if (left < 0.01) {
+            return true;
+        }
+        Vec3 next = left <= REACH_STEP ? target : here.add(gap.scale(REACH_STEP / left));
+        if (!minecraft.level.hasChunkAt(BlockPos.containing(next))) {
+            return false;
+        }
+        minecraft.player.setDeltaMovement(Vec3.ZERO);
+        minecraft.player.setPos(next.x, target.y, next.z);
+        return false;
     }
 
     private static void write(Minecraft minecraft) {
@@ -406,6 +553,14 @@ public final class MultiplayerSmokeClient {
         body.put("towns", townRows());
         body.put("platform", platformRow(minecraft));
         body.put("tourists", visibleTourists(minecraft));
+        if (REACH_STAGE) {
+            Map<String, Object> reach = new LinkedHashMap<>();
+            reach.put("sent", reachSent);
+            reach.put("distance", Math.round(reachSentFrom));
+            reach.put("packets", List.of("SetPlatformEnabledPacket", "SetPlatformDestinationModePacket"));
+            reach.put("stateUnchanged", reachHeld);
+            body.put("reach", reach);
+        }
         try {
             Files.writeString(observationPath(minecraft),
                     new GsonBuilder().setPrettyPrinting().create().toJson(body), StandardCharsets.UTF_8);

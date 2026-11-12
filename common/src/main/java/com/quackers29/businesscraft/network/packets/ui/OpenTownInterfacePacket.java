@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import net.minecraft.core.BlockPos;
@@ -48,8 +50,8 @@ public class OpenTownInterfacePacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
-                BlockEntity entity = player.level().getBlockEntity(blockPos);
-                if (entity instanceof TownInterfaceEntity townInterface) {
+                TownInterfaceEntity townInterface = LoadedTownAccess.getIfLoadedInReach(player, blockPos);
+                if (townInterface != null) {
                     PlatformAccess.getNetwork().openScreen(player, new MenuProvider() {
                         @Override
                         public Component getDisplayName() {
@@ -62,7 +64,7 @@ public class OpenTownInterfacePacket {
                         }
                     }, blockPos);
                 } else {
-                    LOGGER.error("Failed to get TownInterfaceEntity at position: {}", blockPos);
+                    LOGGER.debug("No Town Centre in reach at {}", blockPos);
                 }
             }
         });

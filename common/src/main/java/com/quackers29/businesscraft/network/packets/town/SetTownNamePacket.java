@@ -51,7 +51,7 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
 
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            handlePacket(context, (player, townBlock) -> {
+            handlePacketInReach(context, (player, townBlock) -> {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                         "Processing SetTownNamePacket for position {} with new name: '{}'",
                         pos, newName);

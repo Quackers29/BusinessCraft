@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.misc;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -66,6 +68,20 @@ public abstract class BaseBlockEntityPacket {
 
             // If we get here, we couldn't find a suitable block entity
             LOGGER.warn("Received packet for position {} but no TownInterfaceEntity or TownInterfaceBlock found", pos);
+        }
+    }
+
+    /**
+     * Same as {@link #handlePacket}, for packets that change the town or open one of
+     * its screens: the sender must be within reach of a loaded Town Centre.
+     */
+    protected void handlePacketInReach(Object context, BiConsumer<ServerPlayer, TownInterfaceEntity> handler) {
+        Object senderObj = PlatformAccess.getNetwork().getSender(context);
+        if (senderObj instanceof ServerPlayer player) {
+            TownInterfaceEntity townInterface = LoadedTownAccess.getIfLoadedInReach(player, pos);
+            if (townInterface != null) {
+                handler.accept(player, townInterface);
+            }
         }
     }
 

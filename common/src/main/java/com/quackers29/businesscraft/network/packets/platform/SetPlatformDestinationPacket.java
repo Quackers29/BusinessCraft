@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import java.util.UUID;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -74,9 +76,9 @@ public class SetPlatformDestinationPacket {
                 }
 
                 Level level = player.level();
-                BlockEntity be = level.getBlockEntity(pos);
+                TownInterfaceEntity townInterface = LoadedTownAccess.getForPlatform(player, pos, platformId);
 
-                if (be instanceof TownInterfaceEntity townInterface) {
+                if (townInterface != null) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Player {} is setting destination {} to {} for platform {} at {}", 
                     player.getName().getString(), townId, enabled, platformId, pos);

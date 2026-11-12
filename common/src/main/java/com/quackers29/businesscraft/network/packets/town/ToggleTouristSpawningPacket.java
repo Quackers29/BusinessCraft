@@ -27,7 +27,7 @@ public class ToggleTouristSpawningPacket extends BaseBlockEntityPacket {
 
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            handlePacket(context, (player, townBlock) -> {
+            handlePacketInReach(context, (player, townBlock) -> {
                 ITownDataProvider provider = townBlock.getTownDataProvider();
                 if (provider != null) {
                     boolean newState = !provider.isTouristSpawningEnabled();
