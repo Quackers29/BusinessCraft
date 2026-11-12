@@ -152,15 +152,15 @@ Box positions are in Minecraft model pixels. The head is 8×8×8 and sits with i
 
 ### Which part an accessory follows
 
-`TouristModel.setupAnim` copies the pose each frame:
+Accessory meshes are parented under the vanilla player `body`, `left_arm`, or `right_arm` part in `TouristModel.createBodyLayer`, with cube positions in that limb's local space (held items anchor at the hand, not the model root):
 
-| Follows | Indices | What they are |
+| Parent | Indices | What they are |
 | --- | --- | --- |
 | Body | 1 camera, 3 backpack, 9 red backpack, 11 brass camera | Worn on the torso |
 | Left arm | 2 suitcase, 5 umbrella, 7 basket, 10 brown suitcase | Held on the left |
 | Right arm | 4 map, 6 book, 8 lantern | Held on the right |
 
-A new accessory that is not added to one of those three lists stays at the model root and will not move with the arm or the body.
+A new accessory parented only to the model root will not follow limb animation.
 
 ## How faces work
 
@@ -291,7 +291,7 @@ Craft: two paper, one iron ingot, two sticks (shaped recipe in `data/businesscra
 - A datapack JSON can reuse texture indices that already ship in the mod. A new index needs the PNG on the client (the mod jar, or a resource pack). Server data packs do not deliver those PNGs by themselves.
 - Hat or accessory index past `HEADWEAR_MAX` / `ACCESSORY_MAX` packs successfully and then draws nothing.
 - Two looks with the same four numbers fail `TouristLooksTest`, and `getLookId` returns the first catalog match for that packed int.
-- An accessory that is not in one of the three follow-lists will not move with the arm.
+- An accessory not parented to `body`, `left_arm`, or `right_arm` will not follow that limb.
 - The outfit file is the clothing overlay, not a second copy of the body. Paint the jacket and sleeves, or the arms stay the skin colour.
 - `type` left out is legal in the parser and then fails the builtin test. A platform spawn then keeps the random type from `assignSpawnVariety` instead of one that matches the costume.
 - A private trade list is optional and lives in `TouristTradeCatalog`, not in the look JSON. Market shopper, station scholar, trail hiker, rain caller, garden pilgrim, and library clerk use their type's shared list. The other looks have an override keyed by id.

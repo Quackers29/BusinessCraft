@@ -37,18 +37,6 @@ public class TouristModel extends PlayerModel<TouristEntity> {
             "accessory_umbrella", "accessory_book", "accessory_basket", "accessory_lantern",
             "accessory_backpack_red", "accessory_suitcase_brown", "accessory_camera_brass"
     };
-    private static final int[] BODY_ACCESSORIES = {
-            TouristParts.ACCESSORY_CAMERA, TouristParts.ACCESSORY_BACKPACK,
-            TouristParts.ACCESSORY_BACKPACK_RED, TouristParts.ACCESSORY_CAMERA_BRASS
-    };
-    private static final int[] LEFT_ACCESSORIES = {
-            TouristParts.ACCESSORY_SUITCASE, TouristParts.ACCESSORY_UMBRELLA,
-            TouristParts.ACCESSORY_BASKET, TouristParts.ACCESSORY_SUITCASE_BROWN
-    };
-    private static final int[] RIGHT_ACCESSORIES = {
-            TouristParts.ACCESSORY_MAP, TouristParts.ACCESSORY_BOOK, TouristParts.ACCESSORY_LANTERN
-    };
-
     private final ModelPart headwearRoot;
     private final ModelPart[] hats = new ModelPart[HAT_NAMES.length];
     private final ModelPart[] accessories = new ModelPart[ACCESSORY_NAMES.length];
@@ -62,15 +50,28 @@ public class TouristModel extends PlayerModel<TouristEntity> {
             this.hats[i] = headwearRoot.getChild(HAT_NAMES[i]);
         }
         for (int i = 1; i < ACCESSORY_NAMES.length; i++) {
-            this.accessories[i] = root.getChild(ACCESSORY_NAMES[i]);
+            this.accessories[i] = accessoryPart(root, ACCESSORY_NAMES[i]);
         }
         root.getChild("ear").visible = false;
         root.getChild("cloak").visible = false;
     }
 
+    private static ModelPart accessoryPart(ModelPart root, String name) {
+        for (String limbName : new String[] {"left_arm", "right_arm", "body"}) {
+            ModelPart limb = root.getChild(limbName);
+            if (limb.hasChild(name)) {
+                return limb.getChild(name);
+            }
+        }
+        return root.getChild(name);
+    }
+
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = PlayerModel.createMesh(CubeDeformation.NONE, false);
         PartDefinition root = mesh.getRoot();
+        PartDefinition body = root.getChild("body");
+        PartDefinition leftArm = root.getChild("left_arm");
+        PartDefinition rightArm = root.getChild("right_arm");
         PartDefinition headwear = root.addOrReplaceChild("headwear", CubeListBuilder.create(), PartPose.ZERO);
         headwear.addOrReplaceChild("pith", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-5, -14, -5, 10, 5, 10)
@@ -115,40 +116,38 @@ public class TouristModel extends PlayerModel<TouristEntity> {
         addCap(headwear, "cap_dust");
         addFez(headwear, "fez_plum");
 
-        addCamera(root, "accessory_camera");
-        addSuitcase(root, "accessory_suitcase");
-        addBackpack(root, "accessory_backpack");
-        PartDefinition mapRoot = root.addOrReplaceChild("accessory_map", CubeListBuilder.create(), PartPose.ZERO);
+        addCamera(body, "accessory_camera");
+        addSuitcase(leftArm, "accessory_suitcase");
+        addBackpack(body, "accessory_backpack");
+        PartDefinition mapRoot = rightArm.addOrReplaceChild("accessory_map", CubeListBuilder.create(), PartPose.ZERO);
         mapRoot.addOrReplaceChild("sheet",
                 CubeListBuilder.create().texOffs(0, 0).addBox(-4, 0, -3, 8, 1, 6),
-                PartPose.offsetAndRotation(0.0F, 8.0F, -2.5F, -1.2F, 0.45F, 0.2F));
+                PartPose.offsetAndRotation(0.0F, -2.0F, -1.5F, -1.05F, -0.35F, -0.15F));
 
-        // Held out to the left of the body. The canopy stays beside the shoulder
-        // so it reads as an open umbrella instead of a bar across the face.
-        PartDefinition umbrella = root.addOrReplaceChild("accessory_umbrella",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1, 2, -2, 2, 12, 2), PartPose.ZERO);
+        PartDefinition umbrella = leftArm.addOrReplaceChild("accessory_umbrella",
+                CubeListBuilder.create().texOffs(0, 0).addBox(-1, -14, -1, 2, 12, 2), PartPose.ZERO);
         umbrella.addOrReplaceChild("canopy", CubeListBuilder.create()
                         .texOffs(0, 18).addBox(-6, 0, -6, 12, 1, 12)
                         .texOffs(48, 0).addBox(-2, -2, -2, 4, 2, 4),
-                PartPose.offsetAndRotation(3.0F, 2.0F, -1.0F, 0.2F, 0.15F, -0.55F));
-        PartDefinition book = root.addOrReplaceChild("accessory_book", CubeListBuilder.create(), PartPose.ZERO);
+                PartPose.offsetAndRotation(0.0F, -14.0F, 0.0F, 0.15F, 0.0F, -0.35F));
+        PartDefinition book = rightArm.addOrReplaceChild("accessory_book", CubeListBuilder.create(), PartPose.ZERO);
         book.addOrReplaceChild("cover", CubeListBuilder.create()
                         .texOffs(0, 0).addBox(-4, 0, -3, 8, 2, 6)
                         .texOffs(0, 12).addBox(-4, 0, 2, 8, 2, 1),
-                PartPose.offsetAndRotation(1.0F, 9.0F, -2.0F, -1.05F, -0.35F, 0.15F));
-        root.addOrReplaceChild("accessory_basket", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-3, 8, -5, 6, 5, 6)
-                .texOffs(24, 0).addBox(-3, 5, -2, 1, 4, 1)
-                .texOffs(28, 0).addBox(2, 5, -2, 1, 4, 1)
-                .texOffs(32, 0).addBox(-2, 5, -2, 4, 1, 1), PartPose.ZERO);
-        root.addOrReplaceChild("accessory_lantern", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-2, 8, -4, 4, 5, 4)
-                .texOffs(16, 0).addBox(-1, 7, -3, 2, 1, 2)
-                .texOffs(16, 4).addBox(-2, 13, -4, 4, 1, 4)
-                .texOffs(24, 0).addBox(-0.5F, 6, -2.5F, 1, 2, 1), PartPose.ZERO);
-        addBackpack(root, "accessory_backpack_red");
-        addSuitcase(root, "accessory_suitcase_brown");
-        addCamera(root, "accessory_camera_brass");
+                PartPose.offsetAndRotation(0.0F, -2.0F, -1.5F, -1.05F, -0.35F, 0.15F));
+        leftArm.addOrReplaceChild("accessory_basket", CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-3, -7, -3, 6, 5, 6)
+                .texOffs(24, 0).addBox(-3, -10, -1, 1, 4, 1)
+                .texOffs(28, 0).addBox(2, -10, -1, 1, 4, 1)
+                .texOffs(32, 0).addBox(-2, -10, -1, 4, 1, 1), PartPose.ZERO);
+        rightArm.addOrReplaceChild("accessory_lantern", CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-2, -7, -3, 4, 5, 4)
+                .texOffs(16, 0).addBox(-1, -8, -2, 2, 1, 2)
+                .texOffs(16, 4).addBox(-2, -2, -3, 4, 1, 4)
+                .texOffs(24, 0).addBox(-0.5F, -9, -1.5F, 1, 2, 1), PartPose.ZERO);
+        addBackpack(body, "accessory_backpack_red");
+        addSuitcase(leftArm, "accessory_suitcase_brown");
+        addCamera(body, "accessory_camera_brass");
         return LayerDefinition.create(mesh, 64, 64);
     }
 
@@ -164,21 +163,21 @@ public class TouristModel extends PlayerModel<TouristEntity> {
                 .texOffs(32, 0).addBox(2, -12, -4, 1, 4, 1), PartPose.ZERO);
     }
 
-    private static void addCamera(PartDefinition root, String name) {
-        root.addOrReplaceChild(name, CubeListBuilder.create()
+    private static void addCamera(PartDefinition torso, String name) {
+        torso.addOrReplaceChild(name, CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-2, 3, -6, 4, 3, 3)
                 .texOffs(0, 12).addBox(-1, 4, -7, 2, 2, 1)
                 .texOffs(16, 0).addBox(-1, 0, -3, 2, 4, 1), PartPose.ZERO);
     }
 
-    private static void addSuitcase(PartDefinition root, String name) {
-        root.addOrReplaceChild(name, CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-2, 8, -5, 4, 5, 3)
-                .texOffs(24, 0).addBox(-1, 7, -4, 2, 1, 1), PartPose.ZERO);
+    private static void addSuitcase(PartDefinition arm, String name) {
+        arm.addOrReplaceChild(name, CubeListBuilder.create()
+                .texOffs(0, 0).addBox(-2, -7, -3, 4, 5, 3)
+                .texOffs(24, 0).addBox(-1, -2, -2, 2, 1, 1), PartPose.ZERO);
     }
 
-    private static void addBackpack(PartDefinition root, String name) {
-        root.addOrReplaceChild(name, CubeListBuilder.create()
+    private static void addBackpack(PartDefinition torso, String name) {
+        torso.addOrReplaceChild(name, CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-5, 2, 2, 10, 8, 4)
                 .texOffs(32, 0).addBox(-4, 2, 6, 8, 5, 1)
                 .texOffs(0, 16).addBox(-3, 1, -3, 1, 7, 1)
@@ -216,15 +215,6 @@ public class TouristModel extends PlayerModel<TouristEntity> {
             float netHeadYaw, float headPitch) {
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
         headwearRoot.copyFrom(head);
-        for (int index : BODY_ACCESSORIES) {
-            accessories[index].copyFrom(body);
-        }
-        for (int index : LEFT_ACCESSORIES) {
-            accessories[index].copyFrom(leftArm);
-        }
-        for (int index : RIGHT_ACCESSORIES) {
-            accessories[index].copyFrom(rightArm);
-        }
     }
 
     @Override
