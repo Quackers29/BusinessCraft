@@ -1,6 +1,9 @@
 # Sourced by showcase runners — do not execute directly.
 # shellcheck shell=bash
 
+# shellcheck source=tools/common-lib.sh
+source "$(dirname "${BASH_SOURCE[0]}")/common-lib.sh"
+
 showcase_output_init() {
     local mode="$1"
     local loader="$2"

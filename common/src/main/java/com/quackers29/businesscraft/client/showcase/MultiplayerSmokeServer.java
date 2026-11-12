@@ -88,10 +88,7 @@ public final class MultiplayerSmokeServer {
 
     private static void build(ServerLevel level) {
         MinecraftServer server = level.getServer();
-        level.setDayTime(6000);
-        level.setWeatherParameters(0, 0, false, false);
-        level.getGameRules().getRule(GameRules.RULE_DAYLIGHT).set(false, server);
-        level.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).set(false, server);
+        ShowcaseWorldBuild.pinDaytime(level);
         level.getGameRules().getRule(GameRules.RULE_DOMOBSPAWNING).set(false, server);
         level.getGameRules().getRule(GameRules.RULE_KEEPINVENTORY).set(true, server);
 

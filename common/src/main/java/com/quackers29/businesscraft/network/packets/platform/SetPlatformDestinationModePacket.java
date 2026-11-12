@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.debug.DebugConfig;
@@ -48,8 +50,8 @@ public class SetPlatformDestinationModePacket {
                 return;
             }
             Level level = player.level();
-            BlockEntity be = level.getBlockEntity(townCentrePos);
-            if (!(be instanceof TownInterfaceEntity townInterface)) {
+            TownInterfaceEntity townInterface = LoadedTownAccess.getForPlatform(player, townCentrePos, platformId);
+            if (townInterface == null) {
                 return;
             }
             Platform platform = townInterface.getPlatform(platformId);

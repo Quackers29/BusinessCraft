@@ -2,6 +2,7 @@
 # Two-client dedicated-server smoke for BusinessCraft.
 #
 #   bash tools/multiplayer-smoke.sh              # Forge on 25565, then Fabric on 25566
+#                                                # (the next free port when one is busy)
 #   bash tools/multiplayer-smoke.sh forge
 #   bash tools/multiplayer-smoke.sh --self-test  # observation comparator only
 #
@@ -9,6 +10,8 @@
 # minecart track, and a seeded AUTO route. Two offline clients (BC_Alpha, BC_Beta)
 # join, screenshot the scene, and write multiplayer-smoke-observation.json.
 # The pass fails when those observations disagree, or on a crash, disconnect, or timeout.
+# BC_Beta also walks 120 blocks from the Oakvale platform and sends platform packets; the
+# server must refuse them (BC_REACH_REJECT in its log) and the platform must not change.
 #
 # Output: showcase-output/<timestamp>_mp-smoke_<loader>/
 # See tools/MULTIPLAYER-SMOKE.md.
@@ -19,6 +22,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 # shellcheck source=tools/showcase-output-lib.sh
 source "$ROOT/tools/showcase-output-lib.sh"
+bc_ensure_display "$ROOT/tools/multiplayer-smoke.sh" "$@"
 
 if [[ "${1:-}" == "--self-test" ]]; then
     python3 "$ROOT/tools/mp-smoke-compare.py" --self-test
@@ -34,24 +38,7 @@ case "$TARGET" in
         ;;
 esac
 
-if [[ -e /tmp/.X11-unix/X1 ]]; then
-    export DISPLAY="${DISPLAY:-:1}"
-fi
-
 GAME_PIDS=()
-
-kill_tree() {
-    local pid="$1"
-    local signal="${2:-TERM}"
-    local child
-    if [[ -z "$pid" || "$pid" -le 1 ]]; then
-        return
-    fi
-    for child in $(ps -o pid= --ppid "$pid" 2>/dev/null || true); do
-        kill_tree "$child" "$signal"
-    done
-    kill "-$signal" "$pid" 2>/dev/null || true
-}
 
 stop_pid() {
     local pid="$1"
@@ -77,18 +64,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-read_template() {
-    if [[ -n "${SHOWCASE_TEMPLATE:-}" ]]; then
-        printf '%s\n' "$SHOWCASE_TEMPLATE"
-        return
-    fi
-    local from_props=""
-    if [[ -f gradle.properties ]]; then
-        from_props="$(grep -E '^showcaseTemplate=' gradle.properties 2>/dev/null | tail -1 | cut -d= -f2- | tr -d '\r' || true)"
-    fi
-    printf '%s\n' "${from_props:-/opt/businesscraft/superflat-template}"
-}
-
 offline_uuid() {
     python3 - "$1" <<'PY'
 import hashlib, sys, uuid
@@ -100,23 +75,6 @@ print(uuid.UUID(bytes=bytes(digest)))
 PY
 }
 
-port_busy() {
-    local port="$1"
-    if command -v ss >/dev/null 2>&1; then
-        ss -ltn | grep -q ":${port} "
-        return
-    fi
-    python3 - "$port" <<'PY'
-import socket, sys
-sock = socket.socket()
-try:
-    sock.bind(("127.0.0.1", int(sys.argv[1])))
-except OSError:
-    sys.exit(0)
-sys.exit(1)
-PY
-}
-
 dump_command() {
     local loader="$1"
     local task="$2"
@@ -125,7 +83,7 @@ dump_command() {
     local log="$SHOWCASE_RUN_DIR/logs/gradle-${task}.log"
     echo "Dumping :${loader}:${task} -> ${dest}"
     set +e
-    bash ./gradlew --no-daemon ":${loader}:${task}" "$@" -PmpSmokeDumpCommand="$dest" --console=plain >"$log" 2>&1
+    bc_gradle ":${loader}:${task}" "$@" -PmpSmokeDumpCommand="$dest" --console=plain >"$log" 2>&1
     local code=$?
     set -e
     if [[ ! -s "$dest" ]]; then
@@ -134,32 +92,6 @@ dump_command() {
         return 1
     fi
     return 0
-}
-
-write_server_properties() {
-    local file="$1"
-    local port="$2"
-    cat >"$file" <<EOF
-server-port=${port}
-online-mode=false
-enforce-secure-profile=false
-prevent-proxy-connections=false
-white-list=false
-spawn-protection=0
-gamemode=creative
-force-gamemode=true
-difficulty=peaceful
-pvp=false
-allow-flight=true
-spawn-monsters=false
-view-distance=6
-simulation-distance=4
-max-players=8
-level-name=world
-level-type=minecraft\:flat
-enable-command-block=false
-motd=BusinessCraft multiplayer smoke
-EOF
 }
 
 prepare_client_dir() {
@@ -281,6 +213,13 @@ if missing:
 PY
 }
 
+mp_fail_early() {
+    local loader="$1" reason="$2"
+    echo "$reason" >&2
+    showcase_append_index "$SHOWCASE_OUTPUT_ROOT" "$SHOWCASE_RUN_DIR" "mp-smoke" "$loader" "FAIL"
+    showcase_write_result "$SHOWCASE_RUN_DIR" "mp-smoke" "$loader" FAIL "$((SECONDS - START_SECONDS))" 0 "$reason"
+}
+
 run_loader() {
     local loader="$1"
     local port="$2"
@@ -288,21 +227,23 @@ run_loader() {
     local alpha_dir="$ROOT/$loader/run-mp-alpha"
     local beta_dir="$ROOT/$loader/run-mp-beta"
     local template
-    template="$(read_template)"
-
+    START_SECONDS=$SECONDS
+    FAILURES=()
     showcase_output_init "mp-smoke" "$loader" "$ROOT"
     echo "Output: $SHOWCASE_RUN_DIR"
     mkdir -p "$SHOWCASE_RUN_DIR/screenshots/alpha" "$SHOWCASE_RUN_DIR/screenshots/beta" "$SHOWCASE_RUN_DIR/logs"
 
-    if [[ ! -f "$template/level.dat" ]]; then
-        echo "Showcase template not found: $template" >&2
-        showcase_append_index "$SHOWCASE_OUTPUT_ROOT" "$SHOWCASE_RUN_DIR" "mp-smoke" "$loader" "FAIL"
+    if ! template="$(bc_ensure_template)"; then
+        mp_fail_early "$loader" "showcase template could not be built"
         return 1
     fi
-    if port_busy "$port"; then
-        echo "Port ${port} is already in use" >&2
-        showcase_append_index "$SHOWCASE_OUTPUT_ROOT" "$SHOWCASE_RUN_DIR" "mp-smoke" "$loader" "FAIL"
+    local wanted_port="$port"
+    if ! port="$(bc_free_port "$wanted_port")"; then
+        mp_fail_early "$loader" "no free port from ${wanted_port}"
         return 1
+    fi
+    if [[ "$port" != "$wanted_port" ]]; then
+        echo "Port ${wanted_port} is busy; using ${port}"
     fi
 
     local client_spec="$SHOWCASE_RUN_DIR/client-command.json"
@@ -319,7 +260,7 @@ run_loader() {
 
     mkdir -p "$server_dir"
     printf 'eula=true\n' >"$server_dir/eula.txt"
-    write_server_properties "$server_dir/server.properties" "$port"
+    bc_write_server_properties "$server_dir/server.properties" "$port"
     rm -rf "$server_dir/world"
     cp -a "$template" "$server_dir/world"
     rm -f "$server_dir/world/session.lock" "$server_dir/mp-smoke-ready.json"
@@ -347,7 +288,8 @@ run_loader() {
         echo "BC_Alpha pid ${alpha_pid}"
         sleep 20
         launch_game "$client_spec" "$beta_dir" "$beta_console" \
-            --xmx 1280m --username BC_Beta --uuid "$beta_uuid" --game-dir "$beta_dir"
+            --xmx 1280m --username BC_Beta --uuid "$beta_uuid" --game-dir "$beta_dir" \
+            --sysprop "businesscraft.multiplayerSmoke.reach=true"
         local beta_pid="$LAST_PID"
         echo "BC_Beta pid ${beta_pid}"
 
@@ -372,7 +314,16 @@ run_loader() {
             cp -f "$beta_dir/screenshots"/showcase_mp_*.png "$SHOWCASE_RUN_DIR/screenshots/beta/" 2>/dev/null || true
         fi
 
-        if [[ "$alpha_ok" -eq 1 && "$beta_ok" -eq 1 ]] \
+        # Both platform packets BC_Beta sent from far away must have been refused by the server.
+        local rejects
+        rejects="$(grep -c "BC_REACH_REJECT player=BC_Beta" "$server_log" 2>/dev/null || true)"
+        echo "Server refused ${rejects:-0} out-of-reach packet(s) from BC_Beta"
+        if [[ "${rejects:-0}" -lt 2 ]]; then
+            FAILURES+=("server logged ${rejects:-0} BC_REACH_REJECT lines for BC_Beta, expected at least 2")
+            echo "${FAILURES[-1]}" >&2
+        fi
+
+        if [[ "$alpha_ok" -eq 1 && "$beta_ok" -eq 1 && "${rejects:-0}" -ge 2 ]] \
             && require_shots "$alpha_dir" BC_Alpha \
             && require_shots "$beta_dir" BC_Beta; then
             set +e
@@ -385,9 +336,10 @@ run_loader() {
             if [[ "$compare_code" -eq 0 ]]; then
                 status="PASS"
             else
-                echo "Observations disagree or the seeded scene was missing" >&2
+                echo "Observations disagree, the seeded scene was missing, or the reach stage failed" >&2
                 cat "$SHOWCASE_RUN_DIR/compare-errors.txt" >&2 || true
-                cat "$SHOWCASE_RUN_DIR/diff.txt" >&2 || true
+                head -n 40 "$SHOWCASE_RUN_DIR/diff.txt" >&2 || true
+                FAILURES+=("comparison failed: $(head -c 300 "$SHOWCASE_RUN_DIR/compare-errors.txt" | tr '\n' ' ')")
             fi
         else
             echo "${loader} smoke did not get two complete client observations" >&2
@@ -415,7 +367,13 @@ run_loader() {
     } >"$SHOWCASE_RUN_DIR/summary.txt"
 
     showcase_append_index "$SHOWCASE_OUTPUT_ROOT" "$SHOWCASE_RUN_DIR" "mp-smoke" "$loader" "$status"
-    echo "${loader} multiplayer smoke: ${status}"
+    local shot_total
+    shot_total="$(find "$SHOWCASE_RUN_DIR/screenshots" -name 'showcase_mp_*.png' | wc -l | tr -d ' ')"
+    if [[ "$status" != "PASS" && ${#FAILURES[@]} -eq 0 ]]; then
+        FAILURES+=("did not get two complete client observations")
+    fi
+    showcase_write_result "$SHOWCASE_RUN_DIR" "mp-smoke" "$loader" "$status" "$((SECONDS - START_SECONDS))" \
+        "$shot_total" "${FAILURES[@]+"${FAILURES[@]}"}"
     [[ "$status" == "PASS" ]]
 }
 

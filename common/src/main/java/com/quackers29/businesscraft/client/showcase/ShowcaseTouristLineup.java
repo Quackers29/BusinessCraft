@@ -178,8 +178,7 @@ public final class ShowcaseTouristLineup {
                 return;
             }
             ServerLevel level = player.serverLevel();
-            level.setDayTime(6000);
-            level.setWeatherParameters(0, 0, false, false);
+            ShowcaseWorldBuild.pinDaytime(level);
             level.getGameRules().getRule(GameRules.RULE_DAYLIGHT).set(false, server);
             level.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).set(false, server);
             level.getGameRules().getRule(GameRules.RULE_DOMOBSPAWNING).set(false, server);

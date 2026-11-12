@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -70,9 +72,8 @@ public class SetPlatformEnabledPacket {
             
             Level level = player.level();
             
-            // Check if the block entity is valid
-            BlockEntity be = level.getBlockEntity(blockPos);
-            if (be instanceof TownInterfaceEntity townInterface) {
+            TownInterfaceEntity townInterface = LoadedTownAccess.getForPlatform(player, blockPos, platformId);
+            if (townInterface != null) {
                 // Find the platform
                 Platform platform = townInterface.getPlatform(platformId);
                 if (platform != null) {

@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -36,13 +38,13 @@ public class OpenPaymentBoardPacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
-                net.minecraft.world.level.block.entity.BlockEntity entity = player.level().getBlockEntity(pos);
-                if (entity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface) {
+                var townInterface = LoadedTownAccess.getIfLoadedInReach(player, pos);
+                if (townInterface != null) {
                     // Open the PaymentBoardMenu using the entity's provider method
                     LOGGER.info("Opening Payment Board for player {} at {}", player.getName().getString(), pos);
                     PlatformAccess.getNetwork().openScreen(player, townInterface.createPaymentBoardMenuProvider(), pos);
                 } else {
-                    LOGGER.error("Failed to get TownInterfaceEntity at position: {}", pos);
+                    LOGGER.debug("No Town Centre in reach at {}", pos);
                 }
             }
         });

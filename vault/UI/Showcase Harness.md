@@ -20,6 +20,8 @@ The block, town, platform, kiosk, and lamp scenes (and the combined `all` scene)
 
 The default two-town testbed runs the trade-contract check only. The example template check runs only when named.
 
+By default a showcase run only photographs what a change touches: the changed files are matched to UI routes and scenes, and only those run in one client session. The full set (every route, every scene) runs only when asked for. Every scene is lit the same way: noon, with the day and weather cycles off, so two runs differ only by what changed. A run ends with one `RESULT` line and a `result.json`, and a missing flat template world is built automatically the first time.
+
 The two-player smoke uses the same name list, the same screen record, and the same shot list. Forge listens on 25565 and Fabric on 25566. Each player's report is compared with the other's.
 
 ---
@@ -44,7 +46,11 @@ The two-player smoke uses the same name list, the same screen record, and the sa
 - `ui.scaledWidth` and `ui.scaledHeight` are `Screen.width` and `Screen.height` (GUI pixels). An empty screen records the window's scaled size and an empty screen name.
 - Button ids come from the town bottom bar, the settings grid when that tab is active, the contract grid, and the platform-management grid. Other screens record an empty id list.
 - `showcase-shots.json` `ok` is true only when no grab failed, no writes are still pending, and the saved rows match `expected`. `expected` is `ShowcaseSelection.writtenShots` for that scene. `all` writes 19 shots.
-- `tools/showcase.sh` treats a missing manifest, `ok` not true, a failed row, or a missing PNG as a failed run. `tools/showcase-all-modes-smoke.sh` runs `all`, `town`, `block`, `all-views`, `two-towns`, and `testbed` for one loader.
+- `tools/showcase.sh` treats a missing manifest, `ok` not true, a failed row, or a missing PNG as a failed run. `tools/showcase-all-modes-smoke.sh` (the regression set) runs `all`, `town`, `block`, `all-views`, `two-towns`, and `testbed` for one loader. `all-views` is checked against its own manifest (every selected route ok with its PNG; a full run must select the whole registry) instead of a fixed 19.
+
+- Targeted runs: `tools/showcase-run.sh` asks `tools/showcase-select.py` for a plan from `git diff origin/main` and `tools/showcase-targets.json`; `--routes a,b` names routes, `--regression` runs the full set, `tools/ci.sh` defaults to targeted and `--full` runs the regression set on both loaders. `ShowcaseRouteSelection` narrows the all-views walk (`-PshowcaseRoutes`, property `businesscraft.showcase.routes`): a token is a route name or a group before the slash, an unknown token fails the run, and the manifest lists `selected` so the shell checks exactly those routes.
+- Daylight: `ShowcaseWorldBuild.pinDaytime` sets time 6000, clear weather, no daylight or weather cycle in every scene; the platform lamp shots set 18000 on purpose.
+- `tools/showcase.sh` ends with `RESULT <mode> <loader> PASS|FAIL <n>s shots=<n> ...` and writes `result.json`; it prints only unexpected `ERROR` lines of the client log (not the Gradle console) after hiding the patterns in `tools/known-noise.txt`.
 
 ## Edge cases & behaviors
 - `wait-for-popup` does not change the expected screen. The name popup stays on top of `TownInterfaceScreen`.
@@ -55,6 +61,8 @@ The two-player smoke uses the same name list, the same screen record, and the sa
 - Test file: `common/src/test/java/com/quackers29/businesscraft/client/showcase/ShowcaseSelectionTest.java` (written-shot counts, expected screens, pinned names)
 - Test file: `common/src/test/java/com/quackers29/businesscraft/client/showcase/testbed/ShowcaseTestbedCheckRegistryTest.java` (default set versus opt-in template)
 - Test file: `common/src/test/java/com/quackers29/businesscraft/client/showcase/MultiplayerSmokePlanTest.java` (ports, shot names, multiplayer town line)
+- Test file: `common/src/test/java/com/quackers29/businesscraft/client/showcase/ShowcaseRouteSelectionTest.java` (route and group tokens, unknown names, every route named in `tools/showcase-targets.json` exists)
+- `python3 tools/showcase-select.py --self-test` covers the path-to-scene mapping.
 - Not covered here: framebuffer pixels, or the dedicated-server boot smoke. The two-player run is [[Tourists/Spawning/Multiplayer Client Agreement]].
 
 ## Open questions

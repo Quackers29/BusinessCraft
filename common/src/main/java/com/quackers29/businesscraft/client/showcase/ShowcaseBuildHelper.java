@@ -33,8 +33,7 @@ final class ShowcaseBuildHelper {
                 return;
             }
             ServerLevel level = player.serverLevel();
-            level.setDayTime(6000);
-            level.setWeatherParameters(0, 0, false, false);
+            ShowcaseWorldBuild.pinDaytime(level);
             player.setGameMode(GameType.CREATIVE);
 
             BlockPos feet = player.blockPosition();

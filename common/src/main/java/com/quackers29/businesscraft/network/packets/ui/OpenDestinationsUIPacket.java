@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -44,8 +46,8 @@ public class OpenDestinationsUIPacket {
 
             Level level = player.level();
 
-            BlockEntity be = level.getBlockEntity(blockPos);
-            if (be instanceof TownInterfaceEntity townInterface) {
+            TownInterfaceEntity townInterface = LoadedTownAccess.getForPlatform(player, blockPos, platformId);
+            if (townInterface != null) {
                 Platform platform = townInterface.getPlatform(platformId);
                 if (platform != null) {
                     RefreshDestinationsPacket.sendForPlatform(player, blockPos, platformId, townInterface, platform);

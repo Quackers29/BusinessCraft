@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -82,8 +84,8 @@ public class PaymentBoardClaimPacket {
 
         try {
             // Get the town block entity
-            var blockEntity = serverLevel.getBlockEntity(townBlockPos);
-            if (blockEntity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterfaceEntity) {
+            var townInterfaceEntity = LoadedTownAccess.getIfLoadedInReach(player, townBlockPos);
+            if (townInterfaceEntity != null) {
                 // Get the town
                 var townId = townInterfaceEntity.getTownId();
                 if (townId != null) {
@@ -171,9 +173,9 @@ public class PaymentBoardClaimPacket {
                 }
             } else {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "Block at {} is not a TownInterfaceEntity", townBlockPos);
+                        "No Town Centre in reach at {}", townBlockPos);
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "§cError: Invalid town block"));
+                        "§cError: Town Centre is out of reach"));
             }
         } catch (Exception e) {
             LOGGER.error("Error handling claim request from player {}",

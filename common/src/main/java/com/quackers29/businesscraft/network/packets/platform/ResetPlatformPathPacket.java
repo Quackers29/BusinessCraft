@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
@@ -57,9 +59,9 @@ public class ResetPlatformPathPacket {
             if (!(senderObj instanceof ServerPlayer player)) return;
             
             ServerLevel level = player.serverLevel();
-            BlockEntity be = level.getBlockEntity(msg.townInterfacePos);
+            TownInterfaceEntity townInterfaceEntity = LoadedTownAccess.getForPlatform(player, msg.townInterfacePos, msg.platformId);
             
-            if (be instanceof TownInterfaceEntity townInterfaceEntity) {
+            if (townInterfaceEntity != null) {
                 Platform platform = townInterfaceEntity.getPlatform(msg.platformId);
                 if (platform != null) {
                     platform.setStartPos(null);

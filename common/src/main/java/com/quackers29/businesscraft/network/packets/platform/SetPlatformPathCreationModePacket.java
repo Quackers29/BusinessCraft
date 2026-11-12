@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -61,21 +63,20 @@ public class SetPlatformPathCreationModePacket {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (!(senderObj instanceof ServerPlayer player)) return;
             
-            Level level = player.level();
-            BlockEntity be = level.getBlockEntity(pos);
-            
-            if (be instanceof TownInterfaceEntity townInterface) {
+            if (!mode) {
+                // Leaving path mode only clears this player's own session, so it needs no reach.
+                PlatformPathSessions.clear(player.getUUID());
+                return;
+            }
+            TownInterfaceEntity townInterface = LoadedTownAccess.getForPlatform(player, pos, platformId);
+            if (townInterface != null) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Player {} is setting platform {} path creation mode to {} at {}", 
                     player.getName().getString(), platformId, mode, pos);
                 
-                if (mode) {
-                    PlatformPathSessions.begin(player.getUUID(), pos, platformId);
-                    Platform platform = townInterface.getPlatform(platformId);
-                    PlatformPathSync.show(player, townInterface, platform);
-                } else {
-                    PlatformPathSessions.clear(player.getUUID());
-                }
+                PlatformPathSessions.begin(player.getUUID(), pos, platformId);
+                Platform platform = townInterface.getPlatform(platformId);
+                PlatformPathSync.show(player, townInterface, platform);
                 
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Successfully set platform {} path creation mode to {} at {}", 
