@@ -337,7 +337,8 @@ public class VisitorProcessingHelper {
                 // Create bundled tourist arrival reward (combines fare + milestone rewards)
                 String originTownName = resolveTownName(serverLevel, record.getOriginTownId());
                 if (payment > 0 || milestoneResult.hasRewards()) {
-                    addBundledTouristReward(thisTown, originTownName, payment, milestoneResult, record.getCount());
+                    addBundledTouristReward(thisTown, originTownName, payment, milestoneResult, record.getCount(),
+                            averageDistance);
                     // Trigger callback to update client sync after bundled reward is added
                     if (changeCallback != null) {
                         changeCallback.run();
@@ -478,7 +479,7 @@ public class VisitorProcessingHelper {
      * rewards
      */
     private void addBundledTouristReward(Town town, String originTownName, int payment,
-            DistanceMilestoneHelper.MilestoneResult milestoneResult, int touristCount) {
+            DistanceMilestoneHelper.MilestoneResult milestoneResult, int touristCount, double travelDistance) {
         DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
                 "BUNDLED TOURIST REWARD - Creating bundled reward for town {} from {} with {} emeralds and {} milestone items",
                 town.getName(), originTownName, payment,
@@ -513,6 +514,8 @@ public class VisitorProcessingHelper {
                     if (payment > 0) {
                         rewardEntry.addMetadata("fareAmount", String.valueOf(payment));
                     }
+                    // Always record distance: fare-only arrivals have no milestone result.
+                    rewardEntry.setTravelDistance(travelDistance);
                     if (milestoneResult.hasRewards()) {
                         rewardEntry.addMetadata("milestoneDistance",
                                 String.valueOf((int) Math.round(milestoneResult.actualDistance)));
