@@ -196,6 +196,42 @@ public class TownInterfaceEntity extends BlockEntity
         updateInterfaceVM();
     }
 
+    private static Object viewModelPacket(BlockPos pos, Object vm) {
+        if (vm instanceof TownResourceViewModel rvm) {
+            return new ResourceViewModelSyncPacket(pos, rvm);
+        } else if (vm instanceof ProductionStatusViewModel pvm) {
+            return new ProductionViewModelSyncPacket(pos, pvm);
+        } else if (vm instanceof com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel uvm) {
+            return new com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket(pos, uvm);
+        } else if (vm instanceof com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel ivm) {
+            return new com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket(pos, ivm);
+        }
+        return null;
+    }
+
+    /**
+     * Sends every cached view-model to one player, dirty or not. The dirty flag is cleared
+     * after a send even when nobody was in range, so a player who opens the screen later
+     * would otherwise never receive the production/upgrade models and sit on "Loading...".
+     */
+    public void syncAllTownVMsTo(ServerPlayer player) {
+        if (level == null || level.isClientSide() || player == null) return;
+        if (vmCache.get(ProductionStatusViewModel.class) == null
+                || vmCache.get(com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.class) == null
+                || vmCache.get(TownResourceViewModel.class) == null) {
+            updateAllTownVMs();
+        }
+        BlockPos pos = getBlockPos();
+        for (Class<?> type : new Class<?>[] { TownResourceViewModel.class, ProductionStatusViewModel.class,
+                com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.class,
+                com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class }) {
+            Object packet = viewModelPacket(pos, vmCache.get(type));
+            if (packet != null) {
+                PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
+            }
+        }
+    }
+
     public void syncAllDirtyTownVMsToPlayers() {
         if (level == null || level.isClientSide()) return;
         if (!(level instanceof ServerLevel serverLevel)) return;
@@ -203,16 +239,7 @@ public class TownInterfaceEntity extends BlockEntity
         BlockPos pos = getBlockPos();
 
         vmCache.syncAllDirty(vm -> {
-            Object packet = null;
-            if (vm instanceof TownResourceViewModel rvm) {
-                packet = new ResourceViewModelSyncPacket(pos, rvm);
-            } else if (vm instanceof ProductionStatusViewModel pvm) {
-                packet = new ProductionViewModelSyncPacket(pos, pvm);
-            } else if (vm instanceof com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel uvm) {
-                packet = new com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket(pos, uvm);
-            } else if (vm instanceof com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel ivm) {
-                packet = new com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket(pos, ivm);
-            }
+            Object packet = viewModelPacket(pos, vm);
             if (packet != null) {
                 Object toSend = packet;
                 for (ServerPlayer player : serverLevel.players()) {
