@@ -54,6 +54,42 @@ class RewardEntryTest {
         PlatformAccess.registry = savedRegistry;
     }
 
+    // --- tourist travel distance shown on the Payment Board ---
+
+    private static RewardEntry fareOnlyArrival() {
+        return new RewardEntry(RewardSource.TOURIST_ARRIVAL, List.of(new ItemStack(Items.EMERALD, 1)), "ALL");
+    }
+
+    @Test
+    void travelDistance_fareOnlyArrival_isStoredAndRounded() {
+        RewardEntry e = fareOnlyArrival();
+        e.setTravelDistance(113.4);
+        assertEquals(113, e.getTravelDistanceMeters());
+        assertNull(e.getMetadata().get("milestoneDistance"));
+    }
+
+    @Test
+    void travelDistance_survivesNbtRoundTrip() {
+        RewardEntry e = fareOnlyArrival();
+        e.setTravelDistance(120);
+        assertEquals(120, RewardEntry.fromNBT(e.toNBT()).getTravelDistanceMeters());
+    }
+
+    @Test
+    void travelDistance_legacyMilestoneKeyStillRead() {
+        RewardEntry e = fareOnlyArrival();
+        e.addMetadata("milestoneDistance", "500");
+        assertEquals(500, e.getTravelDistanceMeters());
+    }
+
+    @Test
+    void travelDistance_missingOrBad_isZero() {
+        RewardEntry e = fareOnlyArrival();
+        assertEquals(0, e.getTravelDistanceMeters());
+        e.addMetadata("travelDistance", "abc");
+        assertEquals(0, e.getTravelDistanceMeters());
+    }
+
     // --- test double for registry (enables NBT fidelity + any debug paths) ---
 
     private static class TestRegistryHelper implements RegistryHelper {

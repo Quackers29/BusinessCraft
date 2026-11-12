@@ -452,7 +452,6 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
      */
     private String createTouristInfoDisplay(RewardEntry reward) {
         String touristCountStr = reward.getMetadata().get("touristCount");
-        String milestoneDistanceStr = reward.getMetadata().get("milestoneDistance");
 
         int touristCount = 1; // Default fallback
         if (touristCountStr != null && !touristCountStr.isEmpty()) {
@@ -470,21 +469,7 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             }
         }
 
-        // Get distance traveled from milestone distance metadata
-        int metersTravel = 0;
-        if (milestoneDistanceStr != null && !milestoneDistanceStr.isEmpty()) {
-            try {
-                metersTravel = Integer.parseInt(milestoneDistanceStr);
-            } catch (NumberFormatException e) {
-                metersTravel = 0; // Default fallback
-            }
-        }
-
-        if (metersTravel > 0) {
-            return touristCount + " x " + metersTravel + "m";
-        } else {
-            return touristCount + " x 0m";
-        }
+        return touristCount + " x " + reward.getTravelDistanceMeters() + "m";
     }
 
     /**
@@ -565,12 +550,12 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
 
         String originTown = reward.getMetadata().get("originTown");
         String fareAmount = reward.getMetadata().get("fareAmount");
-        String milestoneDistance = reward.getMetadata().get("milestoneDistance");
+        int travelMeters = reward.getTravelDistanceMeters();
 
         // Line 1: "Origin: [TOWN] ([DISTANCE])"
         String originText = "Origin: " + (originTown != null ? originTown : "Unknown");
-        if (milestoneDistance != null && !milestoneDistance.isEmpty()) {
-            originText += " (" + milestoneDistance + "m)";
+        if (travelMeters > 0) {
+            originText += " (" + travelMeters + "m)";
         }
         tooltipLines.add(net.minecraft.network.chat.Component.literal(originText)
                 .withStyle(ChatFormatting.GRAY));

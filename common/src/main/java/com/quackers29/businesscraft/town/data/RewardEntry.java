@@ -78,6 +78,33 @@ public class RewardEntry {
         this.metadata.put(key, value);
     }
     
+    /** Metadata key holding the paid travel distance (metres) of a tourist arrival. */
+    public static final String META_TRAVEL_DISTANCE = "travelDistance";
+
+    /** Records the paid travel distance, rounded to whole metres. */
+    public void setTravelDistance(double meters) {
+        addMetadata(META_TRAVEL_DISTANCE, String.valueOf((int) Math.round(meters)));
+    }
+
+    /**
+     * Travel distance in metres for display. Reads {@code travelDistance}, falling back to the
+     * legacy {@code milestoneDistance} (only set on milestone-paying arrivals in older saves).
+     * Returns 0 when neither is present or parseable.
+     */
+    public int getTravelDistanceMeters() {
+        for (String key : new String[] { META_TRAVEL_DISTANCE, "milestoneDistance" }) {
+            String v = metadata.get(key);
+            if (v != null && !v.isEmpty()) {
+                try {
+                    return Integer.parseInt(v);
+                } catch (NumberFormatException ignored) {
+                    // try next key
+                }
+            }
+        }
+        return 0;
+    }
+
     /**
      * Check if this reward has expired
      */
