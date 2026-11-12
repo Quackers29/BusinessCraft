@@ -150,6 +150,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                                 && inv.player instanceof net.minecraft.server.level.ServerPlayer sp) {
                             entity.updateInterfaceVM();
                             entity.syncAllDirtyTownVMsToPlayers();
+                            entity.syncAllTownVMsTo(sp);
                         }
 
                         // --- FIX: Sync Contract/Market Data for GPI Display ---
