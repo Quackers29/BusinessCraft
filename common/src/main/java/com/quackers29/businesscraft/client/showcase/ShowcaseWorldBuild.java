@@ -25,6 +25,21 @@ import java.util.UUID;
  * Shared world setup for showcase scenarios (pads, player-like town interface placement).
  */
 public final class ShowcaseWorldBuild {
+    /** Noon. Every showcase and smoke scene is lit the same way. */
+    public static final long SHOWCASE_DAY_TIME = 6000L;
+
+    /**
+     * Fixes the clock at noon with clear weather and no daylight or weather cycle, so shots
+     * from different runs differ only by what changed in the mod.
+     */
+    public static void pinDaytime(ServerLevel level) {
+        net.minecraft.server.MinecraftServer server = level.getServer();
+        level.setDayTime(SHOWCASE_DAY_TIME);
+        level.setWeatherParameters(0, 0, false, false);
+        level.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(false, server);
+        level.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_WEATHER_CYCLE).set(false, server);
+    }
+
     public record PlaceAttemptResult(
             boolean blockRemains,
             int townCountAfter,

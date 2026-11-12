@@ -2,6 +2,35 @@
 
 The testbed reuses the **two-town** showcase layout (town A on the pad, town B at minimum legal distance) and runs **pluggable checks** you can extend while developing features.
 
+## Choosing what to run
+
+| You want | Command |
+|---|---|
+| Screenshots for what you changed (the default) | `bash tools/showcase-run.sh` |
+| See the plan without running it | `bash tools/showcase-run.sh --dry-run` |
+| Specific routes or groups | `bash tools/showcase-run.sh --routes town/map,platform` |
+| Everything, before a release or after a shared UI/harness change | `bash tools/showcase-run.sh --regression` (or `bash tools/ci.sh --full`) |
+| One scene by hand | `bash tools/showcase.sh <mode> <forge\|fabric> [args]` |
+
+**Targeted mode.** `tools/showcase-select.py` lists the files that differ from `origin/main` (committed, uncommitted and untracked) and looks each one up in `tools/showcase-targets.json`. A rule adds routes (`route:town/payment`) and scenes (`mode:tourists`). Route tokens are an exact route name or a group: `platform` means every `platform/...` route. The routes run in one client session through `showcase.sh routes <loader> <list>`, which sets `-PshowcaseRoutes` and checks only those routes in the manifest (every selected route must be ok and have its PNG; an unknown route name fails the run).
+
+- A change to shared UI building blocks (theme, components, modals, grid, layout) selects the whole `all-views` walk.
+- A change to the harness itself (`client/showcase/`, the `tools/showcase*`/`mp-smoke`/`ci.sh` scripts, the `build.gradle` run config) selects the regression set.
+- A code change that no rule covers runs the `town` scene as a sanity check, and the unmapped paths are printed (`# unmapped: ...`). Add a rule for them.
+- Docs, vault notes, tests, tasks and data files select nothing.
+
+`ShowcaseRouteSelectionTest` fails when `showcase-targets.json` names a route that does not exist, so the map cannot drift when routes are renamed.
+
+**Regression set** (`--regression`, one loader per run, `--loader both` for two): `all`, `town`, `block`, `all-views`, `two-towns`, `testbed`. `tourists`, `tourist-screen`, `jade` and `map-sweep` are not in it; targeted mode picks them when their files change, or run them by hand.
+
+## Setup on a new machine
+
+- **Template world.** Every run copies a flat world. `showcase.sh` and `multiplayer-smoke.sh` look for it in this order: `SHOWCASE_TEMPLATE` (environment), `showcaseTemplate=` in `gradle.properties`, `/opt/businesscraft/superflat-template` (the cloud image), then `~/.cache/businesscraft/superflat-template`. When the chosen path has no `level.dat` it is built by booting the Forge dev server once (`bash tools/showcase-template.sh [dir]`, about 20 s after Gradle is warm). Set `SHOWCASE_TEMPLATE` to put it somewhere else.
+- **Display.** `DISPLAY` is used as is. On WSL2, WSLg sets `DISPLAY=:0` and real frames render with no extra setup. With no display, the scripts re-run themselves under `xvfb-run -a` when it is installed (`sudo apt install xvfb`).
+- **Gradle daemon.** Local runs reuse the daemon. `CI=true` or `BC_NO_DAEMON=1` adds `--no-daemon`.
+- **Sound and narrator noise.** `ALSOFT_DRIVERS=null` is exported so a machine without audio logs no OpenAL error. The narrator (flite) error cannot be switched off; `tools/known-noise.txt` lists the expected `ERROR` lines the scripts hide from their summary. The raw logs keep everything.
+- **Fixed lighting.** Every showcase and smoke scene sets the time to noon with the daylight and weather cycles off (`ShowcaseWorldBuild.pinDaytime`). Only the platform lamp shots change the time on purpose.
+
 ## Run
 
 ```bash
@@ -19,14 +48,19 @@ Showcase runs pin town names: the first Town Centre placed in the run is Brooksi
 
 ## Output layout
 
-Every `tools/showcase.sh` run writes a timestamped folder:
+Every `tools/showcase.sh` run writes a timestamped folder and ends with one line to grep:
+
+```text
+RESULT <mode> <loader> PASS|FAIL <seconds>s shots=<n> [failures=<n>] dir=<run dir>
+```
 
 ```text
 showcase-output/<YYYY-MM-DD_HHMMSS>_<mode>_<loader>/
+  result.json              # {status, mode, loader, seconds, shots, failures[], dir}
   screenshots/
   logs/client.log          # Minecraft latest.log (full client session)
   logs/server.log          # Dedicated server log when present; else integrated note
-  logs/gradle-console.log  # Gradle + JVM console
+  logs/gradle-console.log  # Gradle + JVM console (the script never prints from it)
   run-meta.json
   … mode-specific JSON / steps.log / checks.log / index.html …
 ```

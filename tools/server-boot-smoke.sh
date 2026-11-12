@@ -6,18 +6,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-
-kill_tree() {
-    local pid="$1"
-    local child
-    if [[ -z "$pid" ]]; then
-        return
-    fi
-    for child in $(ps -o pid= --ppid "$pid" 2>/dev/null || true); do
-        kill_tree "$child"
-    done
-    kill "$pid" 2>/dev/null || true
-}
+# shellcheck source=tools/common-lib.sh
+source "$ROOT/tools/common-lib.sh"
 
 smoke_one() {
     local loader="$1"
@@ -25,10 +15,13 @@ smoke_one() {
     local game_log="$ROOT/$loader/run/logs/latest.log"
     mkdir -p "$ROOT/$loader/run"
     printf 'eula=true\n' > "$ROOT/$loader/run/eula.txt"
+    # Flat world on a free port, so a busy 25565 or an old world cannot fail the boot.
+    bc_write_server_properties "$ROOT/$loader/run/server.properties" "$(bc_free_port 25565)"
+    rm -rf "$ROOT/$loader/run/world"
     rm -f "$game_log" "$log"
 
     echo "Starting :${loader}:runServer"
-    bash ./gradlew --no-daemon ":${loader}:runServer" --console=plain >"$log" 2>&1 &
+    bc_gradle ":${loader}:runServer" --console=plain >"$log" 2>&1 &
     local pid=$!
     local deadline=$((SECONDS + 420))
 
@@ -61,6 +54,18 @@ smoke_one() {
     return 1
 }
 
-smoke_one forge
-smoke_one fabric
+FAILED=()
+for loader in forge fabric; do
+    started=$SECONDS
+    if smoke_one "$loader"; then
+        echo "RESULT server-boot $loader PASS $((SECONDS - started))s"
+    else
+        echo "RESULT server-boot $loader FAIL $((SECONDS - started))s"
+        FAILED+=("$loader")
+    fi
+done
+if (( ${#FAILED[@]} > 0 )); then
+    echo "Dedicated server smoke failed: ${FAILED[*]}" >&2
+    exit 1
+fi
 echo "Dedicated server smoke passed"

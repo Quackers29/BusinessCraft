@@ -127,8 +127,7 @@ public final class ShowcaseJade {
                 return;
             }
             ServerLevel level = player.serverLevel();
-            level.setDayTime(6000);
-            level.setWeatherParameters(0, 0, false, false);
+            ShowcaseWorldBuild.pinDaytime(level);
             BlockPos feet = player.blockPosition();
             BlockPos placeAt = new BlockPos(feet.getX() + 8, feet.getY(), feet.getZ());
             var result = ShowcaseWorldBuild.placeTownInterfaceLikePlayer(player, level, placeAt);

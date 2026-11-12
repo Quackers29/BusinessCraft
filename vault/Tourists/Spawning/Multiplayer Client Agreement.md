@@ -14,7 +14,7 @@ A dedicated server is the place a shared tourism line actually lives. Each playe
 ## How it works (process view)
 Forge runs first on port 25565, then Fabric on port 25566. The server lays out Oakvale, Hillcrest, and Rivertown in a line, with plain minecart rail between them and no Create trains. It parks two named tourists in front of the Oakvale platform and seeds that platform's AUTO learned table (Hillcrest stronger than Rivertown) instead of waiting for a cart to finish the trip. Town recipe ticks and live tourist spawning stay frozen so the numbers cannot change between the two players.
 
-BC_Alpha and BC_Beta join from separate game folders, each holding a conductor clipboard. They photograph the name tags, the track, and the open platform screen. Each report names the screen that was open, its tab, its buttons, and its scaled size, and lists whether each of the three pictures saved. The town names are fixed (Oakvale, Hillcrest, Rivertown). The smoke fails when the reports disagree, when a picture did not save, when the seeded scene is missing, or when a player crashes, disconnects, or times out.
+BC_Alpha and BC_Beta join from separate game folders, each holding a conductor clipboard. They photograph the name tags, the track, and the open platform screen. Each report names the screen that was open, its tab, its buttons, and its scaled size, and lists whether each of the three pictures saved. The town names are fixed (Oakvale, Hillcrest, Rivertown). BC_Beta also does a reach check: it walks 120 blocks from the Oakvale platform, sends two platform packets for it, walks back, and the platform must still be enabled and AUTO, with the server having refused both ([[Town/Platforms/Packet Reach Checks]]). The smoke fails when the reports disagree, when a picture did not save, when the seeded scene is missing, or when a player crashes, disconnects, or times out.
 
 ---
 > [!info]- Deep reference
@@ -38,6 +38,8 @@ BC_Alpha and BC_Beta join from separate game folders, each holding a conductor c
 - `TownManager.tick` returns immediately while the property is `setup`, so population and tourist counts stay put.
 - Town names are `ShowcaseTownNames` while the server property is `setup`: Oakvale, Hillcrest, Rivertown.
 - Comparison ignores `viewer`. Float strengths may differ by 0.01. Both sides must still contain Oakvale, Hillcrest, Rivertown, mode `auto`, enabled town Hillcrest, learned routes Hillcrest and Rivertown, name tags Morgan and Eleanor, clipboard lines `Oakvale -> Hillcrest` and `Oakvale -> Rivertown`, screen `PlatformInterfaceScreen`, and saved shots `mp_nametags`, `mp_track`, `mp_platform`. The `ui` object (screen, tab, button ids, scaled size) is compared too.
+- Reach stage (BC_Beta only, `businesscraft.multiplayerSmoke.reach=true`): `MultiplayerSmokePlan.REACH_TEST_DISTANCE` = 120 blocks along +X, packets `SetPlatformEnabledPacket(false)` and `SetPlatformDestinationModePacket(SPECIFIC)`. The observation gets `reach {sent, distance, packets, stateUnchanged}`; the comparator requires `sent`, `distance >= 100`, `stateUnchanged`, drops `reach` from the alpha/beta diff, and the script requires at least two `BC_REACH_REJECT player=BC_Beta` server log lines.
+- If the default port is busy the script uses the next free one and passes it as `businesscraft.multiplayerSmoke.port`.
 - `tools/multiplayer-smoke.sh` also requires each client's `showcase-shots.json` to list those three shots with `ok` true and the matching PNG on disk.
 - Players are offline names `BC_Alpha` and `BC_Beta` with the vanilla offline UUID (`OfflinePlayer:` + name, MD5 version-3).
 
@@ -50,7 +52,8 @@ BC_Alpha and BC_Beta join from separate game folders, each holding a conductor c
 ## Test coverage
 - Test file: `common/src/test/java/com/quackers29/businesscraft/client/showcase/MultiplayerSmokePlanTest.java` (ports, shot names, pinned town line)
 - The headless game run is `bash tools/multiplayer-smoke.sh`.
-- `bash tools/multiplayer-smoke.sh --self-test` covers the comparator: agreement within tolerance, a clipboard mismatch, two empty town lists, and a wrong screen name.
+- `bash tools/multiplayer-smoke.sh --self-test` covers the comparator: agreement within tolerance, a clipboard mismatch, two empty town lists, a wrong screen name, and the reach result (missing, applied, or sent from too close).
+- `common/src/test/java/com/quackers29/businesscraft/network/LoadedTownAccessTest.java` covers the distance rule the reach stage exercises.
 
 ## Open questions
 - First shader compile on a fresh game directory dominates the runtime. Later runs of the same directory are faster; the script still starts from the directories it already created.
@@ -62,3 +65,4 @@ BC_Alpha and BC_Beta join from separate game folders, each holding a conductor c
 - [[Town/Data Synchronization/Client Data Synchronization]]
 - [[Tourists/Tourists Overview]]
 - [[UI/Showcase Harness]]
+- [[Town/Platforms/Packet Reach Checks]]

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Compare two multiplayer smoke observation files.
 
-Exits 0 when both clients saw the seeded scene and agree with each other.
+Exits 0 when both clients saw the seeded scene and agree with each other, and the
+client that ran the reach stage (BC_Beta) shows its out-of-reach platform packets changed nothing.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ EXPECTED_ENABLED = ["Hillcrest"]
 EXPECTED_NAMES = {"Morgan", "Eleanor"}
 EXPECTED_LINES = {"Oakvale -> Hillcrest", "Oakvale -> Rivertown"}
 EXPECTED_SCREEN = "PlatformInterfaceScreen"
+MIN_REACH_DISTANCE = 100
 EXPECTED_SHOTS = ["mp_nametags", "mp_track", "mp_platform"]
 
 
@@ -65,9 +67,25 @@ def required_issues(doc: dict, label: str) -> list[str]:
     return issues
 
 
+def reach_issues(doc: dict, label: str) -> list[str]:
+    reach = doc.get("reach")
+    if not isinstance(reach, dict):
+        return [f"{label}: no reach stage result"]
+    issues: list[str] = []
+    if reach.get("sent") is not True:
+        issues.append(f"{label}: reach stage never sent its packets")
+    if (reach.get("distance") or 0) < MIN_REACH_DISTANCE:
+        issues.append(f"{label}: reach packets were sent from {reach.get('distance')} blocks, "
+                      f"expected at least {MIN_REACH_DISTANCE}")
+    if reach.get("stateUnchanged") is not True:
+        issues.append(f"{label}: an out-of-reach platform packet changed the platform")
+    return issues
+
+
 def comparable(doc: dict) -> dict:
     body = copy.deepcopy(doc)
     body.pop("viewer", None)
+    body.pop("reach", None)
     body.pop("failure", None)
     return body
 
@@ -108,13 +126,15 @@ def unified(left: dict, right: dict, left_name: str, right_name: str) -> str:
 
 
 def evaluate(left: dict, right: dict, left_name: str = "alpha", right_name: str = "beta") -> tuple[list[str], str]:
+    """The right-hand document is the one that ran the reach stage."""
     issues = required_issues(left, left_name) + required_issues(right, right_name)
+    issues.extend(reach_issues(right, right_name))
     issues.extend(differences(comparable(left), comparable(right)))
     return issues, unified(left, right, left_name, right_name)
 
 
-def sample(clipboard: str, strength: float = 0.625) -> dict:
-    return {
+def sample(clipboard: str, strength: float = 0.625, reach: bool = False) -> dict:
+    doc = {
         "ok": True,
         "failure": "",
         "viewer": "BC_Alpha",
@@ -155,10 +175,14 @@ def sample(clipboard: str, strength: float = 0.625) -> dict:
             for name in ("mp_nametags", "mp_track", "mp_platform")
         ],
     }
+    if reach:
+        doc["reach"] = {"sent": True, "distance": 120, "packets": ["SetPlatformEnabledPacket"],
+                        "stateUnchanged": True}
+    return doc
 
 
 def self_test() -> None:
-    agree, diff = evaluate(sample("Oakvale -> Hillcrest"), sample("Oakvale -> Hillcrest", 0.626))
+    agree, diff = evaluate(sample("Oakvale -> Hillcrest"), sample("Oakvale -> Hillcrest", 0.626, True))
     if agree:
         raise SystemExit("self-test: identical observations were reported as different: " + "; ".join(agree))
     if "strength" in diff and "-  0.625" in diff:
@@ -166,7 +190,7 @@ def self_test() -> None:
         # The issue list is what fails the run. A textual diff alone must not fail.
         pass
     left = sample("Oakvale -> Hillcrest")
-    right = sample("Oakvale -> Somewhere")
+    right = sample("Oakvale -> Somewhere", reach=True)
     disagree, diff = evaluate(left, right)
     if not disagree:
         raise SystemExit("self-test: clipboard disagreement was accepted")
@@ -184,6 +208,20 @@ def self_test() -> None:
     screen_issues, _ = evaluate(wrong_screen, wrong_screen)
     if not any("screen" in issue for issue in screen_issues):
         raise SystemExit("self-test: wrong screen was accepted")
+    clean = evaluate(sample("Oakvale -> Hillcrest"), sample("Oakvale -> Hillcrest", reach=True))[0]
+    if clean:
+        raise SystemExit("self-test: matching observations were rejected: " + "; ".join(clean))
+    missing_reach = evaluate(sample("Oakvale -> Hillcrest"), sample("Oakvale -> Hillcrest"))[0]
+    if not any("reach" in issue for issue in missing_reach):
+        raise SystemExit("self-test: a missing reach stage was accepted")
+    applied = sample("Oakvale -> Hillcrest", reach=True)
+    applied["reach"]["stateUnchanged"] = False
+    if not any("changed the platform" in issue for issue in evaluate(sample("Oakvale -> Hillcrest"), applied)[0]):
+        raise SystemExit("self-test: an applied out-of-reach packet was accepted")
+    near = sample("Oakvale -> Hillcrest", reach=True)
+    near["reach"]["distance"] = 5
+    if not any("blocks" in issue for issue in evaluate(sample("Oakvale -> Hillcrest"), near)[0]):
+        raise SystemExit("self-test: a reach stage from 5 blocks was accepted")
     print("mp-smoke compare self-test passed")
 
 

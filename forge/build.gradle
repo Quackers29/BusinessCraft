@@ -107,6 +107,10 @@ tasks.configureEach { task ->
         if (testbedChecks != null) {
             task.systemProperty 'businesscraft.showcase.testbed.checks', testbedChecks.toString()
         }
+        def showcaseRoutes = project.findProperty('showcaseRoutes')
+        if (showcaseRoutes != null && !showcaseRoutes.toString().trim().isEmpty()) {
+            task.systemProperty 'businesscraft.showcase.routes', showcaseRoutes.toString()
+        }
         def showcaseMapTag = project.findProperty('showcaseMapTag')
         if (showcaseMapTag != null) {
             task.systemProperty 'businesscraft.showcase.mapTag', showcaseMapTag.toString()

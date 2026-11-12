@@ -428,9 +428,14 @@ For automated two-town scenarios and feature checks in a throwaway client world,
 Quick start:
 
 ```bash
+bash tools/ci.sh                          # unit tests, server boot, showcase for what changed, two-client smoke
+bash tools/ci.sh --full                   # same, with the full regression showcase on both loaders
+bash tools/showcase-run.sh                # screenshots for the screens the git diff touches
 bash tools/showcase.sh testbed forge
 bash tools/showcase-map-sweep.sh forge   # map modal across resolutions / GUI scales
 ```
+
+No display needed on WSL2 (WSLg works as is) or on a headless box with `xvfb-run` installed. A missing superflat template world is built on first use.
 
 Outputs land under **`showcase-output/`** (see [tools/SHOWCASE-TESTBED.md](tools/SHOWCASE-TESTBED.md)).
 

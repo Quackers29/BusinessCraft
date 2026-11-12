@@ -6,5 +6,5 @@ simulationDistance:6
 maxFps:60
 enableVsync:false
 guiScale:2
-resourcePacks:["vanilla","file/readable-menus"]
+resourcePacks:["vanilla"]
 lang:en_us

@@ -72,19 +72,29 @@ public final class ShowcaseAllViews {
     }
 
     public static void reset(Minecraft minecraft) {
-        routes = routeOverride != null ? List.copyOf(routeOverride) : ShowcaseRouteRegistry.allRoutes();
+        try {
+            routes = routeOverride != null
+                    ? List.copyOf(routeOverride)
+                    : ShowcaseRouteSelection.select(ShowcaseRouteRegistry.allRoutes(),
+                            System.getProperty(ShowcaseRouteSelection.PROPERTY));
+        } catch (IllegalArgumentException e) {
+            LOGGER.error("Showcase failed: {}", e.getMessage());
+            routes = List.of();
+            stepFailure = e.getMessage();
+            exitCode = 1;
+        }
         routeIndex = 0;
         stepIndex = 0;
         waitTicks = 0;
         settleTicks = 0;
         gapTicks = 0;
         phase = Phase.STEPS;
-        stepFailure = null;
+        stepFailure = routes.isEmpty() ? stepFailure : null;
         manifestEntries.clear();
         quitting = false;
         quitTicks = 0;
         saved = 0;
-        exitCode = 0;
+        exitCode = stepFailure == null ? 0 : 1;
         runComplete = false;
         initialized = true;
         deleteManifest(minecraft);
@@ -235,6 +245,7 @@ public final class ShowcaseAllViews {
         root.put("loader", loaderName());
         root.put("complete", complete);
         root.put("routes", manifestEntries);
+        root.put("selected", routes.stream().map(ShowcaseRoute::name).toList());
         root.put("registry", ShowcaseRouteRegistry.allRoutes().stream().map(ShowcaseRoute::name).toList());
         try (Writer writer = Files.newBufferedWriter(manifestPath(minecraft), StandardCharsets.UTF_8)) {
             GSON.toJson(root, writer);

@@ -1,0 +1,27 @@
+{
+  "comment": "Maps changed repo paths to showcase work for tools/showcase-run.sh. First matching regex per rule adds its targets; every rule is checked. Targets: route:<token> (a route name or group such as town/map or platform), mode:<showcase.sh mode and args>, full (run the whole regression set). A path that matches no rule and is not in ignore is reported as unmapped and gets the sanity scene.",
+  "sanity": "mode:town",
+  "ignore": [
+    "\\.md$", "^vault/", "^docs/", "^tasks/", "^CHANGELOG", "^LICENSE", "^\\.github/", "^\\.gitignore$",
+    "/src/test/", "^tools/(bc-dump-viewer|server-boot-smoke|MULTIPLAYER|SHOWCASE)", "^gradle", "^forge/src/main/resources/META-INF",
+    "/lang/", "^fabric/\\.gradle/", "^common/src/main/resources/data/"
+  ],
+  "rules": [
+    {"match": "^tools/(showcase|mp-smoke|multiplayer-smoke|ci\\.sh|common-lib|known-noise)|/client/showcase/|^(forge|fabric)/build\\.gradle$|MultiplayerSmoke", "targets": ["full"]},
+    {"match": "/ui/(theme|components|modal|grid|layout|builders|templates|state|interfaces)/|/ui/screens/BaseTownScreen|/assets/businesscraft/textures/gui", "targets": ["mode:all-views"]},
+    {"match": "/ui/screens/town/TownInterfaceScreen|/ui/tabs/|/ui/managers/(Town|Button|Settings|Resource|Production)|block/TownInterfaceBlock|block/entity/TownInterfaceEntity|menu/TownInterfaceMenu|TownInterfaceViewModel|TownOverviewSync", "targets": ["route:town/overview", "route:town/resources", "route:town/production", "route:town/settings", "mode:block"]},
+    {"match": "LoadedTownAccess|BaseBlockEntityPacket|network/packets/town/|network/packets/ui/Open(TownInterface|DestinationsUI)", "targets": ["route:town/overview", "route:town/edit-name", "route:platform/interface"]},
+    {"match": "TownMap|ClientTownMapCache|RequestTownMapData", "targets": ["route:town/map"]},
+    {"match": "TownLeaderboard|TownDetail|/scoreboard/|Leaderboard", "targets": ["route:town/ranking", "route:town/town-detail"]},
+    {"match": "PaymentBoard|TownPaymentBoard|PaymentResult", "targets": ["route:town/payment"]},
+    {"match": "ContractBoard|ContractDetail|/contract/|ContractSync|ContractList", "targets": ["route:town/contracts", "route:town/contract-detail"]},
+    {"match": "/economy/|/trade/|TradeResource|TradingViewModel|MarketViewModel|BCModalInventory", "targets": ["route:town/trade", "mode:testbed trade-contract"]},
+    {"match": "VisitHistory|/town/data/TownVisit", "targets": ["route:town/visitor-history"]},
+    {"match": "TownNamePopup|SetTownName", "targets": ["route:town/edit-name"]},
+    {"match": "/platform/|/block/.*Platform|block/entity/Platform|menu/Platform|network/packets/platform/|PlatformInterface|PlatformManagement", "targets": ["route:platform", "mode:platform"]},
+    {"match": "TouristScreen|menu/TouristMenu|TouristTradeCatalog", "targets": ["route:tourist", "mode:tourist-screen"]},
+    {"match": "/entity/Tourist|/entity/tourist/|/client/(render|model)|/assets/businesscraft/(models|textures/entity)", "targets": ["mode:tourists"]},
+    {"match": "/integration/|Jade", "targets": ["mode:jade"]},
+    {"match": "ProductionTooltip|/production/|ui/.*Upgrade", "targets": ["route:town/production", "mode:production-tooltip"]}
+  ]
+}

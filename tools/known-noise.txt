@@ -1,0 +1,9 @@
+# Extended regexes (grep -E), one per line. A Minecraft log ERROR line that matches any of
+# these is expected on a dev machine and is hidden from the problem summary the scripts print.
+# The full log is still copied to showcase-output/<run>/logs/.
+Error while loading the narrator
+Failed to load library flite
+Error starting SoundSystem
+Failed to open OpenAL device
+No data fixer registered for tourist
+No key layers in MapLike

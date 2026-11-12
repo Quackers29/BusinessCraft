@@ -319,10 +319,7 @@ public final class Showcase {
                 return;
             }
             ServerLevel level = player.serverLevel();
-            level.setDayTime(6000);
-            level.setWeatherParameters(0, 0, false, false);
-            level.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(false, server);
-            level.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_WEATHER_CYCLE).set(false, server);
+            ShowcaseWorldBuild.pinDaytime(level);
             level.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DOMOBSPAWNING).set(false, server);
             player.setGameMode(GameType.CREATIVE);
 

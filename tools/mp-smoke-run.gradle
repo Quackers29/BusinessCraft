@@ -30,7 +30,16 @@ tasks.configureEach { task ->
             return
         }
         def forge = task.class.methods.any { it.name == 'getRunConfig' }
-        def spec = forge ? project.dumpForge(task) : project.dumpFabric(task)
+        def spec
+        try {
+            spec = forge ? project.dumpForge(task) : project.dumpFabric(task)
+        } catch (ReflectiveOperationException | MissingPropertyException | MissingMethodException e) {
+            // This file reads private ForgeGradle / Loom internals. Say so instead of a bare stack trace.
+            throw new org.gradle.api.GradleException(
+                    "mp-smoke-run.gradle could not read the ${task.project.name} run config; the " +
+                    "ForgeGradle or Loom plugin was probably upgraded. Update dumpForge/dumpFabric " +
+                    "in tools/mp-smoke-run.gradle (${e.class.simpleName}: ${e.message})", e)
+        }
         def file = project.file(dump.toString())
         file.parentFile.mkdirs()
         file.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(spec))
