@@ -64,6 +64,7 @@ public final class MultiplayerSmokeServer {
     }
 
     public static void initialize() {
+        ShowcasePlayServer.initialize();
         if (!ENABLED || PlatformAccess.getEvents() == null) {
             return;
         }
@@ -71,6 +72,7 @@ public final class MultiplayerSmokeServer {
     }
 
     public static void onLevelTick(ServerLevel level) {
+        ShowcasePlayServer.onLevelTick(level);
         if (!ENABLED || started || level.dimension() != Level.OVERWORLD) {
             return;
         }
@@ -152,7 +154,7 @@ public final class MultiplayerSmokeServer {
         }
     }
 
-    private static UUID placeTown(ServerLevel level, BlockPos placeAt, String name) {
+    static UUID placeTown(ServerLevel level, BlockPos placeAt, String name) {
         ShowcaseWorldBuild.preparePad(level, placeAt);
         level.setBlock(placeAt, CommonModBlocks.TOWN_INTERFACE_BLOCK.get().defaultBlockState(), 3);
         if (!(level.getBlockEntity(placeAt) instanceof TownInterfaceEntity townEntity)) {
@@ -171,7 +173,7 @@ public final class MultiplayerSmokeServer {
         return id;
     }
 
-    private static TownInterfaceEntity townEntity(ServerLevel level, BlockPos pos) {
+    static TownInterfaceEntity townEntity(ServerLevel level, BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof TownInterfaceEntity town) {
             return town;
         }

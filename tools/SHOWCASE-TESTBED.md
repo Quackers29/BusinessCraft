@@ -124,3 +124,30 @@ register("my-feature", MyFeatureCheck::new);
 ```
 
 Use `context.townAPos()`, `context.townBPos()`, `context.townAId()`, and `context.put(...)` to share data between ticks.
+
+## Play session: look around by hand
+
+`tools/showcase-play.sh` is the human entry point. The smoke screenshots and exits; this stays up until you stop it.
+
+```bash
+bash tools/showcase-play.sh start            # Forge (default); `start fabric` for Fabric
+bash tools/showcase-play.sh status           # running? loader, port, join addresses, logs
+bash tools/showcase-play.sh stop             # save the world, stop the server and the client it opened
+```
+
+`start` resolves the dev server and client commands with Gradle (daemon reused locally), copies the superflat template to `<loader>/run-play-server/world`, boots a dedicated dev server (`online-mode=false`, view distance 10), waits for `Done (` and the world-build marker (`showcase-play-ready.json`), then opens one visible client (`<loader>/run-play-client`, render distance 12, 144 FPS, `pauseOnLostFocus:false`, `skipMultiplayerWarning:true`, 1280x720) connected with `--quickPlayMultiplayer`. Warm Gradle: about 30 s. With no display it starts the server only (never xvfb: it would die with the script). `BC_PLAY_NAME` sets the player name, `BC_PLAY_NO_CLIENT=1` skips the client.
+
+Join from elsewhere: `localhost:<port>` (WSL2 forwards it to Windows), or the LAN address `status` prints. Port 25565 (Forge) or 25566 (Fabric), the next free one when busy. Minecraft 1.20.1, offline mode, any username, BusinessCraft for that loader installed.
+
+The pid/start-time record lives in `showcase-output/play-session.env`. `stop` signals only those pids (start time must match, so a reused pid is never touched), is safe to repeat, and leaves a client you started yourself alone. Logs: `showcase-output/<timestamp>_play_<loader>/logs`.
+
+### What the world holds
+
+Four towns from `ShowcasePlayLayout`: Oakvale (0,0), Hillcrest (0,-120), Rivertown (0,-240), Pinewood (150,-120), at least 100 apart. You spawn south of Oakvale facing the Town Centre.
+
+- Town Centres: stocked resources, visit history, payment-board rewards, tourist capacity, open auctions (Pinewood diamonds, Hillcrest coal, Oakvale bread) and one completed trade.
+- Oakvale ticket machines: SPECIFIC (on the rail line), AUTO (learned routes 5:3, radius 5, spread 4), ANY, and one switched off (dark lamp). Hillcrest, Rivertown and Pinewood each have a line platform.
+- Rail line: carts wait at each departure stop, tourists board, a scripted dispatcher drives them 113 blocks north to the next town, then resets. Carts are driven by `ShowcasePlayServer.dispatch`, not redstone.
+- Five named tourists by the spawn, a chest with the Conductor's Clipboard and a guide book, 13 signs. Noon, no daylight or weather cycle.
+
+Code: `ShowcasePlayServer` (build and dispatcher), `ShowcasePlayLayout` (plan, unit tested). It is selected with `-PmpSmoke=play` and hooked from `MultiplayerSmokeServer`. It is not part of targeted showcase selection (`showcase-targets.json` ignores it).
