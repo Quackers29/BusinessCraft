@@ -45,3 +45,7 @@ showcase-output/<YYYY-MM-DD_HHMMSS>_mp-smoke_<loader>/
 ## Timing
 
 A cold client compile plus two headless windows is the slow part. Expect several minutes per loader on the cloud machine, about 90 seconds once Gradle is warm on a fast PC (the reach stage adds a few seconds). The server must print `MP_SMOKE_READY` within 7 minutes. Each client has 15 minutes to write its observation after launch. Heaps are 1536m for the server and 1280m for each client.
+
+## Playing it by hand
+
+To walk the showcase world yourself instead of running this smoke, use `bash tools/showcase-play.sh start` and `stop`. See [SHOWCASE-TESTBED.md](SHOWCASE-TESTBED.md#play-session-look-around-by-hand).

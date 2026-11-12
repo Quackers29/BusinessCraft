@@ -4,10 +4,12 @@
 /common/logs
 /forge/run
 /forge/run-mp-*/
+/forge/run-play-*/
 /forge/build
 /fabric/build
 /fabric/run
 /fabric/run-mp-*/
+/fabric/run-play-*/
 /showcase-output/
 tools/__pycache__/
 # Obsidian local UI state (per-machine; not shared docs)

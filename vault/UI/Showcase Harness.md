@@ -33,6 +33,7 @@ The two-player smoke uses the same name list, the same screen record, and the sa
 |---|---|---|
 | `ShowcaseTownNames` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcaseTownNames.java` | Brookside then Hillcrest in a showcase; Oakvale, Hillcrest, Rivertown when `businesscraft.multiplayerSmoke=setup` |
 | `MultiplayerSmokePlan` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/MultiplayerSmokePlan.java` | Ports 25565 / 25566 and the three client shot names |
+| `ShowcasePlayServer` / `ShowcasePlayLayout` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcasePlayServer.java` | Playable world for `tools/showcase-play.sh` (`-PmpSmoke=play`): four towns, platforms in every mode, scripted cart line, signs, guide chest. Never quits; stopped by the script. Layout tests in `ShowcasePlayLayoutTest` |
 | `TownInterfaceBlock.setPlacedBy` | `common/src/main/java/com/quackers29/businesscraft/block/TownInterfaceBlock.java` | Uses the pinned name during a showcase run |
 | `ShowcaseUiSnapshot.capture` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcaseUiSnapshot.java` | Screen, tab, button ids, scaled size |
 | `ShowcaseRoute.expectedScreen` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcaseRoute.java` | Last `wait-for-screen` class name |

@@ -7,3 +7,4 @@ Error starting SoundSystem
 Failed to open OpenAL device
 No data fixer registered for tourist
 No key layers in MapLike
+CoreModBaseTransformer/COREMOD\]: Error occurred applying transform of coremod coremods/field_to_method\.js

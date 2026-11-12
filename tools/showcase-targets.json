@@ -3,11 +3,11 @@
   "sanity": "mode:town",
   "ignore": [
     "\\.md$", "^vault/", "^docs/", "^tasks/", "^CHANGELOG", "^LICENSE", "^\\.github/", "^\\.gitignore$",
-    "/src/test/", "^tools/(bc-dump-viewer|server-boot-smoke|MULTIPLAYER|SHOWCASE)", "^gradle", "^forge/src/main/resources/META-INF",
+    "/src/test/", "^tools/(bc-dump-viewer|server-boot-smoke|showcase-play|MULTIPLAYER|SHOWCASE)", "/client/showcase/ShowcasePlay", "^gradle", "^forge/src/main/resources/META-INF",
     "/lang/", "^fabric/\\.gradle/", "^common/src/main/resources/data/"
   ],
   "rules": [
-    {"match": "^tools/(showcase|mp-smoke|multiplayer-smoke|ci\\.sh|common-lib|known-noise)|/client/showcase/|^(forge|fabric)/build\\.gradle$|MultiplayerSmoke", "targets": ["full"]},
+    {"match": "^tools/(showcase(?!-play)|mp-smoke|multiplayer-smoke|ci\\.sh|common-lib|known-noise)|/client/showcase/(?!ShowcasePlay)|^(forge|fabric)/build\\.gradle$|MultiplayerSmoke", "targets": ["full"]},
     {"match": "/ui/(theme|components|modal|grid|layout|builders|templates|state|interfaces)/|/ui/screens/BaseTownScreen|/assets/businesscraft/textures/gui", "targets": ["mode:all-views"]},
     {"match": "/ui/screens/town/TownInterfaceScreen|/ui/tabs/|/ui/managers/(Town|Button|Settings|Resource|Production)|block/TownInterfaceBlock|block/entity/TownInterfaceEntity|menu/TownInterfaceMenu|TownInterfaceViewModel|TownOverviewSync", "targets": ["route:town/overview", "route:town/resources", "route:town/production", "route:town/settings", "mode:block"]},
     {"match": "LoadedTownAccess|BaseBlockEntityPacket|network/packets/town/|network/packets/ui/Open(TownInterface|DestinationsUI)", "targets": ["route:town/overview", "route:town/edit-name", "route:platform/interface"]},
