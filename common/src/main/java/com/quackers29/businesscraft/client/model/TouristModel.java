@@ -118,29 +118,32 @@ public class TouristModel extends PlayerModel<TouristEntity> {
         addCamera(root, "accessory_camera");
         addSuitcase(root, "accessory_suitcase");
         addBackpack(root, "accessory_backpack");
-        // Right-hand map. The sheet pivot sits in the palm (arm y ≈ 9 is the fist;
-        // y = -2 is the shoulder). The tilt opens the sheet up and outward.
+        // Right-hand map. The pivot is in the palm and the sheet extends outward
+        // from that corner (arm y ≈ 9 is the fist; y = -2 is the shoulder).
         PartDefinition mapRoot = root.addOrReplaceChild("accessory_map", CubeListBuilder.create(), PartPose.ZERO);
         mapRoot.addOrReplaceChild("sheet",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-4, 0, -3, 8, 1, 6),
-                PartPose.offsetAndRotation(-1.0F, 9.5F, -1.3F, -1.0F, 0.40F, 0.05F));
+                CubeListBuilder.create().texOffs(0, 0).addBox(-7.0F, 0.0F, -5.0F, 8, 1, 6),
+                PartPose.offsetAndRotation(-1.0F, 9.2F, -1.0F, -0.55F, 0.20F, -0.05F));
 
-        // Open umbrella gripped in the left fist. The shaft pivot is the palm;
-        // the shaft leans up and out so the canopy sits beside the shoulder
-        // instead of lying across the chest.
+        // Open umbrella. Pivot is the front of the left fist. Positive pitch aims the
+        // shaft forward out of the hand (a shaft with no pitch stays inside the arm
+        // and only reappears at the shoulder). The canopy is a child of the shaft.
         PartDefinition umbrella = root.addOrReplaceChild("accessory_umbrella", CubeListBuilder.create(), PartPose.ZERO);
         PartDefinition shaft = umbrella.addOrReplaceChild("shaft",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1.0F, -11.0F, -1.0F, 2.0F, 12.0F, 2.0F),
-                PartPose.offsetAndRotation(1.0F, 9.0F, -0.6F, 0.45F, 0.15F, 0.70F));
+                CubeListBuilder.create()
+                        .texOffs(0, 0).addBox(-1.0F, -6.0F, -1.0F, 2.0F, 8.0F, 2.0F)
+                        .texOffs(0, 0).addBox(-1.0F, -18.0F, -1.0F, 2.0F, 12.0F, 2.0F),
+                PartPose.offsetAndRotation(1.0F, 8.5F, -1.8F, 0.55F, 0.0F, 0.40F));
         shaft.addOrReplaceChild("canopy", CubeListBuilder.create()
-                        .texOffs(0, 18).addBox(-6.0F, -12.0F, -6.0F, 12.0F, 1.0F, 12.0F)
-                        .texOffs(48, 0).addBox(-2.0F, -14.0F, -2.0F, 4.0F, 2.0F, 4.0F),
+                        .texOffs(0, 18).addBox(-6.0F, -19.0F, -6.0F, 12.0F, 1.0F, 12.0F)
+                        .texOffs(48, 0).addBox(-2.0F, -21.0F, -2.0F, 4.0F, 2.0F, 4.0F),
                 PartPose.ZERO);
+        // Closed book. The inner half sits in the right fist; the rest sticks out the front.
         PartDefinition book = root.addOrReplaceChild("accessory_book", CubeListBuilder.create(), PartPose.ZERO);
         book.addOrReplaceChild("cover", CubeListBuilder.create()
-                        .texOffs(0, 0).addBox(-4, 0, -3, 8, 2, 6)
-                        .texOffs(0, 12).addBox(-4, 0, 2, 8, 2, 1),
-                PartPose.offsetAndRotation(-1.2F, 10.0F, -1.2F, -1.05F, -0.35F, 0.15F));
+                        .texOffs(0, 0).addBox(-2.5F, 0.0F, -5.0F, 5, 2, 6)
+                        .texOffs(0, 12).addBox(-2.5F, 0.0F, -5.0F, 5, 2, 1),
+                PartPose.offsetAndRotation(-1.0F, 8.6F, -0.4F, -0.30F, 0.15F, 0.10F));
         root.addOrReplaceChild("accessory_basket", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-1.0F, 9.5F, -3.5F, 6, 5, 6)
                 .texOffs(24, 0).addBox(-1.0F, 7.0F, -1.4F, 1, 4, 1)
