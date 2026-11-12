@@ -152,13 +152,15 @@ Box positions are in Minecraft model pixels. The head is 8×8×8 and sits with i
 
 ### Which part an accessory follows
 
-`TouristModel.setupAnim` copies the pose each frame:
+Accessories stay children of the model root. `TouristModel.setupAnim` copies the limb pose onto them each frame (`copyFrom`), which is the same trick the vanilla sleeves use. They are not parented under `body` / `left_arm` / `right_arm`: those parts are what the skin pass draws, so a child there would also be drawn with the skin texture.
 
 | Follows | Indices | What they are |
 | --- | --- | --- |
 | Body | 1 camera, 3 backpack, 9 red backpack, 11 brass camera | Worn on the torso |
 | Left arm | 2 suitcase, 5 umbrella, 7 basket, 10 brown suitcase | Held on the left |
 | Right arm | 4 map, 6 book, 8 lantern | Held on the right |
+
+Cubes on a held accessory are in that arm's local space. The part origin is the shoulder. The arm cube runs from about y = -2 (shoulder) to y = 10 (fingertips), so a grip belongs around y = 8 to 10 and should overlap the palm (z near -2 to 0). y = -2 is the shoulder, not the hand. A shaft that only leans sideways still runs up inside the arm and looks stuck to the forearm; the umbrella is pitched forward as well, so the shaft leaves the front of the left fist. The canopy is a child of that shaft.
 
 A new accessory that is not added to one of those three lists stays at the model root and will not move with the arm or the body.
 
@@ -292,6 +294,7 @@ Craft: two paper, one iron ingot, two sticks (shaped recipe in `data/businesscra
 - Hat or accessory index past `HEADWEAR_MAX` / `ACCESSORY_MAX` packs successfully and then draws nothing.
 - Two looks with the same four numbers fail `TouristLooksTest`, and `getLookId` returns the first catalog match for that packed int.
 - An accessory that is not in one of the three follow-lists will not move with the arm.
+- A held item posed at the shoulder (arm-local y near -2, or a canopy pivoted there) reads as floating across the chest. The fist is the bottom of the arm, near y = 8 to 10.
 - The outfit file is the clothing overlay, not a second copy of the body. Paint the jacket and sleeves, or the arms stay the skin colour.
 - `type` left out is legal in the parser and then fails the builtin test. A platform spawn then keeps the random type from `assignSpawnVariety` instead of one that matches the costume.
 - A private trade list is optional and lives in `TouristTradeCatalog`, not in the look JSON. Market shopper, station scholar, trail hiker, rain caller, garden pilgrim, and library clerk use their type's shared list. The other looks have an override keyed by id.
