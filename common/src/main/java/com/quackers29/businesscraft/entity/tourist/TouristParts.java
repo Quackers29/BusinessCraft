@@ -37,7 +37,8 @@ public final class TouristParts {
     public static final int ACCESSORY_SUITCASE = 2;
     public static final int ACCESSORY_BACKPACK = 3;
     public static final int ACCESSORY_MAP = 4;
-    public static final int ACCESSORY_UMBRELLA = 5;
+    /** Retired index (was the umbrella). Never valid; kept so other accessory indices stay stable. */
+    private static final int ACCESSORY_RETIRED_5 = 5;
     public static final int ACCESSORY_BOOK = 6;
     public static final int ACCESSORY_BASKET = 7;
     public static final int ACCESSORY_LANTERN = 8;
@@ -57,6 +58,6 @@ public final class TouristParts {
     }
 
     public static boolean knownAccessory(int index) {
-        return index >= ACCESSORY_NONE && index <= ACCESSORY_MAX;
+        return index >= ACCESSORY_NONE && index <= ACCESSORY_MAX && index != ACCESSORY_RETIRED_5;
     }
 }
