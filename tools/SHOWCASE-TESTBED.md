@@ -130,12 +130,14 @@ Use `context.townAPos()`, `context.townBPos()`, `context.townAId()`, and `contex
 `tools/showcase-play.sh` is the human entry point. The smoke screenshots and exits; this stays up until you stop it.
 
 ```bash
-bash tools/showcase-play.sh start            # Forge (default); `start fabric` for Fabric
+bash tools/showcase-play.sh start            # server only, Forge (default); `start fabric` for Fabric
+bash tools/showcase-play.sh start --client   # also open one dev client (or run `client` later)
+bash tools/showcase-play.sh client           # open a dev client on the running server (`./gradlew runClient` also works)
 bash tools/showcase-play.sh status           # running? loader, port, join addresses, logs
-bash tools/showcase-play.sh stop             # save the world, stop the server and the client it opened
+bash tools/showcase-play.sh stop             # save the world, stop the server and any dev client it opened
 ```
 
-`start` resolves the dev server and client commands with Gradle (daemon reused locally), copies the superflat template to `<loader>/run-play-server/world`, boots a dedicated dev server (`online-mode=false`, view distance 10), waits for `Done (` and the world-build marker (`showcase-play-ready.json`), then opens one visible client (`<loader>/run-play-client`, render distance 12, 144 FPS, `pauseOnLostFocus:false`, `skipMultiplayerWarning:true`, 1280x720) connected with `--quickPlayMultiplayer`. Warm Gradle: about 30 s. With no display it starts the server only (never xvfb: it would die with the script). `BC_PLAY_NAME` sets the player name, `BC_PLAY_NO_CLIENT=1` skips the client.
+`start` resolves the dev server and client commands with Gradle (daemon reused locally), copies the superflat template to `<loader>/run-play-server/world`, boots a dedicated dev server (`online-mode=false`, view distance 10), waits for `Done (` and the world-build marker (`showcase-play-ready.json`), then prints the join address and leaves the server running. With `--client` (or the `client` subcommand) it also opens one visible client (`<loader>/run-play-client`, render distance 12, 144 FPS, `pauseOnLostFocus:false`, `skipMultiplayerWarning:true`, 1280x720) connected with `--quickPlayMultiplayer`. Warm Gradle: about 30 s. A client needs a display (never xvfb: it would die with the script). `BC_PLAY_NAME` sets the dev client's player name, `BC_PLAY_PORT` the first port to try (default 25565 Forge / 25566 Fabric; the next free port is used if busy).
 
 Join from elsewhere: `localhost:<port>` (WSL2 forwards it to Windows), or the LAN address `status` prints. Port 25565 (Forge) or 25566 (Fabric), the next free one when busy. Minecraft 1.20.1, offline mode, any username, BusinessCraft for that loader installed.
 
