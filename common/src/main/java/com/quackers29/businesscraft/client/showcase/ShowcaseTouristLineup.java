@@ -48,7 +48,7 @@ public final class ShowcaseTouristLineup {
     private static int phase;
     private static int phaseTicks;
     private static int lookIndex;
-    private static boolean sideShot;
+    private static int shotKind;
     private static boolean quitting;
     private static int quitTicks;
     private static int saved;
@@ -66,7 +66,7 @@ public final class ShowcaseTouristLineup {
         phase = 0;
         phaseTicks = 0;
         lookIndex = 0;
-        sideShot = false;
+        shotKind = 0;
         quitting = false;
         quitTicks = 0;
         saved = 0;
@@ -119,7 +119,7 @@ public final class ShowcaseTouristLineup {
                 phase = 2;
                 phaseTicks = 0;
                 lookIndex = 0;
-                sideShot = false;
+                shotKind = 0;
             }
             return;
         }
@@ -140,26 +140,30 @@ public final class ShowcaseTouristLineup {
             return;
         }
         Spot currentSpot = spots.get(lookIndex);
+        ShotKind kind = SHOT_KINDS[shotKind];
         if (phaseTicks == 1) {
-            aimSpot(minecraft, currentSpot, sideShot);
+            aimSpot(minecraft, currentSpot, kind.bodyYaw != 0f);
         }
         // Body yaw is not synced. Reapply it after the entity tick so the
-        // renderer sees the side pose on this frame. Other looks stay facing forward.
+        // renderer sees the pose on this frame. Other looks stay facing forward.
         for (Spot other : spots) {
-            float yaw = sideShot && other.networkId == currentSpot.networkId ? 70f : 0f;
-            faceTourist(minecraft, other, yaw);
+            if (other.networkId == currentSpot.networkId) {
+                faceTourist(minecraft, other, kind.bodyYaw, kind.headYaw, kind.pitch);
+            } else {
+                faceTourist(minecraft, other, 0f, 0f, 0f);
+            }
         }
         if (phaseTicks < SHOT_TICKS) {
             return;
         }
         Spot spot = spots.get(lookIndex);
-        grab(minecraft, "tourist_" + spot.id + (sideShot ? "_side" : "_front"));
-        if (!sideShot) {
-            sideShot = true;
+        grab(minecraft, "tourist_" + spot.id + kind.suffix);
+        if (shotKind + 1 < SHOT_KINDS.length) {
+            shotKind++;
             phaseTicks = 0;
             return;
         }
-        sideShot = false;
+        shotKind = 0;
         phaseTicks = 0;
         lookIndex++;
         if (lookIndex >= spots.size()) {
@@ -276,7 +280,8 @@ public final class ShowcaseTouristLineup {
     private static void aimSpot(Minecraft minecraft, Spot spot, boolean side) {
         // Camera stays in front of this tourist. The subject is yawed so the
         // shot reads as a side view without standing inside the row.
-        faceTourist(minecraft, spot, side ? 70f : 0f);
+        ShotKind kind = SHOT_KINDS[shotKind];
+        faceTourist(minecraft, spot, kind.bodyYaw, kind.headYaw, kind.pitch);
         Vec3 target = new Vec3(spot.x, spot.y + 1.15, spot.z);
         Vec3 eye = side
                 ? new Vec3(spot.x - 0.2, spot.y + 1.15, spot.z + 2.4)
@@ -307,9 +312,9 @@ public final class ShowcaseTouristLineup {
         }
     }
 
-    private static void faceTourist(Minecraft minecraft, Spot spot, float yaw) {
+    private static void faceTourist(Minecraft minecraft, Spot spot, float bodyYaw, float headYaw, float pitch) {
         if (minecraft.level != null) {
-            applyYaw(minecraft.level.getEntity(spot.networkId), yaw);
+            applyYaw(minecraft.level.getEntity(spot.networkId), bodyYaw, headYaw, pitch);
         }
         MinecraftServer server = minecraft.getSingleplayerServer();
         if (server == null) {
@@ -319,25 +324,25 @@ public final class ShowcaseTouristLineup {
             for (ServerLevel level : server.getAllLevels()) {
                 Entity entity = level.getEntity(spot.networkId);
                 if (entity != null) {
-                    applyYaw(entity, yaw);
+                    applyYaw(entity, bodyYaw, headYaw, pitch);
                     return;
                 }
             }
         });
     }
 
-    private static void applyYaw(Entity entity, float yaw) {
+    private static void applyYaw(Entity entity, float bodyYaw, float headYaw, float pitch) {
         if (!(entity instanceof TouristEntity tourist)) {
             return;
         }
-        tourist.setYRot(yaw);
-        tourist.yRotO = yaw;
-        tourist.setXRot(0f);
-        tourist.xRotO = 0f;
-        tourist.setYHeadRot(yaw);
-        tourist.yHeadRotO = yaw;
-        tourist.setYBodyRot(yaw);
-        tourist.yBodyRotO = yaw;
+        tourist.setYRot(bodyYaw);
+        tourist.yRotO = bodyYaw;
+        tourist.setXRot(pitch);
+        tourist.xRotO = pitch;
+        tourist.setYHeadRot(headYaw);
+        tourist.yHeadRotO = headYaw;
+        tourist.setYBodyRot(bodyYaw);
+        tourist.yBodyRotO = bodyYaw;
     }
 
     private static void aim(Minecraft minecraft, Vec3 eye, Vec3 target) {
@@ -399,6 +404,20 @@ public final class ShowcaseTouristLineup {
             System.exit(failure == null ? code : 1);
         }
     }
+
+    /** Pose per shot: body yaw, head yaw (both degrees) and head pitch (negative looks up). */
+    private record ShotKind(String suffix, float bodyYaw, float headYaw, float pitch) {
+    }
+
+    // Side shots show backpack and strap depth. The tilts are the extremes the bounds test checks.
+    private static final ShotKind[] SHOT_KINDS = {
+            new ShotKind("_front", 0f, 0f, 0f),
+            new ShotKind("_side", 70f, 70f, 0f),
+            new ShotKind("_tiltup", 70f, 70f, -45f),
+            new ShotKind("_tiltdown", 70f, 70f, 45f),
+            new ShotKind("_turn", 0f, 75f, 20f),
+            new ShotKind("_backtilt", 150f, 150f, -45f),
+    };
 
     private record Spot(String id, double x, double y, double z, int networkId) {
     }

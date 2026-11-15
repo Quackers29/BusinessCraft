@@ -101,6 +101,8 @@ Hair is the vanilla second head layer (the player "hat" part). `TouristModel.pre
 | 14 | dust cap (same mesh as 2) | no |
 | 15 | plum fez (same mesh as 5) | yes |
 
+Accessory index 5 is retired and rejected by `knownAccessory`. It stays unused so the other indices keep their numbers.
+
 Indices 13, 14, and 15 are recolours: `addCap` / `addFez` build the same boxes under a new name, and the new name has its own texture. Accessories 9, 10, and 11 are the same idea (red backpack, brown suitcase, brass camera).
 
 ### Skin and outfit UV
@@ -157,10 +159,10 @@ Accessories stay children of the model root. `TouristModel.setupAnim` copies the
 | Follows | Indices | What they are |
 | --- | --- | --- |
 | Body | 1 camera, 3 backpack, 9 red backpack, 11 brass camera | Worn on the torso |
-| Left arm | 2 suitcase, 5 umbrella, 7 basket, 10 brown suitcase | Held on the left |
+| Left arm | 2 suitcase, 7 basket, 10 brown suitcase | Held on the left |
 | Right arm | 4 map, 6 book, 8 lantern | Held on the right |
 
-Cubes on a held accessory are in that arm's local space. The part origin is the shoulder. The arm cube runs from about y = -2 (shoulder) to y = 10 (fingertips), so a grip belongs around y = 8 to 10 and should overlap the palm (z near -2 to 0). y = -2 is the shoulder, not the hand. A shaft that only leans sideways still runs up inside the arm and looks stuck to the forearm; the umbrella is pitched forward as well, so the shaft leaves the front of the left fist. The canopy is a child of that shaft.
+Cubes on a held accessory are in that arm's local space. The part origin is the shoulder. The arm cube runs from about y = -2 (shoulder) to y = 10 (fingertips), so a grip belongs around y = 8 to 10 and should overlap the palm (z near -2 to 0). y = -2 is the shoulder, not the hand. A shaft that only leans sideways still runs up inside the arm and looks stuck to the forearm. Pitch a shaft forward as well so it leaves the front of the fist.
 
 A new accessory that is not added to one of those three lists stays at the model root and will not move with the arm or the body.
 

@@ -56,7 +56,7 @@ class TouristLooksTest {
         assertEquals(TouristAppearance.pack(6, 6, 6, 4), packedOf(looks, "desert_guide"));
         assertEquals(TouristAppearance.pack(7, 7, 5, 0), packedOf(looks, "festival_guest"));
         assertEquals(TouristAppearance.pack(8, 8, 11, 9), packedOf(looks, "alpine_walker"));
-        assertEquals(TouristAppearance.pack(9, 9, 8, 5), packedOf(looks, "rain_caller"));
+        assertEquals(TouristAppearance.pack(9, 9, 8, 0), packedOf(looks, "rain_caller"));
         assertEquals(TouristAppearance.pack(10, 10, 10, 7), packedOf(looks, "garden_pilgrim"));
         assertEquals(TouristAppearance.pack(11, 11, 12, 6), packedOf(looks, "library_clerk"));
         assertEquals(TouristAppearance.pack(12, 12, 9, 4), packedOf(looks, "harbour_skipper"));
