@@ -441,7 +441,7 @@ Outputs land under **`showcase-output/`** (see [tools/SHOWCASE-TESTBED.md](tools
 
 Two dedicated-server clients on the same loader: **[tools/MULTIPLAYER-SMOKE.md](tools/MULTIPLAYER-SMOKE.md)** (`bash tools/multiplayer-smoke.sh`).
 
-Walk the showcase world yourself (server + visible client): `bash tools/showcase-play.sh start`, then `status` / `stop` (see [tools/SHOWCASE-TESTBED.md](tools/SHOWCASE-TESTBED.md)).
+Walk the showcase world yourself: `bash tools/showcase-play.sh start` starts a dedicated server only and prints the address to join from your own launcher (add `--client`, or run `client` later, to also open a dev client), then `status` / `stop` (see [tools/SHOWCASE-TESTBED.md](tools/SHOWCASE-TESTBED.md)).
 
 Related: `bash tools/showcase.sh two-towns forge` (boundary tests + all-views on town B).
 

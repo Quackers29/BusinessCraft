@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 # Playable multiplayer showcase: bring up a dedicated dev server with a built-out BusinessCraft
-# world, join it with one visible client, look around, then shut everything down.
+# world, join it from your own launcher (or an opt-in dev client), then shut everything down.
 #
-#   bash tools/showcase-play.sh start [forge|fabric]   # default forge; leaves everything running
-#   bash tools/showcase-play.sh status                 # running? loader, port, how to join, logs
-#   bash tools/showcase-play.sh stop                   # save and stop what start launched
+#   bash tools/showcase-play.sh start [forge|fabric] [--client]   # server only; --client also opens one
+#   bash tools/showcase-play.sh client                            # open a dev client on the running server
+#   bash tools/showcase-play.sh status                            # running? loader, port, how to join, logs
+#   bash tools/showcase-play.sh stop                              # save and stop what this script launched
 #
 # start builds the world once (towns, ticket machines in every destination mode, a rail line
-# with tourists, contracts, signs, a guide chest), waits for the server's "Done (" line, then
-# opens a Minecraft window already connected. Nothing quits on its own.
+# with tourists, contracts, signs, a guide chest), waits for the server's "Done (" line, prints
+# the address to join and leaves the server running. No client is started unless you pass
+# --client (or run 'client' later); join from your own launcher, or with ./gradlew runClient.
 # stop ends only the processes recorded in the session file. A client you started yourself is
-# left alone. Both are safe to repeat.
+# left alone. Both are safe to repeat, with or without a client.
 #
-# Environment: SHOWCASE_TEMPLATE (superflat template world), BC_PLAY_NAME (player name,
-# default BC_Player), BC_PLAY_NO_CLIENT=1 (server only), BC_NO_DAEMON=1 (no Gradle daemon).
+# Environment: SHOWCASE_TEMPLATE (superflat template world), BC_PLAY_NAME (player name of the
+# dev client, default BC_Player), BC_PLAY_PORT (first port to try;
+# default 25565 forge / 25566 fabric), BC_NO_DAEMON=1 (no Gradle daemon).
 # Output: showcase-output/<timestamp>_play_<loader>/ (logs). See tools/SHOWCASE-TESTBED.md.
 
 set -euo pipefail
@@ -28,7 +31,7 @@ PLAY_NAME="${BC_PLAY_NAME:-BC_Player}"
 READY_TIMEOUT=480
 
 usage() {
-    sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//' >&2
+    sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//' >&2
     exit 2
 }
 
@@ -129,7 +132,7 @@ print_join() {
         echo "  LAN:      address not found; use this machine's IP with port ${PORT}"
     fi
     echo "  Mods:     a client you join with must have BusinessCraft for ${LOADER} (1.20.1) installed"
-    echo "  Stop:     bash tools/showcase-play.sh stop   (ends the server and the client this script opened,"
+    echo "  Stop:     bash tools/showcase-play.sh stop   (ends the server and a dev client this script opened,"
     echo "            not a client you started yourself)"
 }
 
@@ -240,7 +243,17 @@ start_abort() {
 }
 
 do_start() {
-    local loader="${1:-forge}"
+    local loader="forge" want_client=0 arg
+    for arg in "$@"; do
+        case "$arg" in
+            --client) want_client=1 ;;
+            forge | fabric) loader="$arg" ;;
+            *)
+                echo "Unknown argument: $arg (use forge or fabric, and optionally --client)" >&2
+                exit 2
+                ;;
+        esac
+    done
     case "$loader" in
         forge | fabric) ;;
         *)
@@ -268,23 +281,22 @@ do_start() {
         echo "Showcase template could not be built" >&2
         return 1
     fi
-    wanted=25565
-    [[ "$loader" == "fabric" ]] && wanted=25566
+    wanted="${BC_PLAY_PORT:-25565}"
+    [[ -z "${BC_PLAY_PORT:-}" && "$loader" == "fabric" ]] && wanted=25566
     if ! PORT="$(bc_free_port "$wanted")"; then
         echo "No free port from ${wanted}" >&2
         return 1
     fi
     [[ "$PORT" != "$wanted" ]] && echo "Port ${wanted} is busy; using ${PORT}"
 
-    local want_client=1
-    if [[ "${BC_PLAY_NO_CLIENT:-}" == "1" ]]; then
-        want_client=0
-    elif have_real_display; then
-        export BC_IN_XVFB=1 # a window for a person: never re-run under xvfb, which would end with this script
-        bc_ensure_display "$0" "$@"
-    else
-        want_client=0
-        echo "No display found (DISPLAY, WSLg and X sockets are all absent): starting the server only." >&2
+    if [[ "$want_client" -eq 1 ]]; then
+        if have_real_display; then
+            export BC_IN_XVFB=1 # a window for a person: never re-run under xvfb, which would end with this script
+            bc_ensure_display "$0" "$@"
+        else
+            want_client=0
+            echo "No display found (DISPLAY, WSLg and X sockets are all absent): starting the server only." >&2
+        fi
     fi
 
     START_BEGUN=1
@@ -294,7 +306,6 @@ do_start() {
     SERVER_DIR="$ROOT/$loader/run-play-server"
     CLIENT_DIR="$ROOT/$loader/run-play-client"
     local server_spec="$RUN_DIR/server-command.json"
-    local client_spec="$RUN_DIR/client-command.json"
     dump_command "$loader" runServer "$server_spec" -PmpSmoke=play
 
     mkdir -p "$SERVER_DIR"
@@ -316,14 +327,6 @@ do_start() {
     save_session
     echo "Server pid ${SERVER_PID} on port ${PORT}; building the world as soon as it is up"
 
-    if [[ "$want_client" -eq 1 ]]; then
-        # Resolved while the server boots. The client run has no smoke property: nothing is scripted.
-        if ! dump_command "$loader" runClient "$client_spec"; then
-            want_client=0
-            echo "Client command could not be resolved; continuing with the server only" >&2
-        fi
-    fi
-
     if ! wait_server_ready "$SERVER_PID" "$SERVER_START" "$SERVER_DIR/logs/latest.log" "$server_console" \
             "$SERVER_DIR/showcase-play-ready.json"; then
         tail -n 60 "$server_console" >&2 || true
@@ -335,24 +338,9 @@ do_start() {
     READY_SECONDS=$((SECONDS - began))
     echo "Server is ready (${READY_SECONDS}s): ${DETAIL%% layout=*}"
 
+    save_session
     if [[ "$want_client" -eq 1 ]]; then
-        prepare_client_dir "$CLIENT_DIR"
-        local uuid
-        uuid="$(offline_uuid "$PLAYER")"
-        local client_console="$RUN_DIR/logs/client-console.log"
-        setsid python3 "$ROOT/tools/mp-smoke-launch.py" "$client_spec" --working-dir "$CLIENT_DIR" \
-            --xmx 3072m --username "$PLAYER" --uuid "$uuid" --game-dir "$CLIENT_DIR" \
-            --append-arg=--quickPlayMultiplayer --append-arg="localhost:${PORT}" \
-            --append-arg=--width --append-arg=1280 --append-arg=--height --append-arg=720 \
-            </dev/null >"$client_console" 2>&1 &
-        CLIENT_PID=$!
-        sleep 1
-        CLIENT_START="$(pid_start "$CLIENT_PID" || true)"
-        save_session
-        echo "Client pid ${CLIENT_PID} (player ${PLAYER}) is opening and will connect to localhost:${PORT}"
-        wait_client_joined "$CLIENT_PID" "$CLIENT_START" "$SERVER_DIR/logs/latest.log" || true
-    else
-        save_session
+        launch_client || echo "The client did not start; the server keeps running" >&2
     fi
 
     START_BEGUN=0
@@ -360,6 +348,45 @@ do_start() {
     echo
     echo "Showcase is running ($(( SECONDS - began ))s since start)."
     print_status_body
+}
+
+# Opens one dev client against the recorded server. Needs a loaded session with a running server.
+launch_client() {
+    local client_spec="$RUN_DIR/client-command.json"
+    dump_command "$LOADER" runClient "$client_spec" || return 1
+    prepare_client_dir "$CLIENT_DIR"
+    local uuid client_console="$RUN_DIR/logs/client-console.log"
+    uuid="$(offline_uuid "$PLAYER")"
+    # The client run has no smoke property: nothing is scripted.
+    setsid python3 "$ROOT/tools/mp-smoke-launch.py" "$client_spec" --working-dir "$CLIENT_DIR" \
+        --xmx 3072m --username "$PLAYER" --uuid "$uuid" --game-dir "$CLIENT_DIR" \
+        --append-arg=--quickPlayMultiplayer --append-arg="localhost:${PORT}" \
+        --append-arg=--width --append-arg=1280 --append-arg=--height --append-arg=720 \
+        </dev/null >"$client_console" 2>&1 &
+    CLIENT_PID=$!
+    sleep 1
+    CLIENT_START="$(pid_start "$CLIENT_PID" || true)"
+    save_session
+    echo "Client pid ${CLIENT_PID} (player ${PLAYER}) is opening and will connect to localhost:${PORT}"
+    wait_client_joined "$CLIENT_PID" "$CLIENT_START" "$SERVER_DIR/logs/latest.log" || true
+}
+
+do_client() {
+    if ! load_session || ! server_running; then
+        echo "No running showcase server. Run 'bash tools/showcase-play.sh start' first." >&2
+        return 1
+    fi
+    if client_running; then
+        echo "A dev client is already running (pid ${CLIENT_PID})."
+        return 0
+    fi
+    if ! have_real_display; then
+        echo "No display found (DISPLAY, WSLg and X sockets are all absent): cannot open a client." >&2
+        return 1
+    fi
+    export BC_IN_XVFB=1
+    bc_ensure_display "$0" "$@"
+    launch_client
 }
 
 wait_client_joined() {
@@ -383,7 +410,7 @@ wait_client_joined() {
 # ---- status ---------------------------------------------------------------------------------
 
 print_status_body() {
-    local client_note="none (server only)"
+    local client_note="none (join from your own launcher, or run 'client')"
     if [[ -n "${CLIENT_PID:-}" ]]; then
         if client_running; then client_note="running (pid ${CLIENT_PID}, player ${PLAYER})"; else client_note="not running"; fi
     fi
@@ -466,7 +493,8 @@ do_stop() {
 # ---- main -----------------------------------------------------------------------------------
 
 case "${1:-}" in
-    start) do_start "${2:-forge}" ;;
+    start) shift; do_start "$@" ;;
+    client) do_client ;;
     status) do_status ;;
     stop) do_stop ;;
     *) usage ;;
