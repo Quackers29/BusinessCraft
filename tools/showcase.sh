@@ -10,7 +10,7 @@
 #   bash tools/showcase.sh two-towns forge
 #   bash tools/showcase.sh testbed forge trade-contract
 #   bash tools/showcase.sh map-sweep forge 1920x1080_gui4
-#   bash tools/showcase.sh tourists forge          # every tourist look, front and side
+#   bash tools/showcase.sh tourists forge          # every tourist look: front, side, back, head tilt
 #   bash tools/showcase.sh jade forge              # Jade tooltips (Town Centre, platforms, tourist)
 #   bash tools/showcase.sh tourist-screen forge   # vanilla merchant screen, then the tourist screen
 #   bash tools/showcase.sh production-tooltip forge   # upgrades list with the first tooltip open
@@ -370,8 +370,10 @@ folder = Path(sys.argv[2])
 missing = [s for s in shots if not (folder / f"showcase_{s}.png").is_file()]
 front = [s for s in shots if s.endswith("_front")]
 side = [s for s in shots if s.endswith("_side")]
-if len(shots) < 2 or not front or not side:
-    print("expected front and side tourist shots", file=sys.stderr)
+back = [s for s in shots if s.endswith("_back")]
+tilt = [s for s in shots if "tilt" in s]
+if len(shots) < 4 or not front or not side or not back or not tilt:
+    print("expected front, side, back, and head-tilt tourist shots", file=sys.stderr)
     sys.exit(1)
 if missing:
     print("missing shots: " + ", ".join(missing), file=sys.stderr)

@@ -30,7 +30,8 @@ import java.util.Map;
 
 /**
  * Spawns every tourist look in a line and photographs the group plus each look
- * from the front and the side. Driven by {@code tools/showcase.sh tourists}.
+ * from the front, the side, the back, and with the head tilted. Driven by
+ * {@code tools/showcase.sh tourists}.
  */
 public final class ShowcaseTouristLineup {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/ShowcaseTourists");
@@ -142,7 +143,7 @@ public final class ShowcaseTouristLineup {
         Spot currentSpot = spots.get(lookIndex);
         ShotKind kind = SHOT_KINDS[shotKind];
         if (phaseTicks == 1) {
-            aimSpot(minecraft, currentSpot, kind.bodyYaw != 0f);
+            aimSpot(minecraft, currentSpot);
         }
         // Body yaw is not synced. Reapply it after the entity tick so the
         // renderer sees the pose on this frame. Other looks stay facing forward.
@@ -198,11 +199,14 @@ public final class ShowcaseTouristLineup {
             int originX = feet.getX();
             int originZ = feet.getZ();
             int count = looks.size();
-            int x0 = originX - 4;
-            int x1 = originX + (int) Math.ceil((count - 1) * SPACING) + 6;
-            int z0 = originZ - 5;
-            // The front camera sits about span / tan(35°) in front of sixteen tourists.
-            int z1 = originZ + 40;
+            double span = Math.max(0, (count - 1) * SPACING);
+            double half = span / 2.0 + 0.9;
+            double frontDistance = Math.max(6.5, half / Math.tan(Math.toRadians(35.0)) + 0.4);
+            double sideDistance = Math.max(7.5, span * 0.62);
+            int x0 = originX - 6;
+            int x1 = originX + (int) Math.ceil(span) + 8;
+            int z0 = originZ - 6;
+            int z1 = originZ + (int) Math.ceil(Math.max(frontDistance, sideDistance)) + 6;
             for (int x = x0; x <= x1; x++) {
                 for (int z = z0; z <= z1; z++) {
                     level.setBlock(new BlockPos(x, ground, z), Blocks.SMOOTH_STONE.defaultBlockState(), 3);
@@ -277,15 +281,16 @@ public final class ShowcaseTouristLineup {
         aim(minecraft, eye, target);
     }
 
-    private static void aimSpot(Minecraft minecraft, Spot spot, boolean side) {
-        // Camera stays in front of this tourist. The subject is yawed so the
-        // shot reads as a side view without standing inside the row.
+    private static void aimSpot(Minecraft minecraft, Spot spot) {
+        // Camera stays in front of this tourist. The subject is yawed so a side
+        // or back shot does not require standing inside the row.
         ShotKind kind = SHOT_KINDS[shotKind];
         faceTourist(minecraft, spot, kind.bodyYaw, kind.headYaw, kind.pitch);
         Vec3 target = new Vec3(spot.x, spot.y + 1.15, spot.z);
-        Vec3 eye = side
-                ? new Vec3(spot.x - 0.2, spot.y + 1.15, spot.z + 2.4)
-                : new Vec3(spot.x, spot.y + 1.15, spot.z + 2.55);
+        boolean straight = "_front".equals(kind.suffix()) || "_back".equals(kind.suffix());
+        Vec3 eye = straight
+                ? new Vec3(spot.x, spot.y + 1.15, spot.z + 2.55)
+                : new Vec3(spot.x - 0.2, spot.y + 1.15, spot.z + 2.4);
         aim(minecraft, eye, target);
     }
 
@@ -410,9 +415,11 @@ public final class ShowcaseTouristLineup {
     }
 
     // Side shots show backpack and strap depth. The tilts are the extremes the bounds test checks.
+    // Back is a straight 180 so the camera, still in front of the row, sees the tourist's back.
     private static final ShotKind[] SHOT_KINDS = {
             new ShotKind("_front", 0f, 0f, 0f),
             new ShotKind("_side", 70f, 70f, 0f),
+            new ShotKind("_back", 180f, 180f, 0f),
             new ShotKind("_tiltup", 70f, 70f, -45f),
             new ShotKind("_tiltdown", 70f, 70f, 45f),
             new ShotKind("_turn", 0f, 75f, 20f),

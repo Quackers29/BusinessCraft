@@ -67,6 +67,11 @@ public final class TouristLooks {
         looks = List.copyOf(sorted);
     }
 
+    /**
+     * One catalog entry, one equal share. {@code nextInt} is {@code Random.nextInt(bound)}:
+     * the bound is the live catalog size, so a new JSON file is included with no code change.
+     * The chosen look's packed int is what clients render.
+     */
     public static TouristLook pick(IntUnaryOperator nextInt) {
         List<TouristLook> current = all();
         if (current.isEmpty()) {
