@@ -65,7 +65,9 @@ import java.util.UUID;
  */
 public final class ShowcasePlayServer {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/Play");
-    private static final boolean ENABLED = ShowcasePlayLayout.MODE.equals(System.getProperty(MultiplayerSmokeServer.PROPERTY));
+    private static final boolean PRODUCTION = ShowcaseProductionLayout.MODE.equals(System.getProperty(MultiplayerSmokeServer.PROPERTY));
+    private static final boolean ENABLED = PRODUCTION || ShowcasePlayLayout.MODE.equals(System.getProperty(MultiplayerSmokeServer.PROPERTY));
+    private static final int PRODUCTION_REPORT_TICKS = 1200;
     private static final int READY_DELAY_TICKS = 100;
     private static final String SEEN_TAG = "bc_play_seen";
     /** Blocks per tick. Vanilla's own limit on plain rail is 0.4. */
@@ -85,6 +87,7 @@ public final class ShowcasePlayServer {
     private static final List<Line> LINES = new ArrayList<>();
     private static final List<UUID> TOWN_IDS = new ArrayList<>();
     private static final List<BlockPos> TOWN_POS = new ArrayList<>();
+    private static ShowcaseProductionWorld productionWorld;
 
     private ShowcasePlayServer() {
     }
@@ -118,7 +121,13 @@ public final class ShowcasePlayServer {
             return;
         }
         if (ready) {
-            dispatch(level);
+            if (PRODUCTION) {
+                if (level.getGameTime() % PRODUCTION_REPORT_TICKS == 0) {
+                    productionWorld.report(level);
+                }
+            } else {
+                dispatch(level);
+            }
         }
     }
 
@@ -137,6 +146,28 @@ public final class ShowcasePlayServer {
             throw new IllegalStateException("refusing to build at surface Y " + surface);
         }
 
+        String detail;
+        if (PRODUCTION) {
+            productionWorld = new ShowcaseProductionWorld();
+            detail = productionWorld.build(level, surface);
+            ShowcaseProductionLayout.TownSpec first = ShowcaseProductionLayout.TOWNS.get(0);
+            viewX = first.dx() + ShowcaseProductionLayout.VIEW_DX + 0.5;
+            viewZ = first.dz() + ShowcaseProductionLayout.VIEW_DZ + 0.5;
+        } else {
+            detail = buildTour(level);
+        }
+        level.setDefaultSpawnPos(BlockPos.containing(viewX, surface, viewZ), 180f);
+
+        ready = true;
+        LOGGER.info("PLAY_READY {}", detail);
+        writeReady(server, true, detail);
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            welcome(player);
+        }
+    }
+
+    /** The tour world: four towns, ticket machines, rail line, contracts, signs, guide chest. */
+    private static String buildTour(ServerLevel level) {
         ShowcaseTownNames.reset();
         for (ShowcasePlayLayout.TownSpec spec : ShowcasePlayLayout.TOWNS) {
             BlockPos pos = new BlockPos(spec.dx(), surface, spec.dz());
@@ -176,17 +207,10 @@ public final class ShowcasePlayServer {
 
         viewX = ShowcasePlayLayout.TOWNS.get(0).dx() + ShowcasePlayLayout.VIEW_DX + 0.5;
         viewZ = ShowcasePlayLayout.TOWNS.get(0).dz() + ShowcasePlayLayout.VIEW_DZ + 0.5;
-        level.setDefaultSpawnPos(BlockPos.containing(viewX, surface, viewZ), 180f);
 
-        ready = true;
-        String detail = "towns=" + TOWN_IDS.size() + " platforms=" + platforms + " rails=" + rails
+        return "towns=" + TOWN_IDS.size() + " platforms=" + platforms + " rails=" + rails
                 + " signs=" + signs + " contracts=" + contracts + " tourists=" + tourists
                 + " lines=" + LINES.size() + " layout=" + ShowcasePlayLayout.summary();
-        LOGGER.info("PLAY_READY {}", detail);
-        writeReady(server, true, detail);
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            welcome(player);
-        }
     }
 
     /** Oakvale: the line platform plus one ticket machine per other mode, and one switched off. */
@@ -429,8 +453,8 @@ public final class ShowcasePlayServer {
         return 1;
     }
 
-    private static void placeSign(ServerLevel level, BlockPos at, int rotation, List<String> lines) {
-        BlockPos pos = new BlockPos(at.getX(), surface, at.getZ());
+    static void placeSign(ServerLevel level, BlockPos at, int rotation, List<String> lines) {
+        BlockPos pos = at;
         if (level.getBlockState(pos.below()).isAir()) {
             level.setBlock(pos.below(), Blocks.STONE_BRICKS.defaultBlockState(), 3);
         }

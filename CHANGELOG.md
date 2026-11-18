@@ -7,6 +7,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- `bash tools/showcase-play.sh start --production` starts the showcase server with `[production]` and `[research]` on (in that server's own config only) and four labelled towns to try them on: Starterton (biome kit only), Farmstead (full stores, recipes run), Highmark (mid-game, research AI active) and Hungerford (starving: low happiness, min-stock conditions fail). A plain `start` is unchanged.
 - A fresh install now gets the shipped `items.csv`, `productions.csv`, `upgrades.csv` and `biomes.csv`. Before, each file was replaced by a smaller built-in version with different ids (`basic_farming`, `basic_taxes`) and no `tourism` recipe. Files that already exist are never overwritten.
 - The four CSV files are checked after every load. The log gets one warning per problem with the file and line or entry: unknown resources in inputs, outputs or costs, unknown tokens in amount expressions (such as `1*popp`), effect targets that are not a recipe, upgrade or known stat, unknown prerequisites and biome starting upgrades, short rows, duplicate ids, and a cycle time of 0 or less. Nothing about how production or upgrades run changes.
 - Unit tests for production and upgrades: CSV parsing, validation, recipe processing over whole cycles, upgrade modifiers and research, research AI choices, and a test that loads the shipped CSVs and expects no warnings.
