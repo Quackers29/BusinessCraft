@@ -10,6 +10,7 @@ tags:
 ## Processes in this area
 - **[[Config/Configuration Loading|Configuration Loading]]** (T-014) — How the settings file is read and written: every option has a built-in default so a missing or broken file never crashes the game, list-style settings (milestone rewards, town names) fall back safely when malformed, and edits to the file are picked up live without a restart.
 - **[[Config/Data Parsing|Data Parsing]]** (T-021) — The compact text formats used in the mod's editable CSV files (upgrades, production recipes, biome starting kits) are turned into the structured effects, conditions, and resource costs the game uses. Parsing is forgiving: one bad entry is skipped with a warning instead of breaking the whole row.
+- **[[Config/CSV Config Files|CSV Config Files]]** — The four editable game-data files (items, production recipes, upgrades, biome kits) are installed from the mod jar on a fresh install, read with one shared row format, and checked at load for bad references (unknown resources, expression typos, missing prerequisites). Problems are logged as warnings; behaviour never changes.
 - **[[Config/Subsystem Toggle Honesty|Subsystem Toggle Honesty]]** (T-041) — Turning off trading, contracts, research, or production in settings truly stops those systems on the server: player trade/contract actions are refused, towns stop building research shopping lists, and new towns skip production stock and advanced research unlocks — while still receiving the basic settlement unlock so tourist generation keeps working.
 
 ## How it connects

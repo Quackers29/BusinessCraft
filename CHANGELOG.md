@@ -6,6 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- A fresh install now gets the shipped `items.csv`, `productions.csv`, `upgrades.csv` and `biomes.csv`. Before, each file was replaced by a smaller built-in version with different ids (`basic_farming`, `basic_taxes`) and no `tourism` recipe. Files that already exist are never overwritten.
+- The four CSV files are checked after every load. The log gets one warning per problem with the file and line or entry: unknown resources in inputs, outputs or costs, unknown tokens in amount expressions (such as `1*popp`), effect targets that are not a recipe, upgrade or known stat, unknown prerequisites and biome starting upgrades, short rows, duplicate ids, and a cycle time of 0 or less. Nothing about how production or upgrades run changes.
+- Unit tests for production and upgrades: CSV parsing, validation, recipe processing over whole cycles, upgrade modifiers and research, research AI choices, and a test that loads the shipped CSVs and expects no warnings.
+
+### Fixed
+- The Balanced Hamlet biome variant listed a starting upgrade (`border_basic`) that does not exist. It is removed.
+- `upgrades.csv` rows with an empty effects column were silently dropped, and a comma inside a quoted description shifted every later column. `upgrades.csv` and `items.csv` now read rows the same way as `productions.csv` and `biomes.csv`: quotes are respected, empty trailing columns are kept, and `#` comment lines are skipped.
+- `businesscraft.toml` comments for `[production]` and `[research]` now say what each key does, and the `[research]` comment sits above its key.
+
+### Removed
+- `production.tickInterval` is gone from `businesscraft.toml`. Nothing read it. An existing value in a config file is ignored.
+
 ### Changed
 - Right-clicking a tourist opens a tourist screen instead of the villager trade window. The title is the tourist's personal name and rank, and the screen shows the origin town, destination, distance, and progress to the next rank.
 - The old barrier "info" row is gone. Locked deals say which rank unlocks them. The Travel Ticket tooltip says it is a paper souvenir and what Any Town means.
