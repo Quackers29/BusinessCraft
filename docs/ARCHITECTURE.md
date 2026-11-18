@@ -25,7 +25,7 @@ Most transport in Minecraft feels pointless — Create trains run empty around s
 ## Current Focus Areas (0.9 beta)
 
 - **Tourism transport loop**: Town Centre + Platform Interface setup, honest UI, distance payouts
-- **Tourist presentation**: 16 layered looks, names, ranks — see **`docs/TOURIST_MODELS.md`** (not a `config/skins` folder workflow)
+- **Tourist presentation**: 32 layered looks, names, ranks — see **`docs/TOURIST_MODELS.md`** (not a `config/skins` folder workflow)
 - **Verification**: Automated tests + showcase harness; owner playtest and listings still open (`tasks/todo.md`)
 - **Locked by default**: production, research, trading, contracts (tabs visible, inert)
 

@@ -7,7 +7,7 @@
 ## Current state (0.9.x — as of 2026-10-26)
 - **Towns**: Craft and place a **Town Centre** block to found a town and set its boundary. There is no town owner; the name comes from `general.townNames`.
 - **Platforms**: Craft **Platform Interface** blocks and place them inside the boundary (up to 10; 5-block spacing). Each block is one platform. Path, search radius, spread, enable, and destination allow-list are edited on the **Platform Interface** screen. The Town Centre shows a **read-only** platform list — no “add platform” from town UI.
-- **Tourists**: **Do not walk today** (movement speed ~0). Players must move them with minecarts or Create trains. Sixteen layered looks, personal names, and distance ranks ship in 0.9 (`docs/TOURIST_MODELS.md`).
+- **Tourists**: **Do not walk today** (movement speed ~0). Players must move them with minecarts or Create trains. Thirty-two layered looks, personal names, and distance ranks ship in 0.9 (`docs/TOURIST_MODELS.md`).
 - **Not in 0.9**: Tourist transport contracts, prestige / “First to City”, and worldgen (pillars below). Production, research, trading, and contracts remain locked by default.
 
 ## Vision for v1.0

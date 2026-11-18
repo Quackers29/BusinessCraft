@@ -6,6 +6,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Sixteen more tourist looks. The builtin catalog is the list in `data/businesscraft/tourist_looks` (32 files). Each new look has its own skin and outfit colours. New hat shapes are a visor, bucket hat, turban, cycling helmet, and fedora. New held or worn items are binoculars, a briefcase, a canteen, a newspaper, and a tote. The other new hats and items are recolours of meshes that were already there. Spawn gives every catalog entry an equal chance and syncs the same packed int. The umbrella index stays empty. See `docs/TOURIST_MODELS.md`.
+
 ### Changed
 - Right-clicking a tourist opens a tourist screen instead of the villager trade window. The title is the tourist's personal name and rank, and the screen shows the origin town, destination, distance, and progress to the next rank.
 - The old barrier "info" row is gone. Locked deals say which rank unlocks them. The Travel Ticket tooltip says it is a paper souvenir and what Any Town means.
