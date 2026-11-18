@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -45,8 +46,9 @@ class TouristLooksTest {
             assertTrue(look.type() != null, look.id() + " should name the matching tourist type");
             assertEquals(look.packed(), TouristAppearance.pack(look.skin(), look.outfit(), look.headwear(), look.accessory()));
         }
-        assertTrue(headwear.size() >= 8, "headwear should vary");
-        assertTrue(accessories.size() >= 6, "accessories should vary");
+        assertTrue(headwear.size() >= 14, "headwear should vary");
+        assertTrue(accessories.size() >= 12, "accessories should vary");
+        assertFalse(accessories.contains(5), "retired umbrella index");
         assertEquals(TouristAppearance.pack(1, 0, 1, 1), packedOf(looks, "safari_sightseer"));
         assertEquals(TouristAppearance.pack(0, 1, 0, 2), packedOf(looks, "market_shopper"));
         assertEquals(TouristAppearance.pack(2, 2, 3, 4), packedOf(looks, "station_scholar"));
@@ -63,6 +65,22 @@ class TouristLooksTest {
         assertEquals(TouristAppearance.pack(13, 13, 15, 8), packedOf(looks, "bazaar_merchant"));
         assertEquals(TouristAppearance.pack(14, 14, 14, 11), packedOf(looks, "canyon_scout"));
         assertEquals(TouristAppearance.pack(15, 15, 13, 10), packedOf(looks, "station_conductor"));
+        assertEquals(TouristAppearance.pack(16, 16, 16, 0), packedOf(looks, "beach_daytripper"));
+        assertEquals(TouristAppearance.pack(17, 17, 20, 13), packedOf(looks, "business_traveller"));
+        assertEquals(TouristAppearance.pack(18, 18, 23, 17), packedOf(looks, "campus_student"));
+        assertEquals(TouristAppearance.pack(19, 19, 17, 15), packedOf(looks, "park_retiree"));
+        assertEquals(TouristAppearance.pack(20, 20, 21, 12), packedOf(looks, "field_photographer"));
+        assertEquals(TouristAppearance.pack(21, 21, 19, 14), packedOf(looks, "city_cyclist"));
+        assertEquals(TouristAppearance.pack(22, 22, 30, 18), packedOf(looks, "summit_hiker"));
+        assertEquals(TouristAppearance.pack(23, 23, 24, 4), packedOf(looks, "museum_visitor"));
+        assertEquals(TouristAppearance.pack(24, 24, 22, 19), packedOf(looks, "orchard_picker"));
+        assertEquals(TouristAppearance.pack(25, 25, 26, 16), packedOf(looks, "rain_commuter"));
+        assertEquals(TouristAppearance.pack(26, 26, 25, 6), packedOf(looks, "tea_tourist"));
+        assertEquals(TouristAppearance.pack(27, 27, 31, 11), packedOf(looks, "night_painter"));
+        assertEquals(TouristAppearance.pack(28, 28, 18, 20), packedOf(looks, "souk_traveller"));
+        assertEquals(TouristAppearance.pack(29, 29, 29, 4), packedOf(looks, "rail_surveyor"));
+        assertEquals(TouristAppearance.pack(30, 30, 28, 7), packedOf(looks, "spa_guest"));
+        assertEquals(TouristAppearance.pack(31, 31, 27, 6), packedOf(looks, "winter_scholar"));
     }
 
     private static int packedOf(List<TouristLook> looks, String id) {
@@ -97,5 +115,21 @@ class TouristLooksTest {
         assertEquals(looks.get(0).id(), first.id());
         assertEquals(looks.get(looks.size() - 1).id(), last.id());
         assertEquals(first.id(), TouristLooks.pick(bound -> 0).id());
+    }
+
+    @Test
+    void pick_reachesEveryBuiltinLookOnce() {
+        TouristLooks.replace(TouristLooks.loadFromClasspath());
+        List<TouristLook> looks = TouristLooks.all();
+        Set<String> picked = new HashSet<>();
+        for (int i = 0; i < looks.size(); i++) {
+            int index = i;
+            TouristLook look = TouristLooks.pick(bound -> index);
+            assertTrue(picked.add(look.id()), "duplicate pick " + look.id());
+            assertEquals(looks.get(index).id(), look.id());
+        }
+        assertEquals(looks.size(), picked.size());
+        assertTrue(picked.contains("beach_daytripper"));
+        assertTrue(picked.contains("winter_scholar"));
     }
 }

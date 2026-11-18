@@ -100,10 +100,26 @@ Hair is the vanilla second head layer (the player "hat" part). `TouristModel.pre
 | 13 | navy cap (same mesh as 2) | no |
 | 14 | dust cap (same mesh as 2) | no |
 | 15 | plum fez (same mesh as 5) | yes |
+| 16 | visor | yes |
+| 17 | bucket hat | no |
+| 18 | turban | no |
+| 19 | cycling helmet | no |
+| 20 | fedora | no |
+| 21 | scarlet cap (same mesh as 2) | no |
+| 22 | sand sun hat (same mesh as 4) | no |
+| 23 | plum beanie (same mesh as 12) | no |
+| 24 | ink beret (same mesh as 3) | no |
+| 25 | cream boater (same mesh as 9) | no |
+| 26 | slate hood (same mesh as 8) | no |
+| 27 | grey ushanka (same mesh as 11) | no |
+| 28 | rose headband (same mesh as 6) | yes |
+| 29 | olive pith (same mesh as 1) | no |
+| 30 | olive cap (same mesh as 2) | no |
+| 31 | crimson beret (same mesh as 3) | no |
 
-Accessory index 5 is retired and rejected by `knownAccessory`. It stays unused so the other indices keep their numbers.
+Accessory index 5 is retired and rejected by `knownAccessory`. It stays unused so the other indices keep their numbers. Do not put an umbrella back on that index.
 
-Indices 13, 14, and 15 are recolours: `addCap` / `addFez` build the same boxes under a new name, and the new name has its own texture. Accessories 9, 10, and 11 are the same idea (red backpack, brown suitcase, brass camera).
+Indices 13, 14, and 15 are recolours: `addCap` / `addFez` build the same boxes under a new name, and the new name has its own texture. Accessories 9, 10, and 11 are the same idea (red backpack, brown suitcase, brass camera). Indices 21–31 (except the new silhouettes 16–20) and accessories 17–20 are the same kind of recolour. A recolour needs a new index because the texture number is the index.
 
 ### Skin and outfit UV
 
@@ -158,9 +174,9 @@ Accessories stay children of the model root. `TouristModel.setupAnim` copies the
 
 | Follows | Indices | What they are |
 | --- | --- | --- |
-| Body | 1 camera, 3 backpack, 9 red backpack, 11 brass camera | Worn on the torso |
-| Left arm | 2 suitcase, 7 basket, 10 brown suitcase | Held on the left |
-| Right arm | 4 map, 6 book, 8 lantern | Held on the right |
+| Body | 1 camera, 3 backpack, 9 red backpack, 11 brass camera, 18 olive backpack | Worn on the torso |
+| Left arm | 2 suitcase, 7 basket, 10 brown suitcase, 13 briefcase, 16 tote, 19 apple basket | Held on the left |
+| Right arm | 4 map, 6 book, 8 lantern, 12 binoculars, 14 canteen, 15 newspaper, 17 navy book, 20 copper lantern | Held on the right |
 
 Cubes on a held accessory are in that arm's local space. The part origin is the shoulder. The arm cube runs from about y = -2 (shoulder) to y = 10 (fingertips), so a grip belongs around y = 8 to 10 and should overlap the palm (z near -2 to 0). y = -2 is the shoulder, not the hand. A shaft that only leans sideways still runs up inside the arm and looks stuck to the forearm. Pitch a shaft forward as well so it leaves the front of the fist.
 
@@ -214,6 +230,8 @@ Skins 8–15 are the same masks with new colours. They were made by copying one 
 | 14 canyon | 4 blush |
 | 15 conductor | 5 plain, including the light streak |
 
+Skins and outfits 16–31 are one new palette per look in the second set below. Each skin is a recolour of the mask named in that table (same brow, eye, mouth, and feature pixels). Each outfit is a recolour of an existing cut, so a short sleeve stays short and a full coat stays full. Nothing in the repo rebuilds them.
+
 Hair overlay, on every skin, at (40, 8):
 
 ```text
@@ -232,27 +250,52 @@ To make a new face, copy the skin whose mask you want, change the skin colours a
 
 This example is not in the game. It reuses the sun hat (4) and the basket (7), and a new outfit index.
 
-1. Copy a skin whose face you want. For a blush smile, copy `skin_0.png` to `skin_16.png` and recolour it. Do not edit `skin_0.png` if you still want the market shopper unchanged.
-2. Copy an outfit, for example `outfit_0.png` to `outfit_16.png`, and recolour the jacket, sleeves, and trousers.
+1. Copy a skin whose face you want. For a blush smile, copy `skin_0.png` to the next free index (`skin_32.png` once 0–31 are in use) and recolour it. Do not edit a skin a shipped look still uses.
+2. Copy an outfit, for example `outfit_0.png` to `outfit_32.png`, and recolour the jacket, sleeves, and trousers.
 3. You do not need a new `headwear_4.png` or `accessory_7.png`. Those already exist. You also do not need a Java change, because 4 and 7 are already in `TouristParts` and `TouristModel`.
 4. Add `common/src/main/resources/data/businesscraft/tourist_looks/pond_skater.json`:
 
 ```json
-{ "id": "pond_skater", "order": 16, "type": "SIGHTSEER", "skin": 16, "outfit": 16, "headwear": 4, "accessory": 7 }
+{ "id": "pond_skater", "order": 32, "type": "SIGHTSEER", "skin": 32, "outfit": 32, "headwear": 4, "accessory": 7 }
 ```
 
 5. Add a line `pond_skater` to `index.txt`. The reload listener would find the JSON without that line, but the classpath loader and `TouristLooksTest` only see ids listed there.
 6. No lang file. The screen will say "Pond Skater". With `type` set to `SIGHTSEER` and no private trade list, the tourist sells the shared sightseer deals (`TouristTradeCatalog.forLook`). A private list is a `lists.put("pond_skater", ...)` entry in `lookLists()`, which is Java, not JSON.
 
-Preview every loaded look, front and side, plus a lineup:
+Preview every loaded look. The harness photographs the lineup, then each look from the front, the side, and the back, plus head-tilt shots:
 
 ```bash
 bash tools/showcase.sh tourists forge
 ```
 
-Screenshots land in `showcase-output/<timestamp>_tourists_forge/screenshots/`. The new look is `showcase_tourist_pond_skater_front.png` and `showcase_tourist_pond_skater_side.png`. The lineup shots are `showcase_tourists_lineup_front.png` and `showcase_tourists_lineup_side.png`. The harness loads `TouristLooks.all()` and places one tourist per look, so there is no switch for a single id. `bash tools/showcase.sh tourists fabric` is the same scene on Fabric.
+Screenshots land in `showcase-output/<timestamp>_tourists_forge/screenshots/`. A look id `pond_skater` is `showcase_tourist_pond_skater_front.png`, `_side.png`, `_back.png`, and `_tiltup.png` (head pitched up). The lineup shots are `showcase_tourists_lineup_front.png` and `showcase_tourists_lineup_side.png`. The harness loads `TouristLooks.all()` and places one tourist per look, so there is no switch for a single id. The floor is sized from that list. `bash tools/showcase.sh tourists fabric` is the same scene on Fabric.
 
-`./gradlew test` runs `TouristLooksTest`. A builtin look must have a unique id, a unique packed int, a known hat index, a known accessory index, and a `type`. Adding `pond_skater` as above satisfies that. Changing an existing look's numbers fails the test that pins the original sixteen.
+`./gradlew test` runs `TouristLooksTest` and `TouristModelBoundsTest`. A builtin look must have a unique id, a unique packed int, a known hat index, a known accessory index, and a `type`. Adding `pond_skater` as above satisfies that. Changing a shipped look's numbers fails the test that pins both the original sixteen and the second sixteen. The bounds test poses every hat and every accessory, and again for every look in the catalog, through the head turns and the arm and leg swings.
+
+## The second set of looks
+
+The builtin catalog is whatever `index.txt` lists. Spawn does not have a separate weight table. `TouristLooks.pick` asks the random source for an index in `0 .. size-1`, so each file is one equal chance. The server stores that look's id and writes the packed int into synced entity data (`TouristLook` in NBT, `DATA_LOOK` on the wire). Clients draw from the int. A dedicated server and a joining player agree when they share the same JSON and the client has the textures. An already-saved tourist keeps the int they spawned with.
+
+These sixteen sit after the original sixteen. Orders 16–31. Trade lists are the shared list for `type` (no private override).
+
+| Id | Who | Type | Mask copied | Hat | Item |
+| --- | --- | --- | --- | --- | --- |
+| `beach_daytripper` | Beachgoer | SIGHTSEER | 0 blush | visor | none |
+| `business_traveller` | Business traveller | SHOPPER | 5 plain, light streak | fedora | briefcase |
+| `campus_student` | Student | SCHOLAR | 2 glasses | plum beanie | navy book |
+| `park_retiree` | Retiree | SIGHTSEER | 7 plain | bucket hat | newspaper |
+| `field_photographer` | Photographer | ADVENTURER | 1 stubble | scarlet cap | binoculars |
+| `city_cyclist` | Cyclist | ADVENTURER | 0 blush | cycling helmet | canteen |
+| `summit_hiker` | Hiker | ADVENTURER | 3 beard | olive cap | olive backpack |
+| `museum_visitor` | Museum visitor | SCHOLAR | 2 glasses | ink beret | map |
+| `orchard_picker` | Orchard picker | PILGRIM | 0 blush | sand sun hat | apple basket |
+| `rain_commuter` | Commuter | SHOPPER | 1 stubble | slate hood | tote |
+| `tea_tourist` | Tea tourist | SIGHTSEER | 4 blush, deep skin | cream boater | book |
+| `night_painter` | Painter | SIGHTSEER | 5 plain, light streak | crimson beret | brass camera |
+| `souk_traveller` | Souk traveller | SHOPPER | 6 moustache | turban | copper lantern |
+| `rail_surveyor` | Surveyor | ADVENTURER | 1 stubble | olive pith | map |
+| `spa_guest` | Spa guest | PILGRIM | 4 blush, deep skin | rose headband | basket |
+| `winter_scholar` | Winter scholar | SCHOLAR | 2 glasses | grey ushanka | book |
 
 ## How to add a new hat or accessory shape
 
@@ -261,7 +304,7 @@ Recolouring an existing mesh stops at the steps above. A new silhouette needs co
 1. Add a constant at the end of `TouristParts` and move `HEADWEAR_MAX` or `ACCESSORY_MAX` to it. Indices have to stay contiguous. The arrays in `TouristModel` are indexed by these numbers, with an empty name at index 0.
 2. Add the part name to `HAT_NAMES` or `ACCESSORY_NAMES` at that same index.
 3. Build it in `createBodyLayer` with `addBox` and `texOffs`. Copy `addCap` if you only wanted another cap colour: that is how `cap_navy` and `cap_dust` exist.
-4. For a hat, decide whether the hair overlay should stay visible. If it should, add the new index next to the fez, headband, and flower checks in `prepare`.
+4. For a hat, decide whether the hair overlay should stay visible. If it should, add the new index to the `SHOW_HAIR` list in `TouristModel`. Wide crowns leave that list empty for their index.
 5. For an accessory, add the index to `BODY_ACCESSORIES`, `LEFT_ACCESSORIES`, or `RIGHT_ACCESSORIES`.
 6. Add `headwear_N.png` or `accessory_N.png` and paint the rectangles from the box unwrap above.
 7. Point a look JSON at the new index.
@@ -272,7 +315,7 @@ Recolouring an existing mesh stops at the steps above. A new silhouette needs co
 
 The costume and the personal name are chosen separately. A look does not have a name pool.
 
-On the server, the destination constructor calls `assignLook` immediately. The plain constructor waits until the first server tick, which assigns a look if `DATA_LOOK` is still unset. `TouristLooks.pick` takes one entry at random from the catalog. The id is stored on the entity and the packed int is synced. NBT keys are `TouristLook` (the int) and `TouristLookId` (the string). A tourist already saved keeps those numbers if you later add more looks.
+On the server, the destination constructor calls `assignLook` immediately. The plain constructor waits until the first server tick, which assigns a look if `DATA_LOOK` is still unset. `TouristLooks.pick` takes one entry at random from the catalog: the random source is asked for an index below the live list size, so a new file is included at the same chance as the old ones and there is no hardcoded count. The id is stored on the entity and the packed int is synced to every client. NBT keys are `TouristLook` (the int) and `TouristLookId` (the string). A tourist already saved keeps those numbers if you later add more looks. The client never rolls its own look.
 
 A platform spawn rolls a random type in `assignSpawnVariety`, then `assignLook` replaces it when the JSON has a `type`. The type is display and trades, not the mesh.
 
@@ -296,7 +339,8 @@ Craft: two paper, one iron ingot, two sticks (shaped recipe in `data/businesscra
 - Hat or accessory index past `HEADWEAR_MAX` / `ACCESSORY_MAX` packs successfully and then draws nothing.
 - Two looks with the same four numbers fail `TouristLooksTest`, and `getLookId` returns the first catalog match for that packed int.
 - An accessory that is not in one of the three follow-lists will not move with the arm.
-- A held item posed at the shoulder (arm-local y near -2, or a canopy pivoted there) reads as floating across the chest. The fist is the bottom of the arm, near y = 8 to 10.
+- A held item posed at the shoulder (arm-local y near -2, or a canopy pivoted there) reads as floating across the chest. The fist is the bottom of the arm, near y = 8 to 10. Pitch a shaft forward from that grip. The map, the book, the binoculars, and the newspaper all do this.
+- Index 5 is the removed umbrella. Leave it empty.
 - The outfit file is the clothing overlay, not a second copy of the body. Paint the jacket and sleeves, or the arms stay the skin colour.
 - `type` left out is legal in the parser and then fails the builtin test. A platform spawn then keeps the random type from `assignSpawnVariety` instead of one that matches the costume.
-- A private trade list is optional and lives in `TouristTradeCatalog`, not in the look JSON. Market shopper, station scholar, trail hiker, rain caller, garden pilgrim, and library clerk use their type's shared list. The other looks have an override keyed by id.
+- A private trade list is optional and lives in `TouristTradeCatalog`, not in the look JSON. Market shopper, station scholar, trail hiker, rain caller, garden pilgrim, library clerk, and every look in the second set use their type's shared list. The other original looks have an override keyed by id.
