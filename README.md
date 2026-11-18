@@ -1,6 +1,6 @@
 # BusinessCraft - Town Management Mod
 
-**A Minecraft Forge / Fabric 1.20.1 mod (0.9.0-beta) featuring town management and a tourism transport economy.**
+**A Minecraft Forge / Fabric 1.20.1 mod (0.9.0 alpha) featuring town management and a tourism transport economy.**
 
 ## 🏙️ Core Systems Overview
 
@@ -380,7 +380,7 @@ Server-built UI view models pushed to the client: town interface, resources, pro
 ### **Installation Requirements**
 - **Minecraft**: 1.20.1
 - **Loader**: Forge or Fabric (both fully supported)
-- **Mod version**: 0.9.0-beta
+- **Mod version**: 0.9.0 alpha; the exact build is `mod_version` in `gradle.properties` (`0.9.0-alphaN`, bumped on every merge to main)
 - **Memory**: Recommended 4GB+ for optimal performance
 - **Storage**: Persistent data saved with world files (no pre-alpha save back-compat promise)
 

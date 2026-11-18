@@ -1,7 +1,7 @@
 # BusinessCraft - Living Document
 
 **Last Updated**: October 26, 2026  
-**Project Status**: 0.9.0-beta — tourism transport core  
+**Project Status**: 0.9.0 alpha (`0.9.0-alphaN`, see `gradle.properties`) — tourism transport core  
 **Core Vision**: Create a compelling **transport economy** in Minecraft. Towns attract tourists; **moving them real distance** (minecarts, Create trains) generates revenue and growth. Production, trading, and contracts exist in code but ship **locked off** in 0.9.
 
 ## The Big Idea (Why This Mod Exists)

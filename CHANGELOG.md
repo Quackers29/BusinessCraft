@@ -13,6 +13,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A tourist shows their first name above their head, from a few blocks away, including through walls. The full name stays on the tourist screen. The name is chosen when they spawn and kept in the save.
 - The eight newer tourist looks use the same face layout as the original eight: the same brow, eye, and mouth placement, and the same blush, stubble, glasses, beard, and moustache masks.
 - The tourist screen times the visit in minutes. The trade list scrolls when the window is short.
+- Builds are numbered `0.9.0-alphaN`. `tools/bump-alpha.sh` adds one to N on every merge to main.
 
 ## [0.9.0-beta] — 2026-07-16
 
