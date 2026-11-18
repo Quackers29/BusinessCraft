@@ -3,6 +3,7 @@
 # world, join it from your own launcher (or an opt-in dev client), then shut everything down.
 #
 #   bash tools/showcase-play.sh start [forge|fabric] [--client]   # server only; --client also opens one
+#   bash tools/showcase-play.sh start --production [forge|fabric] # production/research world (below)
 #   bash tools/showcase-play.sh client                            # open a dev client on the running server
 #   bash tools/showcase-play.sh status                            # running? loader, port, how to join, logs
 #   bash tools/showcase-play.sh stop                              # save and stop what this script launched
@@ -11,6 +12,12 @@
 # with tourists, contracts, signs, a guide chest), waits for the server's "Done (" line, prints
 # the address to join and leaves the server running. No client is started unless you pass
 # --client (or run 'client' later); join from your own launcher, or with ./gradlew runClient.
+# --production builds a different world: [production] and [research] are switched on in this
+# server's own config (<loader>/run-play-server/config), never in your normal config, and four
+# towns 120 blocks apart show the states: Starterton (biome starting kit only), Farmstead (full
+# stores, recipes run), Highmark (many upgrades, research AI active), Hungerford (starving: low
+# happiness, min-stock recipe conditions fail). Each has a sign. A plain 'start' restores the
+# tour world and its default config.
 # stop ends only the processes recorded in the session file. A client you started yourself is
 # left alone. Both are safe to repeat, with or without a client.
 #
@@ -31,7 +38,7 @@ PLAY_NAME="${BC_PLAY_NAME:-BC_Player}"
 READY_TIMEOUT=480
 
 usage() {
-    sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//' >&2
+    sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//' >&2
     exit 2
 }
 
@@ -74,7 +81,7 @@ save_session() {
     mkdir -p "$(dirname "$SESSION_FILE")"
     {
         for key in LOADER PORT RUN_DIR SERVER_DIR CLIENT_DIR SERVER_PID SERVER_START CLIENT_PID CLIENT_START \
-                STARTED_AT READY_SECONDS DETAIL PLAYER; do
+                STARTED_AT READY_SECONDS DETAIL PLAYER SCENARIO; do
             printf '%s=%q\n' "$key" "${!key:-}"
         done
     } >"$SESSION_FILE.tmp"
@@ -83,7 +90,7 @@ save_session() {
 
 load_session() {
     LOADER="" PORT="" RUN_DIR="" SERVER_DIR="" CLIENT_DIR="" SERVER_PID="" SERVER_START=""
-    CLIENT_PID="" CLIENT_START="" STARTED_AT="" READY_SECONDS="" DETAIL="" PLAYER=""
+    CLIENT_PID="" CLIENT_START="" STARTED_AT="" READY_SECONDS="" DETAIL="" PLAYER="" SCENARIO=""
     [[ -f "$SESSION_FILE" ]] || return 1
     # shellcheck disable=SC1090
     source "$SESSION_FILE"
@@ -161,6 +168,29 @@ write_server_properties() {
     sed -i -e 's/^view-distance=.*/view-distance=10/' \
         -e 's/^simulation-distance=.*/simulation-distance=10/' \
         -e 's/^motd=.*/motd=BusinessCraft showcase tour/' "$file"
+}
+
+# Config of the production world. The server's own config dir is the only place it is written;
+# it is the bundled businesscraft.toml with [production] and [research] switched on, plus a marker
+# so a later plain start knows to remove it.
+PRODUCTION_CONFIG_MARKER="# showcase-play: production scenario"
+BUNDLED_TOML="$ROOT/common/src/main/resources/assets/businesscraft/config/businesscraft.toml"
+
+write_server_config() {
+    local scenario="$1" file="$2/config/businesscraft.toml"
+    if [[ "$scenario" == "production" ]]; then
+        mkdir -p "$2/config"
+        {
+            echo "$PRODUCTION_CONFIG_MARKER"
+            awk '/^\[/ { section = $0 }
+                (section == "[production]" || section == "[research]") && /^[ \t]*enabled[ \t]*=/ {
+                    sub(/=.*/, "= true")
+                }
+                { print }' "$BUNDLED_TOML"
+        } >"$file"
+    elif [[ -f "$file" ]] && head -n 1 "$file" | grep -qxF "$PRODUCTION_CONFIG_MARKER"; then
+        rm -f "$file"
+    fi
 }
 
 prepare_client_dir() {
@@ -243,13 +273,14 @@ start_abort() {
 }
 
 do_start() {
-    local loader="forge" want_client=0 arg
+    local loader="forge" want_client=0 scenario="tour" arg
     for arg in "$@"; do
         case "$arg" in
             --client) want_client=1 ;;
+            --production) scenario="production" ;;
             forge | fabric) loader="$arg" ;;
             *)
-                echo "Unknown argument: $arg (use forge or fabric, and optionally --client)" >&2
+                echo "Unknown argument: $arg (use forge or fabric, and optionally --client or --production)" >&2
                 exit 2
                 ;;
         esac
@@ -274,6 +305,7 @@ do_start() {
     RUN_DIR="$SHOWCASE_RUN_DIR"
     LOADER="$loader"
     PLAYER="$PLAY_NAME"
+    SCENARIO="$scenario"
     echo "Output: $RUN_DIR"
 
     local template wanted
@@ -306,10 +338,13 @@ do_start() {
     SERVER_DIR="$ROOT/$loader/run-play-server"
     CLIENT_DIR="$ROOT/$loader/run-play-client"
     local server_spec="$RUN_DIR/server-command.json"
-    dump_command "$loader" runServer "$server_spec" -PmpSmoke=play
+    local smoke_mode="play"
+    [[ "$scenario" == "production" ]] && smoke_mode="play-production"
+    dump_command "$loader" runServer "$server_spec" -PmpSmoke="$smoke_mode"
 
     mkdir -p "$SERVER_DIR"
     printf 'eula=true\n' >"$SERVER_DIR/eula.txt"
+    write_server_config "$scenario" "$SERVER_DIR"
     write_server_properties "$SERVER_DIR/server.properties" "$PORT"
     rm -rf "$SERVER_DIR/world"
     cp -a "$template" "$SERVER_DIR/world"
@@ -414,7 +449,7 @@ print_status_body() {
     if [[ -n "${CLIENT_PID:-}" ]]; then
         if client_running; then client_note="running (pid ${CLIENT_PID}, player ${PLAYER})"; else client_note="not running"; fi
     fi
-    echo "  Loader:   ${LOADER}   Port: ${PORT}"
+    echo "  Loader:   ${LOADER}   Port: ${PORT}   Scenario: ${SCENARIO:-tour}"
     echo "  Server:   running (pid ${SERVER_PID})   Client: ${client_note}"
     [[ -n "${STARTED_AT:-}" ]] && echo "  Started:  ${STARTED_AT}   ready after ${READY_SECONDS:-?}s"
     print_join

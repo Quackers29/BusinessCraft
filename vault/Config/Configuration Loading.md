@@ -18,7 +18,7 @@ The mod's entire behavior (town spacing, tourist spawning thresholds, payment ra
 - Special cases:
   - `general.townNames` falls back to an internal list of 14 themed names via private getDefaultTownNames().
   - `milestones.rewards` (a list of tables) is handled by loadMilestoneRewards: if the list is absent or empty the map is populated with two default entries (distance 1000 → apple×1, distance 5000 → bread×1); otherwise each entry is parsed (distance as Number, items as list of "modid:item:count" strings) and inserted only if distance > 0 and items non-empty.
-- After the TOML block, loadRegistries() is called (Resource/Production/Upgrade/Biome registries, which themselves may consult the platform config dir).
+- After the TOML block, loadRegistries() is called (Resource/Production/Upgrade/Biome registries, which install any missing CSV from the jar and then run a validation pass - see [[Config/CSV Config Files]]).
 - Hot reload: registerWithHotReload() registers the main config with ConfigurationService, which sets up a JDK WatchService on the parent directory and a 250 ms debounced executor callback that re-invokes loadConfig() on detected modify/create.
 - saveConfig() (also used by the in-game "save" path if needed) rebuilds a fresh CommentedFileConfig, sets every current static value plus a descriptive comment, handles milestone serialization symmetrically, and writes it.
 - All values are live: changing a static (in tests, via commands, or after reload) immediately affects every reader (e.g. TouristEntity.expiry, payment math, boundary checks, name picker).
@@ -53,7 +53,7 @@ Defaults (source of truth = the Java field initializers; must match the shipped 
 - Milestones: enableMilestones=true, milestoneRewards populated by loadMilestoneRewards (default empty-list path: 1000→apple, 5000→bread)
 - Player: playerTracking=true, townBoundaryMessages=true
 - Trading: tradingEnabled=false, tradingTickInterval=60, tradingRestockRate=0.5f, tradingDefaultMaxStock=1000.0f
-- Production: productionEnabled=false, productionTickInterval=100, dailyTickInterval=24000, minStockPercent=60, excessStockPercent=80
+- Production: productionEnabled=false, dailyTickInterval=24000, minStockPercent=60, excessStockPercent=80
 - Contracts: contractAuctionDurationMinutes=1.0, contractCourierAcceptanceMinutes=2.0, contractCourierDeliveryMinutesPerMeter=0.05, contractSnailMailDeliveryMinutesPerMeter=0.1, contractsEnabled=false
 - Display: displayTimezone="UTC" (also pushed to BCTimeUtils on load)
 - Research/phase11: researchEnabled=false
@@ -126,6 +126,7 @@ Error handling: every I/O or platform failure path in loadConfig / saveConfig / 
 - NightConfig CommentedConfig / CommentedFileConfig are used directly; their exact getOrElse null-vs-absent semantics are relied upon but not unit-tested here beyond the loader's usage.
 
 ## Related
+- [[Config/CSV Config Files]]
 - [[Config/Subsystem Toggle Honesty]] (how trading/contracts/research/production flags gate packets, wants, and biome kits)
 - [[Economy/Economy Overview]] (metersPerEmerald and currencyItem feed T-001 payment calc and T-006 GlobalMarket)
 - [[Town/Town Overview]] (most town sizing, pop, tourist capacity, and boundary numbers come from here)

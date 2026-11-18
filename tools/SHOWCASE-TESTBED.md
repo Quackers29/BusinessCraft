@@ -132,6 +132,7 @@ Use `context.townAPos()`, `context.townBPos()`, `context.townAId()`, and `contex
 ```bash
 bash tools/showcase-play.sh start            # server only, Forge (default); `start fabric` for Fabric
 bash tools/showcase-play.sh start --client   # also open one dev client (or run `client` later)
+bash tools/showcase-play.sh start --production   # production/research world: four towns in different states
 bash tools/showcase-play.sh client           # open a dev client on the running server (`./gradlew runClient` also works)
 bash tools/showcase-play.sh status           # running? loader, port, join addresses, logs
 bash tools/showcase-play.sh stop             # save the world, stop the server and any dev client it opened
@@ -153,3 +154,20 @@ Four towns from `ShowcasePlayLayout`: Oakvale (0,0), Hillcrest (0,-120), Riverto
 - Five named tourists by the spawn, a chest with the Conductor's Clipboard and a guide book, 13 signs. Noon, no daylight or weather cycle.
 
 Code: `ShowcasePlayServer` (build and dispatcher), `ShowcasePlayLayout` (plan, unit tested). It is selected with `-PmpSmoke=play` and hooked from `MultiplayerSmokeServer`. It is not part of targeted showcase selection (`showcase-targets.json` ignores it).
+
+### Production world: `start --production`
+
+`bash tools/showcase-play.sh start --production [forge|fabric]` builds a different world for trying the production and research systems. It writes the bundled `businesscraft.toml` with `[production] enabled` and `[research] enabled` set to `true` into `<loader>/run-play-server/config/` only (your normal config is not touched), and boots with `-PmpSmoke=play-production`. A plain `start` removes that file again, so the default tour world is unchanged. Everything else (server only by default, `--client`, ports, `status`, `stop`) works as above.
+
+Four towns, 120 blocks apart, each with a sign south of its Town Centre. Stock is set as a percentage of each town's storage cap and upgrades are unlocked through the normal APIs, so the numbers follow `upgrades.csv` and `[production]` `minStockPercent` / `excessStockPercent`. Open the Resources tab to see stock, rates and happiness.
+
+| Town | Position | State | What it shows |
+|---|---|---|---|
+| Starterton | (0, 0) | Biome starting kit only | The kit's upgrades and stock for the biome (random variant), nothing seeded. Food and money tick with the starting recipes; research AI picks cheap upgrades |
+| Farmstead | (120, 0) | Farming plus wood | Food, wood and money stocked at or above the min stock level, work units banked. Farming, woodcutting, sawmill and taxes all run; planks and food climb |
+| Highmark | (0, -120) | Mid-game | Many upgrades (higher farming and cap levels, research, tourism, work units), larger storage, high stock. The research AI keeps starting new upgrades (see the research bar) |
+| Hungerford | (120, -120) | Starving | Food about 6% of cap, farming and woodcutting stopped, wood below the min level. Happiness drops to the 50 base, the sawmill (`wood:>min`) never runs, population growth stays blocked |
+
+The server logs one `PRODUCTION_TOWN` line per town after the build and a `PRODUCTION_STATUS` line each minute (population, happiness, work units, upgrades, stock/cap per resource, current research). Starterton's biome is random, so its kit changes between runs. The build fails (`PLAY_FAILED`) if the config flags are off or a town spec names an unknown node, recipe or resource.
+
+Code: `ShowcaseProductionLayout` (plan, unit tested in `ShowcaseProductionLayoutTest`) and `ShowcaseProductionWorld` (seeding), driven from `ShowcasePlayServer`.
