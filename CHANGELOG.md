@@ -14,6 +14,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Unit tests for production and upgrades: CSV parsing, validation, recipe processing over whole cycles, upgrade modifiers and research, research AI choices, and a test that loads the shipped CSVs and expects no warnings.
 
 ### Fixed
+- Population growth stops at the town's `pop_cap`. A step that would pass the cap is cut back to the cap, and a town with no `pop_cap` is left uncapped. A food surplus no longer counts a recipe that is stalled because its output does not fit.
+- Expand Border (`border_expansion_production`) still runs only while population is over 80% of `pop_cap`, and it now also stops once the town is no more crowded than the biome kit it started as (`crowding:>1`). The threshold and the starting pop and border come from the CSVs and the config. Cycle time and the +1 border output are unchanged.
+- Repeating a research node no longer speeds up the recipe it unlocks. A bare unlock such as `border_expansion_production` stays at 1. A real bonus (`border:2`, `farming*0.5`) still scales with the node's benefit multiplier.
 - The Balanced Hamlet biome variant listed a starting upgrade (`border_basic`) that does not exist. It is removed.
 - `upgrades.csv` rows with an empty effects column were silently dropped, and a comma inside a quoted description shifted every later column. `upgrades.csv` and `items.csv` now read rows the same way as `productions.csv` and `biomes.csv`: quotes are respected, empty trailing columns are kept, and `#` comment lines are skipped.
 - `businesscraft.toml` comments for `[production]` and `[research]` now say what each key does, and the `[research]` comment sits above its key.

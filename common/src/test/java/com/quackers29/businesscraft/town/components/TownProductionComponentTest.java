@@ -390,10 +390,23 @@ class TownProductionComponentTest {
         ProductionRecipe producer = recipe("wuprod", 10.0f, List.of(), List.of(new ResourceAmount("wu", "1")));
         putRecipe(producer);
         setSpeedMod("wuprod", 1.0f);
+        setStorageCapMod("wu_cap", 100f); // room to finish; a full cap is not a surplus
 
         Condition c = new Condition("surplus", ">", "wu", false);
         ProductionRecipe r = recipeWithConditions("csurp", 1f, List.of(), List.of(), List.of(c));
         assertTrue(invokeCheckConditions(r)); // prod=0.1 > cons=0
+    }
+
+    @Test
+    void checkConditions_surplusIgnoresStalledRecipe() throws Exception {
+        ProductionRecipe producer = recipe("wuprod", 10.0f, List.of(), List.of(new ResourceAmount("wu", "1")));
+        putRecipe(producer);
+        setSpeedMod("wuprod", 1.0f);
+        setStorageCapMod("wu_cap", 0f); // 0 + 1 does not fit, so the producer is stalled
+
+        Condition c = new Condition("surplus", ">", "wu", false);
+        ProductionRecipe r = recipeWithConditions("csurp", 1f, List.of(), List.of(), List.of(c));
+        assertFalse(invokeCheckConditions(r));
     }
 
     @Test

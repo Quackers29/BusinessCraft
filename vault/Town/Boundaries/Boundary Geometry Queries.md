@@ -95,7 +95,7 @@ return minDistance;
 
 ## Open questions
 - **Service vs Town min-distance helpers**: TownBoundaryService.getMinimumDistanceRequired substitutes `defaultBorderRadius` on a null side; Town.getMinimumDistanceRequired substitutes the present town's own radius. Callers must know which contract they want. Placement new-side now matches the same default as getBoundaryRadius() fallback (aligned as of border cleanup).
-- Optional pop-linked growth: production recipe `border_expansion_production` (`pop:>80%pop_cap` → `border:1`), unlocked by `border_expansion` upgrade — not automatic from population alone.
+- Optional pop-linked growth: production recipe `border_expansion_production` (`pop:>80%pop_cap;crowding:>1` → `border:1`), unlocked by `border_expansion` upgrade — not automatic from population alone. `crowding` is pop/radius² divided by the biome kit's starting pop/border² (config defaults when no kit matches). Above 1 the town is more crowded than it started; at or below 1 the recipe stops.
 - isPositionInside and the two Town-to-Town helpers are only a partial API; many systems call getBoundaryRadius() and compare themselves.
 - 3D vs 2D distance is not configurable; PlayerBoundaryTracker uses horizontal distance.
 

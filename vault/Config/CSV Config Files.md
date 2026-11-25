@@ -19,7 +19,7 @@ Server owners and pack makers tune the economy by editing these files. A clean i
 - After all four registries load, `ConfigValidator` checks the references between them and adds one warning per problem:
   - input, output and cost ids that are not in `items.csv` (outputs may also be `pop`, `wu`, `tourist` or a known stat; costs may also be requirement-only stats such as `tourism`)
   - unknown tokens in an amount expression such as `1*popp` (these evaluate as 0 at runtime)
-  - condition targets and values that cannot be evaluated
+  - condition targets and values that cannot be evaluated (`crowding` is a known target: current density divided by the biome kit's starting density)
   - upgrade effect targets that are not a recipe, a node, or a known stat (`pop_cap`, `tourist_cap`, `wu_cap`, `storage_cap_all`, `storage_cap_<item>`, `border`, `happiness`, `research`)
   - unknown prerequisites and unknown biome starting nodes or starting values
   - a biome variant with weight 0 or less

@@ -6,7 +6,7 @@ tags:
 # Town Distance Validation
 
 **Breadcrumb**: Town > Boundaries > Town Distance Validation
-**TL;DR**: Placement of new towns and border expansion checks reject if euclidean distance to any other town is strictly less than (proposedBorder + other.getBoundaryRadius()). New-town and null sides use `ConfigLoader.defaultBorderRadius` (default **50**). `Town.getBoundaryRadius()` is the border upgrade/kit modifier (same default fallback). Population is **not** a boundary source; optional pop-linked growth is via production CSV (`border_expansion_production` with `pop:>80%pop_cap`).
+**TL;DR**: Placement of new towns and border expansion checks reject if euclidean distance to any other town is strictly less than (proposedBorder + other.getBoundaryRadius()). New-town and null sides use `ConfigLoader.defaultBorderRadius` (default **50**). `Town.getBoundaryRadius()` is the border upgrade/kit modifier (same default fallback). Population is **not** a boundary source; optional pop-linked growth is via production CSV (`border_expansion_production` with `pop:>80%pop_cap;crowding:>1`, so it stops once the town is no more crowded than its biome starting density).
 
 ## What it does
 These two services implement the "founding a town" and "growing a town" spatial and input validation rules. When a player places a Town Interface block, TownManager calls TownBoundaryService.checkTownPlacement to ensure the new settlement is far enough from existing ones given their border radii. `checkBorderExpansion` validates a proposed new border radius against neighbors (for upgrade/production growth paths). TownValidationService is the gate for TownService.createTown and settings updates — it rejects bad names, impossible coordinates, and inconsistent tourist config before any Town is allocated.
@@ -72,4 +72,4 @@ Config values read live: `ConfigLoader.defaultBorderRadius`, `ConfigLoader.minPo
 ## Related
 - [[Town/Boundaries/Boundary Geometry Queries]]
 - [[Town/Town Overview]]
-- Production recipe `border_expansion_production` (`productions.csv`) + unlock via `border_expansion` upgrade (`upgrades.csv`)
+- Production recipe `border_expansion_production` (`productions.csv`, `pop:>80%pop_cap;crowding:>1`) + unlock via `border_expansion` upgrade (`upgrades.csv`)
