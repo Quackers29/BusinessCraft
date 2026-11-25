@@ -203,17 +203,21 @@ public class TownUpgradeComponent implements TownComponent {
             }
         }
         // Deduct
+        Map<String, Long> paid = new java.util.LinkedHashMap<>();
         for (ResourceAmount ra : costs) {
             // Do not consume stats like tourism_count
             if (ra.resourceId.startsWith("tourism_"))
                 continue;
 
             town.getTrading().adjustStock(ra.resourceId, -ra.amount);
+            paid.merge(ra.resourceId, (long) ra.amount, Long::sum);
         }
 
         this.currentResearchNode = nodeId;
         this.researchProgress = 0;
         this.idleTicks = 0;
+        com.quackers29.businesscraft.debug.production.ProductionEvents.researchStarted(
+                town, nodeId, currentLevel + 1, paid);
 
         // Notification
         net.minecraft.server.level.ServerLevel level = com.quackers29.businesscraft.town.utils.TownNotificationUtils
@@ -245,6 +249,8 @@ public class TownUpgradeComponent implements TownComponent {
                 displayName += " " + newLevel;
             }
 
+            com.quackers29.businesscraft.debug.production.ProductionEvents.researchCompleted(
+                    town, nodeId, newLevel);
             unlockNode(nodeId); // Increments level
             currentResearchNode = null;
             researchProgress = 0;
@@ -270,6 +276,9 @@ public class TownUpgradeComponent implements TownComponent {
 
         upgradeLevels.put(nodeId, lvl + 1);
         unlockedNodes.add(nodeId);
+        if (!town.isLoading()) {
+            com.quackers29.businesscraft.debug.production.ProductionEvents.upgradeLevel(town, nodeId, lvl + 1);
+        }
 
         // Check for chained unlocks (Upgrade unlocking another Upgrade)
         UpgradeNode node = UpgradeRegistry.get(nodeId);
@@ -327,6 +336,27 @@ public class TownUpgradeComponent implements TownComponent {
                 float value = node.calculateEffectValue(effect, level);
                 activeModifiers.merge(effect.getTarget(), value, Float::sum);
             }
+        }
+        publishBorder();
+    }
+
+    private int publishedBorder = Integer.MIN_VALUE;
+
+    /** Records the radius already in effect so the next real change is the first event. */
+    public void baselineBorder() {
+        publishedBorder = town.getBoundaryRadius();
+    }
+
+    private void publishBorder() {
+        int radius = town.getBoundaryRadius();
+        if (town.isLoading() || publishedBorder == Integer.MIN_VALUE) {
+            publishedBorder = radius;
+            return;
+        }
+        if (radius != publishedBorder) {
+            int before = publishedBorder;
+            publishedBorder = radius;
+            com.quackers29.businesscraft.debug.production.ProductionEvents.border(town, before, radius);
         }
     }
 

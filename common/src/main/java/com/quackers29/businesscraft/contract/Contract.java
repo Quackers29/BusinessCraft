@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.contract;
 
+import com.quackers29.businesscraft.util.BcRandom;
+import com.quackers29.businesscraft.util.GameClock;
 import net.minecraft.nbt.CompoundTag;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,10 +17,10 @@ public abstract class Contract {
     protected Map<UUID, Float> bids = new HashMap<>();
 
     public Contract(UUID issuerTownId, String issuerTownName, long duration) {
-        this.id = UUID.randomUUID();
+        this.id = BcRandom.nextUuid();
         this.issuerTownId = issuerTownId;
         this.issuerTownName = issuerTownName;
-        this.creationTime = System.currentTimeMillis();
+        this.creationTime = GameClock.millis();
         this.expiryTime = this.creationTime + duration;
         this.isCompleted = false;
     }
@@ -40,7 +42,7 @@ public abstract class Contract {
     }
 
     public boolean isExpired() {
-        return System.currentTimeMillis() > expiryTime;
+        return GameClock.millis() > expiryTime;
     }
 
     public boolean isCompleted() {
@@ -60,11 +62,11 @@ public abstract class Contract {
     }
 
     public void extendExpiry(long additionalMillis) {
-        this.expiryTime = System.currentTimeMillis() + additionalMillis;
+        this.expiryTime = GameClock.millis() + additionalMillis;
     }
 
     public void expireNow() {
-        this.expiryTime = System.currentTimeMillis() - 1;
+        this.expiryTime = GameClock.millis() - 1;
     }
 
     public Map<UUID, Float> getBids() {

@@ -174,12 +174,6 @@ public final class ShowcasePlayServer {
             TOWN_POS.add(pos);
             TOWN_IDS.add(MultiplayerSmokeServer.placeTown(level, pos, spec.name()));
         }
-        for (int i = 0; i < TOWN_POS.size(); i++) {
-            Town town = MultiplayerSmokeServer.townEntity(level, TOWN_POS.get(i)).getTown();
-            if (town != null) {
-                town.setPopulation(ShowcasePlayLayout.TOWNS.get(i).population());
-            }
-        }
 
         int platforms = 0;
         platforms += buildOakvale(level);
@@ -362,14 +356,6 @@ public final class ShowcasePlayServer {
 
     // ---- content ---------------------------------------------------------------------------
 
-    private static final Item[][] STOCK = {
-            {Items.OAK_LOG, Items.COBBLESTONE, Items.IRON_INGOT, Items.BREAD, Items.EMERALD, Items.WHEAT},
-            {Items.IRON_INGOT, Items.COAL, Items.STONE, Items.COPPER_INGOT, Items.GOLD_INGOT, Items.EMERALD},
-            {Items.COD, Items.SALMON, Items.SAND, Items.CLAY_BALL, Items.SUGAR_CANE, Items.EMERALD},
-            {Items.SPRUCE_LOG, Items.DIAMOND, Items.GOLD_INGOT, Items.EMERALD, Items.APPLE, Items.LAPIS_LAZULI}};
-    private static final int[][] AMOUNT = {
-            {320, 500, 120, 90, 40, 200}, {300, 400, 600, 150, 60, 25},
-            {150, 80, 200, 120, 90, 15}, {600, 12, 80, 200, 64, 90}};
     /** Visits recorded for each town: {town index, origin index, count}. */
     private static final int[][] VISITS = {
             {0, 1, 4}, {0, 2, 2}, {1, 0, 6}, {1, 3, 1}, {2, 1, 3}, {2, 0, 1}, {3, 1, 2}};
@@ -380,16 +366,7 @@ public final class ShowcasePlayServer {
             if (town == null) {
                 continue;
             }
-            // The random biome variant may skip the starting node that grants the tourist cap.
-            if (!town.getUpgrades().isUnlocked("basic_settlement")) {
-                town.getUpgrades().unlockNode("basic_settlement");
-            }
-            if (town.getUpgrades().getModifier("tourist_cap") < 1f) {
-                town.getUpgrades().addFlatModifier("tourist_cap", 6f);
-            }
-            for (int r = 0; r < STOCK[i].length; r++) {
-                town.addResource(STOCK[i][r], AMOUNT[i][r]);
-            }
+            ShowcaseTownSeed.apply(town, i);
             town.getPaymentBoard().addReward(RewardSource.TOURIST_PAYMENT,
                     List.of(new ItemStack(Items.EMERALD, 6)), "ALL");
             town.getPaymentBoard().addReward(RewardSource.MILESTONE,

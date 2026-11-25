@@ -91,3 +91,8 @@ task cleanAll {
     dependsOn ':common:clean', ':forge:clean', ':fabric:clean'
     description = 'Cleans all modules'
 }
+
+task productionSim {
+    dependsOn ':common:productionSim'
+    description = 'Headless production simulation (common/build/production-sim)'
+}

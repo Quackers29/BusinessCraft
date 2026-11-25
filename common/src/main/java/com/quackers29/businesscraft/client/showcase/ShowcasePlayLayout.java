@@ -29,6 +29,10 @@ public final class ShowcasePlayLayout {
     public record TownSpec(String name, int dx, int dz, int population, String role) {
     }
 
+    /** One starting stack. Item ids are the same strings the play world places. */
+    public record Stock(String itemId, int amount) {
+    }
+
     public record Segment(int from, int to) {
     }
 
@@ -41,6 +45,24 @@ public final class ShowcasePlayLayout {
             new TownSpec("Hillcrest", 0, -120, 35, "Stop on the line"),
             new TownSpec("Rivertown", 0, -240, 20, "End of the line"),
             new TownSpec("Pinewood", 150, -120, 45, "Off the line: trade"));
+
+    /**
+     * Stacks placed into each town, in {@link #TOWNS} order. The play world and the
+     * headless production simulation both read this list.
+     */
+    public static final List<List<Stock>> STARTING_STOCK = List.of(
+            List.of(new Stock("minecraft:oak_log", 320), new Stock("minecraft:cobblestone", 500),
+                    new Stock("minecraft:iron_ingot", 120), new Stock("minecraft:bread", 90),
+                    new Stock("minecraft:emerald", 40), new Stock("minecraft:wheat", 200)),
+            List.of(new Stock("minecraft:iron_ingot", 300), new Stock("minecraft:coal", 400),
+                    new Stock("minecraft:stone", 600), new Stock("minecraft:copper_ingot", 150),
+                    new Stock("minecraft:gold_ingot", 60), new Stock("minecraft:emerald", 25)),
+            List.of(new Stock("minecraft:cod", 150), new Stock("minecraft:salmon", 80),
+                    new Stock("minecraft:sand", 200), new Stock("minecraft:clay_ball", 120),
+                    new Stock("minecraft:sugar_cane", 90), new Stock("minecraft:emerald", 15)),
+            List.of(new Stock("minecraft:spruce_log", 600), new Stock("minecraft:diamond", 12),
+                    new Stock("minecraft:gold_ingot", 80), new Stock("minecraft:emerald", 200),
+                    new Stock("minecraft:apple", 64), new Stock("minecraft:lapis_lazuli", 90)));
 
     /** Oakvale to Hillcrest, then Hillcrest to Rivertown. */
     public static final List<Segment> SEGMENTS = List.of(new Segment(0, 1), new Segment(1, 2));

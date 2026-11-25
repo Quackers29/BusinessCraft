@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.config;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.data.parsers.Condition;
 import com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount;
 import com.quackers29.businesscraft.data.parsers.Effect;
@@ -10,6 +11,9 @@ import com.quackers29.businesscraft.production.UpgradeNode;
 import com.quackers29.businesscraft.production.UpgradeRegistry;
 import com.quackers29.businesscraft.world.BiomeRegistry;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
 
@@ -37,9 +41,14 @@ public final class ConfigValidator {
     private ConfigValidator() {
     }
 
+    /** The only column order biomes.csv may use. */
+    static final String BIOME_COLUMNS =
+            "biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values";
+
     /** Runs every check. Returns the number of warnings added by this pass. */
     public static int validate() {
         int before = ConfigWarnings.all().size();
+        warnIfLegacyBiomeColumnOrder();
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
             validateRecipe(recipe);
         }
@@ -50,6 +59,50 @@ public final class ConfigValidator {
             validateKit(kit);
         }
         return ConfigWarnings.all().size() - before;
+    }
+
+    /**
+     * The generated stub put {@code weight} in column 4. That file is not read as a second format.
+     * One warning names the file and the only supported header; the row is left as written.
+     */
+    private static void warnIfLegacyBiomeColumnOrder() {
+        if (PlatformAccess.platform == null) {
+            return;
+        }
+        File file = PlatformAccess.platform.getConfigDirectory().resolve("businesscraft").resolve(BIOMES).toFile();
+        if (!file.isFile()) {
+            return;
+        }
+        String header;
+        try {
+            header = Files.readString(file.toPath()).lines().findFirst().orElse("");
+        } catch (IOException e) {
+            ConfigWarnings.warn(BIOMES, 1, "could not be read: " + e.getMessage());
+            return;
+        }
+        String[] columns = CsvConfig.splitLine(header);
+        boolean headerIsOld = columns.length >= 4 && columns[3].equalsIgnoreCase("weight");
+        boolean dataLooksOld = false;
+        if (!headerIsOld) {
+            try {
+                for (CsvConfig.Row row : CsvConfig.readRows(file)) {
+                    if (row.columns().length >= 4 && row.columns()[3].matches("\\d+")) {
+                        dataLooksOld = true;
+                    }
+                    break;
+                }
+            } catch (IOException e) {
+                ConfigWarnings.warn(BIOMES, 1, "could not be read: " + e.getMessage());
+                return;
+            }
+        }
+        if (headerIsOld || dataLooksOld) {
+            ConfigWarnings.warn(BIOMES, 1,
+                    "old column order (weight before description). The only supported order is "
+                            + BIOME_COLUMNS
+                            + ". Replace this file with the bundled copy; showcase-play --production overwrites a stale one. "
+                            + "The values were not remapped.");
+        }
     }
 
     // --- productions.csv ---

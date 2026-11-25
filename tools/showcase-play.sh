@@ -3,7 +3,7 @@
 # world, join it from your own launcher (or an opt-in dev client), then shut everything down.
 #
 #   bash tools/showcase-play.sh start [forge|fabric] [--client]   # server only; --client also opens one
-#   bash tools/showcase-play.sh start --production [forge|fabric] # production/research world (below)
+#   bash tools/showcase-play.sh start --production [forge|fabric] # production world, event log on
 #   bash tools/showcase-play.sh client                            # open a dev client on the running server
 #   bash tools/showcase-play.sh status                            # running? loader, port, how to join, logs
 #   bash tools/showcase-play.sh stop                              # save and stop what this script launched
@@ -12,15 +12,17 @@
 # with tourists, contracts, signs, a guide chest), waits for the server's "Done (" line, prints
 # the address to join and leaves the server running. No client is started unless you pass
 # --client (or run 'client' later); join from your own launcher, or with ./gradlew runClient.
-# --production builds a different world: [production] and [research] are switched on in this
-# server's own config (<loader>/run-play-server/config), never in your normal config, and four
-# towns 20 blocks apart show the states: Starterton (biome starting kit only), Farmstead (full
-# stores, recipes run), Highmark (many upgrades, research AI active), Hungerford (starving: low
-# happiness, min-stock recipe conditions fail). Each has a sign. It also replaces that server's
-# items.csv, productions.csv, upgrades.csv and biomes.csv with the bundled copies. The game
-# never overwrites an existing CSV, and a run dir created before the bundled install still has
-# the old generated files (different biomes column order, and no farming_advanced). A plain
-# 'start' restores the tour world and removes the production toml marker.
+# --production builds a different world: [production], [research] and [contracts] are switched
+# on in this server's own config (<loader>/run-play-server/config), never in your normal config.
+# Four towns 20 blocks apart show the states: Starterton (biome starting kit only), Farmstead
+# (full stores, recipes run), Highmark (many upgrades, research AI active), Hungerford (starving:
+# low happiness, min-stock recipe conditions fail). Each has a sign. It also replaces that
+# server's items.csv, productions.csv, upgrades.csv and biomes.csv with the bundled copies, and
+# writes the production event CSV into showcase-output/<run>/production/. The game never
+# overwrites an existing CSV; this start does, because a run dir created before the bundled
+# install still has the old generated files (different biomes column order, and no
+# farming_advanced). A plain 'start' restores the tour world and removes the production toml
+# marker. The event log stays off unless you pass --production or set [debug] productionEventLog.
 # stop ends only the processes recorded in the session file. A client you started yourself is
 # left alone. Both are safe to repeat, with or without a client.
 #
@@ -41,7 +43,7 @@ PLAY_NAME="${BC_PLAY_NAME:-BC_Player}"
 READY_TIMEOUT=480
 
 usage() {
-    sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//' >&2
+    sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//' >&2
     exit 2
 }
 
@@ -84,7 +86,7 @@ save_session() {
     mkdir -p "$(dirname "$SESSION_FILE")"
     {
         for key in LOADER PORT RUN_DIR SERVER_DIR CLIENT_DIR SERVER_PID SERVER_START CLIENT_PID CLIENT_START \
-                STARTED_AT READY_SECONDS DETAIL PLAYER SCENARIO; do
+                STARTED_AT READY_SECONDS DETAIL PLAYER SCENARIO PRODUCTION LOG_DIR; do
             printf '%s=%q\n' "$key" "${!key:-}"
         done
     } >"$SESSION_FILE.tmp"
@@ -93,7 +95,7 @@ save_session() {
 
 load_session() {
     LOADER="" PORT="" RUN_DIR="" SERVER_DIR="" CLIENT_DIR="" SERVER_PID="" SERVER_START=""
-    CLIENT_PID="" CLIENT_START="" STARTED_AT="" READY_SECONDS="" DETAIL="" PLAYER="" SCENARIO=""
+    CLIENT_PID="" CLIENT_START="" STARTED_AT="" READY_SECONDS="" DETAIL="" PLAYER="" SCENARIO="" PRODUCTION="" LOG_DIR=""
     [[ -f "$SESSION_FILE" ]] || return 1
     # shellcheck disable=SC1090
     source "$SESSION_FILE"
@@ -379,8 +381,20 @@ do_start() {
     local fifo="$RUN_DIR/server-stdin"
     mkfifo "$fifo"
     local server_console="$RUN_DIR/logs/server-console.log"
+    local -a prod_props=()
+    PRODUCTION=0
+    LOG_DIR=""
+    if [[ "$scenario" == "production" ]]; then
+        PRODUCTION=1
+        LOG_DIR="$RUN_DIR/production"
+        mkdir -p "$LOG_DIR"
+        prod_props=(
+            --sysprop businesscraft.debug.productionEventLog=true
+            --sysprop "businesscraft.debug.productionEventLogDir=$LOG_DIR"
+        )
+    fi
     setsid python3 "$ROOT/tools/mp-smoke-launch.py" "$server_spec" --working-dir "$SERVER_DIR" \
-        --xmx 2048m --append-arg nogui <>"$fifo" >"$server_console" 2>&1 &
+        --xmx 2048m "${prod_props[@]}" --append-arg nogui <>"$fifo" >"$server_console" 2>&1 &
     SERVER_PID=$!
     sleep 1
     SERVER_START="$(pid_start "$SERVER_PID" || true)"
@@ -398,6 +412,7 @@ do_start() {
         "$SERVER_DIR/showcase-play-ready.json" 2>/dev/null || true)"
     READY_SECONDS=$((SECONDS - began))
     echo "Server is ready (${READY_SECONDS}s): ${DETAIL%% layout=*}"
+    print_production_log
 
     save_session
     if [[ "$want_client" -eq 1 ]]; then
@@ -470,6 +485,17 @@ wait_client_joined() {
 
 # ---- status ---------------------------------------------------------------------------------
 
+print_production_log() {
+    [[ "${PRODUCTION:-0}" == "1" && -n "${LOG_DIR:-}" ]] || return 0
+    echo "  Production log: ${LOG_DIR}"
+    local file
+    shopt -s nullglob
+    for file in "$LOG_DIR"/production-events-*.csv "$LOG_DIR"/production-summary-*.csv "$LOG_DIR"/production-summary-*.md; do
+        echo "    $file"
+    done
+    shopt -u nullglob
+}
+
 print_status_body() {
     local client_note="none (join from your own launcher, or run 'client')"
     if [[ -n "${CLIENT_PID:-}" ]]; then
@@ -482,6 +508,7 @@ print_status_body() {
     echo "  World:    ${DETAIL%% layout=*}"
     echo "  Layout:   ${DETAIL#*layout=}"
     echo "  Logs:     ${RUN_DIR}/logs  (server: ${SERVER_DIR}/logs/latest.log)"
+    print_production_log
     local problems
     problems="$(showcase_log_problems "$SERVER_DIR/logs/latest.log" || true)"
     if [[ -n "$problems" ]]; then
@@ -542,6 +569,7 @@ do_stop() {
         fi
     fi
     collect_logs
+    print_production_log
     rm -f "$SESSION_FILE" "$RUN_DIR/server-stdin" 2>/dev/null || true
     if [[ "$was_running" -eq 1 ]]; then
         echo "Stopped."

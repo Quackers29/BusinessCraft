@@ -156,9 +156,11 @@ public class BusinessCraftForge {
 
         com.quackers29.businesscraft.command.ClearContractsCommand.register(event.getDispatcher());
         com.quackers29.businesscraft.command.DumpTownDataCommand.register(event.getDispatcher());
+        com.quackers29.businesscraft.command.ProductionDebugCommand.register(event.getDispatcher());
     }
 
     private void onServerStopping(ServerStoppingEvent event) {
+        com.quackers29.businesscraft.debug.production.ProductionEventLog.onServerStopping();
         LOGGER.info("Server stopping, saving town data...");
         ServerLifecycleHooks.getCurrentServer().getAllLevels().forEach(level -> {
             TownManager.get((ServerLevel) level).onServerStopping();
@@ -188,6 +190,8 @@ public class BusinessCraftForge {
                 LOGGER.info("Loaded {} towns for level: {}", townCount, level.dimension().location());
             }
         });
+        com.quackers29.businesscraft.debug.production.ProductionEventLog.onServerStarted(
+                ServerLifecycleHooks.getCurrentServer().getServerDirectory().toPath());
     }
 
     @SubscribeEvent

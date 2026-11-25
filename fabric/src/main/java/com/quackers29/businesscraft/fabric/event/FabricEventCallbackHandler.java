@@ -134,6 +134,7 @@ public class FabricEventCallbackHandler {
 
                     com.quackers29.businesscraft.command.ClearContractsCommand.register(dispatcher);
                     com.quackers29.businesscraft.command.DumpTownDataCommand.register(dispatcher);
+                    com.quackers29.businesscraft.command.ProductionDebugCommand.register(dispatcher);
                 });
     }
 

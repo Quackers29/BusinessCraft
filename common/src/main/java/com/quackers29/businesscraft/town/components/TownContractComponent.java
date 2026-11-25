@@ -44,11 +44,26 @@ public class TownContractComponent implements TownComponent {
         this.town = town;
     }
 
+    private com.quackers29.businesscraft.town.TownManager manager() {
+        for (com.quackers29.businesscraft.town.TownManager manager : com.quackers29.businesscraft.town.TownManager
+                .getAllInstances()) {
+            if (manager.getTown(town.getId()) != null) {
+                return manager;
+            }
+        }
+        return null;
+    }
+
+    private ContractBoard board() {
+        com.quackers29.businesscraft.town.TownManager manager = manager();
+        return manager == null ? null : manager.activeContractBoard();
+    }
+
     private java.util.Map<UUID, Long> pendingBids = new java.util.HashMap<>();
 
     @Override
     public void tick() {
-        long currentTime = System.currentTimeMillis();
+        long currentTime = com.quackers29.businesscraft.util.GameClock.millis();
 
         // Process pending bids every tick (or every few ticks)
         processPendingBids(currentTime);
@@ -70,19 +85,12 @@ public class TownContractComponent implements TownComponent {
         if (pendingBids.isEmpty())
             return;
 
-        // Get the server level
-        net.minecraft.server.level.ServerLevel level = null;
-        for (com.quackers29.businesscraft.town.TownManager manager : com.quackers29.businesscraft.town.TownManager
-                .getAllInstances()) {
-            if (manager.getTown(town.getId()) != null) {
-                level = manager.getLevel();
-                break;
-            }
-        }
-
-        if (level == null)
+        com.quackers29.businesscraft.town.TownManager manager = manager();
+        ContractBoard board = board();
+        if (manager == null || board == null) {
             return;
-        ContractBoard board = ContractBoard.get(level);
+        }
+        net.minecraft.server.level.ServerLevel level = manager.getLevel();
 
         java.util.Iterator<java.util.Map.Entry<UUID, Long>> iterator = pendingBids.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -110,8 +118,7 @@ public class TownContractComponent implements TownComponent {
                     float basePrice = marketPrice * sc.getQuantity();
 
                     // Calculate courier cost
-                    com.quackers29.businesscraft.town.Town sellerTown = com.quackers29.businesscraft.town.TownManager
-                            .get(level).getTown(sc.getIssuerTownId());
+                    com.quackers29.businesscraft.town.Town sellerTown = manager.getTown(sc.getIssuerTownId());
                     int courierCost = ContractBoard.calculateCourierCost(town, sellerTown);
 
                     // NEED-BASED BID MODIFIER: Calculate current need level
@@ -145,7 +152,7 @@ public class TownContractComponent implements TownComponent {
                     float bidModifier = 0.80f + (needRatio * 0.40f);
 
                     // Add randomness ±5%
-                    float randomness = (float)(Math.random() * 0.10f) - 0.05f;
+                    float randomness = (float) (com.quackers29.businesscraft.util.BcRandom.nextDouble() * 0.10f) - 0.05f;
                     bidModifier += randomness;
 
                     // Calculate bid - if there's a current highest, we must beat it
@@ -199,21 +206,12 @@ public class TownContractComponent implements TownComponent {
     }
 
     private void scanForBids(long currentTime) {
-        // Get the server level
-        net.minecraft.server.level.ServerLevel level = null;
-        for (com.quackers29.businesscraft.town.TownManager manager : com.quackers29.businesscraft.town.TownManager
-                .getAllInstances()) {
-            if (manager.getTown(town.getId()) != null) {
-                level = manager.getLevel();
-                break;
-            }
-        }
-
-        if (level == null) {
+        com.quackers29.businesscraft.town.TownManager manager = manager();
+        ContractBoard board = board();
+        if (manager == null || board == null) {
             return;
         }
-
-        ContractBoard board = ContractBoard.get(level);
+        net.minecraft.server.level.ServerLevel level = manager.getLevel();
         List<Contract> contracts = board.getContracts();
 
         for (Contract contract : contracts) {
@@ -283,8 +281,7 @@ public class TownContractComponent implements TownComponent {
                     float basePrice = marketPrice * sc.getQuantity();
 
                     // Calculate courier cost
-                    com.quackers29.businesscraft.town.Town sellerTown = com.quackers29.businesscraft.town.TownManager
-                            .get(level).getTown(sc.getIssuerTownId());
+                    com.quackers29.businesscraft.town.Town sellerTown = manager.getTown(sc.getIssuerTownId());
                     int courierCost = ContractBoard.calculateCourierCost(town, sellerTown);
 
                     // NEED-BASED BID MODIFIER: Mirrors seller's excess-based pricing
@@ -303,7 +300,7 @@ public class TownContractComponent implements TownComponent {
                     float bidModifier = 0.80f + (needRatio * 0.40f);
 
                     // Add randomness ±5%
-                    float randomness = (float)(Math.random() * 0.10f) - 0.05f;
+                    float randomness = (float) (com.quackers29.businesscraft.util.BcRandom.nextDouble() * 0.10f) - 0.05f;
                     bidModifier += randomness;
 
                     // Calculate bid - if there's a current highest, we must beat it
@@ -344,24 +341,10 @@ public class TownContractComponent implements TownComponent {
     }
 
     private void tryCreateContract() {
-        // Get the server level from any of the active TownManager instances
-        // Since this town exists, we know its manager is loaded
-        net.minecraft.server.level.ServerLevel level = null;
-        for (com.quackers29.businesscraft.town.TownManager manager : com.quackers29.businesscraft.town.TownManager
-                .getAllInstances()) {
-            if (manager.getTown(town.getId()) != null) {
-                // Found our manager, get its level
-                level = getServerLevelFromManager(manager);
-                break;
-            }
-        }
-
-        if (level == null) {
-            LOGGER.warn("Could not find ServerLevel for town {}", town.getName());
+        ContractBoard board = board();
+        if (board == null) {
             return;
         }
-
-        ContractBoard board = ContractBoard.get(level);
         long activeCount = board.getContracts().stream()
                 .filter(c -> c instanceof SellContract sc &&
                         sc.getIssuerTownId().equals(town.getId()) &&
@@ -391,17 +374,11 @@ public class TownContractComponent implements TownComponent {
             }
 
             String resourceId = resourceType.getId();
-            checkAndCreateContract(board, level, resourceId, item);
+            checkAndCreateContract(board, resourceId, item);
         }
     }
 
-    private net.minecraft.server.level.ServerLevel getServerLevelFromManager(
-            com.quackers29.businesscraft.town.TownManager manager) {
-        return manager.getLevel();
-    }
-
-    private void checkAndCreateContract(ContractBoard board, net.minecraft.server.level.ServerLevel level,
-            String resourceId, Item item) {
+    private void checkAndCreateContract(ContractBoard board, String resourceId, Item item) {
         // Check if already at max contracts
         long activeCount = board.getContracts().stream()
                 .filter(c -> c instanceof SellContract sc &&
@@ -488,7 +465,7 @@ public class TownContractComponent implements TownComponent {
             float modifier = 0.05f + (excessRatio * (-0.40f - 0.05f));
 
             // Add randomness (+/- 5%)
-            float randomness = (float) (Math.random() * 0.10f) - 0.05f;
+            float randomness = (float) (com.quackers29.businesscraft.util.BcRandom.nextDouble() * 0.10f) - 0.05f;
 
             float pricePerUnit = marketPrice * (1.0f + modifier + randomness);
 
@@ -527,21 +504,10 @@ public class TownContractComponent implements TownComponent {
     }
 
     public long getInTransitResourceCount(String resourceId) {
-        // Need to find the server level to get the board
-        net.minecraft.server.level.ServerLevel level = null;
-        for (com.quackers29.businesscraft.town.TownManager manager : com.quackers29.businesscraft.town.TownManager
-                .getAllInstances()) {
-            if (manager.getTown(town.getId()) != null) {
-                level = manager.getLevel();
-                break;
-            }
-        }
-
-        if (level == null) {
+        ContractBoard board = board();
+        if (board == null) {
             return 0;
         }
-
-        ContractBoard board = ContractBoard.get(level);
         // Sum up quantities of SellContracts where:
         // 1. We are the winner (active or delivered-but-not-fully)
         // 2. !isDelivered (completely) OR deliveredAmount < quantity

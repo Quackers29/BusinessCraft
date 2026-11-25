@@ -72,6 +72,24 @@ class ConfigValidatorTest {
     }
 
     @Test
+    void oldBiomeColumnOrder_warnsAndDoesNotRemap() throws Exception {
+        env.writeCsv("items.csv", ITEMS);
+        env.writeCsv("productions.csv", PROD_HEADER);
+        env.writeCsv("upgrades.csv", UP_HEADER);
+        env.writeCsv("biomes.csv",
+                "biome_ids,variant_id,variant_name,weight,starting_nodes,starting_values,description\n"
+                        + "minecraft:plains,farming,Farming Village,60,basic_settlement,population:6;food:140,\"Strong farming\"\n");
+        env.loadBundledRegistries();
+        ConfigValidator.validate();
+        assertOneWarningContaining(ConfigWarnings.all(), "biomes.csv line 1", "old column order");
+        com.quackers29.businesscraft.world.BiomeRegistry.BiomeKit kit =
+                com.quackers29.businesscraft.world.BiomeRegistry.getSpecificKit("minecraft:plains", "Farming Village");
+        assertNotNull(kit);
+        assertFalse(kit.startingValues.containsKey("food"),
+                "food:140 stays in the values column of the old file and is not read as stock");
+    }
+
+    @Test
     void unknownResourceInInputOutputAndCost() throws Exception {
         List<String> w = loadAndValidate(
                 "bad,Bad,1,irn:2,gold:1\n",
