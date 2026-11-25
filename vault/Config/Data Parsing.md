@@ -13,7 +13,7 @@ The mod's upgrade nodes, production recipes, biome starting resources, and some 
 
 ## How it works (process view)
 - On load (UpgradeRegistry, ProductionRegistry, BiomeRegistry), raw comma-split fields from CSV rows are fed as "packed" strings to the three parse methods.
-- Effects describe numeric or flag-like benefits: "pop_cap:10" means +10 population cap (absolute), "happiness:50" same, bare words like "population_maintenance" or "basic_taxes" become value=1.0 flag effects, "foo*1.5" is a multiplier form.
+- Effects describe numeric or flag-like benefits: "pop_cap:10" means +10 population cap (absolute), "happiness:50" same, bare words like "population_maintenance" or "border_expansion_production" become value=1.0 unlocks (`isUnlock` true, so a repeat level does not scale them), "foo*1.5" is a multiplier form and is not an unlock.
 - Conditions gate recipes or behaviors: "happiness:>50", "pop:>=100", "surplus:>0%" etc. The operator and value (with % flag) are captured for later evaluation by TownProductionComponent etc.
 - Resource amounts appear in upgrade costs, recipe inputs/outputs, starting biome values: "wood:10;iron:5" or special "pop:10" (normalized). The amount can be a literal number or a dynamic expression token (parsed as 0 if non-numeric, leaving expression for later).
 - A worked example (from default upgrades.csv):

@@ -26,7 +26,7 @@ public class DataParser {
                         String key = kv[0].trim();
                         try {
                             float val = Float.parseFloat(kv[1].trim());
-                            effects.add(new Effect(key, val, false));
+                            effects.add(new Effect(key, val, false, false));
                             continue;
                         } catch (NumberFormatException e) {
                             LOGGER.warn("Invalid effect modifier value: {}", part);
@@ -34,7 +34,8 @@ public class DataParser {
                     }
                 }
 
-                effects.add(new Effect(part, 1.0f, false));
+                // Bare name: an unlock flag. Value 1 means "on", and it must not scale with level.
+                effects.add(new Effect(part, 1.0f, false, true));
                 continue;
             }
 

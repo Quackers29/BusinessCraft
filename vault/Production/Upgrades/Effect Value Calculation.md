@@ -6,7 +6,7 @@ tags:
 # Effect Value Calculation
 
 **Breadcrumb**: Production > Upgrades > Effect Value Calculation
-**TL;DR**: An upgrade effect at a given level is `baseValue × level` (linear, default) or `baseValue × benefitMult^(level-1)` (exponential when benefitMult != 1.0); level ≤ 0 always returns 0. The same pure function is used for server-side application and client UI display.
+**TL;DR**: An upgrade effect at a given level is `baseValue × level` (linear, default) or `baseValue × benefitMult^(level-1)` (exponential when benefitMult != 1.0); level ≤ 0 always returns 0. A bare unlock (`farming`, `border_expansion_production`) stays at its unlock value at every level above 0, so repeating the research does not speed the recipe it turned on. The same pure function is used for server-side application and client UI display.
 
 ## What it does
 Upgrade nodes define "effects" (e.g. +10 to pop_cap, +2 to tourist_cap, +50 to happiness). Because upgrades can be leveled (or repeated), the actual numeric benefit at level N is not just the base — it is scaled by this formula. This ensures that when the town has "Basic Settlement at level 3", the displayed and applied bonus matches exactly, whether you're looking at the upgrade screen or the town stats are being recalculated.
@@ -14,8 +14,9 @@ Upgrade nodes define "effects" (e.g. +10 to pop_cap, +2 to tourist_cap, +50 to h
 ## How it works (process view)
 - Each UpgradeNode carries a benefitMultiplier (parsed from the repeat column in upgrades.csv as the third ":" segment, defaults to 1.0).
 - When the town's upgrade level for that node is queried (e.g. in TownUpgradeComponent or viewmodel builders), the node is asked: "what is the effective value of this Effect at level L?"
-- If benefitMultiplier is 1.0 (within 0.0001 tolerance), the effect uses simple linear scaling: the base value is multiplied by the integer level.
-- Otherwise it uses compound/exponential scaling: base × (mult raised to level-1). Level 1 always yields exactly the base (any mult ^ 0 = 1).
+- If the effect is an unlock (a bare name in the effects column, `Effect.isUnlock()`), any level above 0 returns the base value unchanged. Level 1 and level 5 of Border Expansion both leave `border_expansion_production` at 1. A written number (`border:2`, `farming*0.5`, `research:0.25`) is not an unlock and still scales.
+- If benefitMultiplier is 1.0 (within 0.0001 tolerance), a numeric effect uses simple linear scaling: the base value is multiplied by the integer level.
+- Otherwise a numeric effect uses compound/exponential scaling: base × (mult raised to level-1). Level 1 always yields exactly the base (any mult ^ 0 = 1).
 - **Worked example (exponential)**: Effect value=10, benefitMult=1.5, level=3 → 10 × (1.5 ^ 2) = 10 × 2.25 = 22.5. At level 1: 10 × 1.0 = 10. At level 2: 10 × 1.5 = 15.
 - **Worked example (linear/default)**: Effect value=5, benefitMult=1.0, level=4 → 5 × 4 = 20.
 - The isPercentage flag on Effect is ignored by the scaler (it only affects how the value is later rendered or interpreted as +X or +X%).
@@ -40,6 +41,9 @@ public float calculateEffectValue(Effect effect, int level) {
     if (level <= 0)
         return 0f;
 
+    if (effect.isUnlock())
+        return effect.getValue();
+
     boolean useExponentialBenefit = Math.abs(benefitMultiplier - 1.0f) > 0.0001f;
 
     if (useExponentialBenefit) {
@@ -51,6 +55,7 @@ public float calculateEffectValue(Effect effect, int level) {
 ```
 
 - `level <= 0` → 0 (guards bad data or "not unlocked").
+- Unlock (`isUnlock`, the bare-name form) at level > 0 → exactly `effect.getValue()` (1 for a normal unlock). Benefit multiplier and level are ignored. This is what stops Border Expansion level 3 from making the expand recipe run at 4× speed.
 - Detection of "exponential mode": `abs(mult - 1.0f) > 0.0001f`. Anything sufficiently different from 1.0 (including 0.999 or 1.0002) triggers pow path.
 - Exponential: `base × mult^(level-1)` cast to float after pow. Level 1 → mult^0 = 1.0 × base.
 - Linear (mult ≈ 1): `base × level` (accumulation style).
@@ -59,7 +64,8 @@ public float calculateEffectValue(Effect effect, int level) {
 
 ## Edge cases & behaviors
 - level = 0 or negative → exactly 0.0f (even if base value is huge).
-- level = 1 → always exactly the Effect's base value (any valid mult).
+- level = 1 → always exactly the Effect's base value (any valid mult), unlock or not.
+- Unlock at level 2+ → still the base value. A numeric effect of 1 (`border:1`, not a bare name) still compounds.
 - benefitMultiplier = 1.0f (or within 1e-4) → linear path, even if the CSV intended "1" as a no-op.
 - benefitMultiplier = 0.0f → exponential path yields 0 for level > 1 (level 1 still base).
 - benefitMultiplier < 1.0 (e.g. 0.9) → diminishing returns in exponential mode.
@@ -71,7 +77,7 @@ public float calculateEffectValue(Effect effect, int level) {
 
 ## Test coverage
 - Test file: `common/src/test/java/com/quackers29/businesscraft/production/UpgradeNodeTest.java`
-- Covered: linear default path, explicit exponential, level 0/negative/1 boundaries, different multipliers (including near-1 epsilon case), hand-computed expectations with arithmetic comments for each (14 tests); isPercentage flag confirmed to have no numeric impact; fractional bases; zero base.
+- Covered: linear default path, explicit exponential, level 0/negative/1 boundaries, different multipliers (including near-1 epsilon case), hand-computed expectations with arithmetic comments for each; isPercentage flag confirmed to have no numeric impact; fractional bases; zero base; bare unlock stays at its base value on both the linear and the benefit-multiplier paths while a numeric effect on the same node still compounds; an explicit value of 1 (`border:1`) still compounds.
 - Not covered: integration with actual upgrade application or recipe conditions (those live in components that require a Town/Level); parsing of UpgradeNode from CSV (covered indirectly via registry tests if added later); floating-point precision at extreme levels.
 - No McBootstrap required — pure arithmetic on plain data objects (Effect is a simple 3-field class).
 

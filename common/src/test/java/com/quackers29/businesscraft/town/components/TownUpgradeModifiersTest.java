@@ -129,6 +129,22 @@ class TownUpgradeModifiersTest {
     }
 
     @Test
+    void borderExpansion_unlockStaysOne_whileBorderStatCompounds() {
+        bundled();
+        // infinite:2:2, effects border:2 and bare border_expansion_production.
+        // Level 3: border = 2 * 2^(3-1) = 8. The unlock must stay 1, not become 4.
+        up.unlockNode("border_expansion");
+        assertEquals(1f, up.getModifier("border_expansion_production"), 1e-6f);
+        assertEquals(2f, up.getModifier("border"), 1e-6f);
+
+        up.unlockNode("border_expansion");
+        up.unlockNode("border_expansion");
+        assertEquals(3, up.getUpgradeLevel("border_expansion"));
+        assertEquals(1f, up.getModifier("border_expansion_production"), 1e-6f);
+        assertEquals(8f, up.getModifier("border"), 1e-4f);
+    }
+
+    @Test
     void speedEffect_addsToRecipeModifier() {
         bundled();
         up.unlockNode("basic_settlement"); // farming = 1

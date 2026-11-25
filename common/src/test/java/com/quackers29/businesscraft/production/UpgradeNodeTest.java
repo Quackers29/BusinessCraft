@@ -159,4 +159,39 @@ class UpgradeNodeTest {
         // 10 * 1.0002^(2-1) = 10 * 1.0002 = 10.002
         assertEquals(10.002f, node.calculateEffectValue(effect(10.0f), 2), 1e-6f);
     }
+
+    @Test
+    void calculateEffectValue_unlock_staysAtBase_whileNumericEffectCompounds() {
+        // border_expansion is infinite:2:2 with effects border:2 and a bare unlock.
+        // Level 3 used to turn the unlock 1 into 1 * 2^(3-1) = 4, which divided the recipe time by 4.
+        UpgradeNode node = nodeWithBenefitMult(2.0f);
+        Effect unlock = new Effect("border_expansion_production", 1.0f, false, true);
+        Effect border = effect(2.0f);
+
+        assertEquals(1.0f, node.calculateEffectValue(unlock, 1), 1e-6f);
+        assertEquals(1.0f, node.calculateEffectValue(unlock, 2), 1e-6f);
+        assertEquals(1.0f, node.calculateEffectValue(unlock, 3), 1e-6f);
+
+        // The real stat still compounds: 2 * 2^(3-1) = 8.
+        assertEquals(2.0f, node.calculateEffectValue(border, 1), 1e-6f);
+        assertEquals(4.0f, node.calculateEffectValue(border, 2), 1e-6f);
+        assertEquals(8.0f, node.calculateEffectValue(border, 3), 1e-6f);
+    }
+
+    @Test
+    void calculateEffectValue_unlock_doesNotMultiplyByLevelOnLinearPath() {
+        UpgradeNode node = nodeLinearDefault();
+        Effect unlock = new Effect("farming", 1.0f, false, true);
+        assertEquals(0.0f, node.calculateEffectValue(unlock, 0), 1e-6f);
+        assertEquals(1.0f, node.calculateEffectValue(unlock, 1), 1e-6f);
+        assertEquals(1.0f, node.calculateEffectValue(unlock, 4), 1e-6f);
+    }
+
+    @Test
+    void calculateEffectValue_explicitValueOne_stillCompounds() {
+        // "border:1" is a number, not a bare unlock. Only the bare name stays put.
+        UpgradeNode node = nodeWithBenefitMult(2.0f);
+        Effect numericOne = new Effect("border", 1.0f, false, false);
+        assertEquals(4.0f, node.calculateEffectValue(numericOne, 3), 1e-6f);
+    }
 }
