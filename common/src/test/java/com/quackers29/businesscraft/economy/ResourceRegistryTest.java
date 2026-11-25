@@ -235,7 +235,7 @@ class ResourceRegistryTest {
         ResourceType t = ResourceRegistry.get("iron");
         assertNotNull(t);
         assertEquals("iron", t.getId());
-        assertEquals(2.0f, t.getBaseValue(), 1e-6f);
+        assertEquals(1.0f, t.getBaseValue(), 1e-6f); // bundled items.csv has no base_price column
     }
 
     @Test
@@ -309,7 +309,7 @@ class ResourceRegistryTest {
     // --- csv load + default creation + parse edge cases (use temp dir) ---
 
     @Test
-    void registry_load_createsDefaultCsvWhenMissing_andParsesAllFive() throws Exception {
+    void registry_load_installsBundledCsvWhenMissing() throws Exception {
         // Ensure no csv exists in our temp businesscraft/ dir
         Path bcDir = tempDir.resolve("businesscraft");
         Path csv = bcDir.resolve("items.csv");
@@ -322,8 +322,8 @@ class ResourceRegistryTest {
 
         assertTrue(Files.exists(csv), "default csv should have been written");
         String content = Files.readString(csv);
-        assertTrue(content.contains("wood,Wood,minecraft:oak_log,0.5"));
-        assertTrue(content.contains("money,Emeralds,minecraft:emerald,5.0"));
+        assertTrue(content.contains("wood,Wood,minecraft:oak_log"));
+        assertTrue(content.contains("money,Emeralds,minecraft:emerald"));
 
         // After load the map has them and expand ran (logs etc are present)
         assertNotNull(ResourceRegistry.get("wood"));

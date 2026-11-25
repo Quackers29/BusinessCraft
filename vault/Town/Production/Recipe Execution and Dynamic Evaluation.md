@@ -40,7 +40,7 @@ The production system gives towns a living economy that runs without player micr
 | `getActiveRecipes()` (public) | same | For each tracked progress entry, compute current / getEffectiveCycleTime(recipe) (or 0). |
 | `checkConditions(recipe)` (private) | same | Per Condition: target value lookup (pop/happiness/resource count / upgrade mod / surplus via rates), threshold derivation from literal / "min" (cap*minStock/100) / "excess" / "N%" / "N%pop_cap" / "pop_cap", comparison with == using 0.001 epsilon. Surplus re-invokes the rate methods. |
 | `ProductionRecipe` | `common/src/main/java/com/quackers29/businesscraft/production/ProductionRecipe.java` | Immutable holder of id, displayName, baseCycleTimeMinutes, inputs/outputs (ResourceAmount), conditions (Condition). |
-| `ProductionRegistry` (getAll / get) | `common/src/main/java/com/quackers29/businesscraft/production/ProductionRegistry.java` | Static registry of recipes loaded from productions.csv (or defaults). |
+| `ProductionRegistry` (getAll / get) | `common/src/main/java/com/quackers29/businesscraft/production/ProductionRegistry.java` | Static registry of recipes loaded from productions.csv (the bundled file is installed on a fresh config folder). |
 | `Town.getProduction()` + delegates | `common/src/main/java/com/quackers29/businesscraft/town/Town.java` | Exposes the component and the two rate methods to the rest of the system (ITownState, viewmodels, menus, AI). |
 | `ConfigLoader.minStockPercent` / `excessStockPercent` (static) | `common/src/main/java/com/quackers29/businesscraft/config/ConfigLoader.java` | Live values (60/80) used for threshold and happiness math. |
 
@@ -139,7 +139,8 @@ All formulas are taken verbatim from the implementation (as of this iteration). 
 ## Test coverage
 - Test file: `common/src/test/java/com/quackers29/businesscraft/town/components/TownProductionComponentTest.java`
 - Covered via direct calls + reflection on privates: evaluateExpression (all token types + combos + rewrite + bad input), resolveDynamicAmount, getEffectiveCycleTime (normal + stopped + fractional), getProductionRate/getConsumptionRate (simple, pop-scaled, speed-modded, locked, additive, unknown), getActiveRecipes (progress %), condition evaluation (numeric, min/excess/%, pop_cap, surplus, ops, epsilon =), stall on output cap, starvation special path for population_maintenance, config percent live read (save/restore), zero/edge values.
-- Not covered (by design for this iteration): full tick() side effects over many cycles, real CSV-loaded recipes + file I/O, network/UI delivery of the resulting rates, interaction with live ContractBoard or full TownManager, exact floating point accumulation drift over thousands of ticks.
+- Tick-driven coverage lives in `TownProductionProcessingTest` (real CSV-loaded recipes through `ProductionRegistry.load()`, tick() over whole cycles: consume and produce, upgrade speed, conditions, expression amounts, output stalls incl. tourist/wu caps, starvation, happiness from food stock, NBT). Cycle times in those tests sit half a tick below a whole number of ticks so float rounding cannot move the completion tick.
+- Not covered (by design for this iteration): network/UI delivery of the resulting rates, interaction with live ContractBoard or full TownManager, exact floating point accumulation drift over thousands of ticks.
 - McBootstrap used (required for Town construction safety + Item registry when resource paths or "food" lookups execute). Reflection used for private expression/condition helpers (pure logic, matches protocol precedent). ProductionRegistry static RECIPES map manipulated via reflection for deterministic recipe injection (pattern from ProductionRegistryTest).
 
 ## Open questions
