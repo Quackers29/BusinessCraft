@@ -16,8 +16,11 @@
 # server's own config (<loader>/run-play-server/config), never in your normal config, and four
 # towns 120 blocks apart show the states: Starterton (biome starting kit only), Farmstead (full
 # stores, recipes run), Highmark (many upgrades, research AI active), Hungerford (starving: low
-# happiness, min-stock recipe conditions fail). Each has a sign. A plain 'start' restores the
-# tour world and its default config.
+# happiness, min-stock recipe conditions fail). Each has a sign. It also replaces that server's
+# items.csv, productions.csv, upgrades.csv and biomes.csv with the bundled copies. The game
+# never overwrites an existing CSV, and a run dir created before the bundled install still has
+# the old generated files (different biomes column order, and no farming_advanced). A plain
+# 'start' restores the tour world and removes the production toml marker.
 # stop ends only the processes recorded in the session file. A client you started yourself is
 # left alone. Both are safe to repeat, with or without a client.
 #
@@ -172,9 +175,26 @@ write_server_properties() {
 
 # Config of the production world. The server's own config dir is the only place it is written;
 # it is the bundled businesscraft.toml with [production] and [research] switched on, plus a marker
-# so a later plain start knows to remove it.
+# so a later plain start knows to remove it. The four CSVs are copied over whatever is already
+# there: CsvConfig.ensureInstalled leaves an existing file alone, so a pre-bundled run dir would
+# otherwise keep feeding the seeder the old ids.
 PRODUCTION_CONFIG_MARKER="# showcase-play: production scenario"
-BUNDLED_TOML="$ROOT/common/src/main/resources/assets/businesscraft/config/businesscraft.toml"
+BUNDLED_CONFIG_DIR="$ROOT/common/src/main/resources/assets/businesscraft/config"
+BUNDLED_TOML="$BUNDLED_CONFIG_DIR/businesscraft.toml"
+BUNDLED_CSVS=(items.csv productions.csv upgrades.csv biomes.csv)
+
+install_bundled_csvs() {
+    local dest="$1/config/businesscraft" name
+    mkdir -p "$dest"
+    for name in "${BUNDLED_CSVS[@]}"; do
+        if [[ ! -f "$BUNDLED_CONFIG_DIR/$name" ]]; then
+            echo "Bundled config file is missing: $BUNDLED_CONFIG_DIR/$name" >&2
+            return 1
+        fi
+        cp -f "$BUNDLED_CONFIG_DIR/$name" "$dest/$name"
+    done
+    echo "Installed bundled CSVs into $dest"
+}
 
 write_server_config() {
     local scenario="$1" file="$2/config/businesscraft.toml"
@@ -188,6 +208,7 @@ write_server_config() {
                 }
                 { print }' "$BUNDLED_TOML"
         } >"$file"
+        install_bundled_csvs "$2"
     elif [[ -f "$file" ]] && head -n 1 "$file" | grep -qxF "$PRODUCTION_CONFIG_MARKER"; then
         rm -f "$file"
     fi

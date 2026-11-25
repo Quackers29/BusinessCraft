@@ -1,8 +1,13 @@
 package com.quackers29.businesscraft.client.showcase;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -34,6 +39,42 @@ class ShowcaseProductionLayoutTest {
             town.stock().forEach(s -> assertTrue(s.percentOfCap() >= 0 && s.percentOfCap() <= 100, town.name()));
             assertTrue(town.workUnitPercent() <= 100, town.name());
             town.unlocks().forEach(u -> assertTrue(u.level() >= 1, town.name()));
+        }
+    }
+
+    @Test
+    void seedNodesExistInBundledUpgrades() throws Exception {
+        Set<String> ids = bundledUpgradeIds();
+        assertTrue(ids.contains("farming_advanced"), "bundled upgrades.csv should name farming_advanced");
+        for (var town : ShowcaseProductionLayout.TOWNS) {
+            for (var unlock : town.unlocks()) {
+                assertTrue(ids.contains(unlock.node()),
+                        town.name() + " seeds unknown upgrade node " + unlock.node());
+            }
+        }
+    }
+
+    /** First column of the shipped upgrades.csv. This is the file a fresh install copies. */
+    private static Set<String> bundledUpgradeIds() throws Exception {
+        try (InputStream in = ShowcaseProductionLayoutTest.class
+                .getResourceAsStream("/assets/businesscraft/config/upgrades.csv")) {
+            assertNotNull(in, "bundled upgrades.csv is missing from the test classpath");
+            Set<String> ids = new HashSet<>();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                reader.readLine();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String trimmed = line.trim();
+                    if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                        continue;
+                    }
+                    String id = trimmed.split(",", 2)[0].trim();
+                    if (!id.isEmpty()) {
+                        ids.add(id);
+                    }
+                }
+            }
+            return ids;
         }
     }
 
