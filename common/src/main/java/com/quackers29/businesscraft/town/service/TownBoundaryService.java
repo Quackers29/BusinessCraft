@@ -16,7 +16,9 @@ import java.util.Collection;
  * Radii come from the {@code border} upgrade/kit modifier (plus
  * {@link ConfigLoader#defaultBorderRadius} fallback) — never from population.
  * Optional population-linked border growth belongs in production recipes
- * (e.g. {@code pop:>80%pop_cap} → {@code border:1}), not this service.
+ * (e.g. {@code pop:>80%pop_cap;crowding:>1} → {@code border:1}), not this service.
+ * Crowding compares the town to its biome starting density so the recipe stops
+ * once the town has its room back.
  */
 public class TownBoundaryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBoundaryService.class);

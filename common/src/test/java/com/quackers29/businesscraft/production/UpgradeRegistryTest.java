@@ -44,10 +44,12 @@ class UpgradeRegistryTest {
         savedPlatform = PlatformAccess.platform;
         // Install test double before any load() call
         PlatformAccess.platform = new TestPlatformHelper(tempDir);
+        com.quackers29.businesscraft.config.ConfigWarnings.clear();
     }
 
     @AfterEach
     void tearDown() throws Exception {
+        com.quackers29.businesscraft.config.ConfigWarnings.clear();
         // Restore platform first
         PlatformAccess.platform = savedPlatform;
         // Restore exact prior NODES contents
@@ -105,55 +107,64 @@ class UpgradeRegistryTest {
     // --- default load behavior ---
 
     @Test
-    void load_missingFile_createsDefaultCsvAndRegistersTwoNodes() throws Exception {
-        // Ensure no prior csv in the temp businesscraft subdir
+    void load_missingFile_installsBundledCsvAndRegistersItsNodes() throws Exception {
         Path bcDir = tempDir.resolve("businesscraft");
         Path csv = bcDir.resolve("upgrades.csv");
         Files.deleteIfExists(csv);
-        Files.createDirectories(bcDir);  // registry createDefault does not mkdirs (quirk pinned in note)
 
         UpgradeRegistry.load();
 
-        assertTrue(Files.exists(csv), "default upgrades.csv should be written");
+        assertTrue(Files.exists(csv), "bundled upgrades.csv should be installed");
         String content = Files.readString(csv);
-        assertTrue(content.contains("node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects"));
-        assertTrue(content.contains("basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,0,,"));
-        assertTrue(content.contains("farming_basic,farming,Basic Farming,,basic_settlement,Starts food production,1,wood:10,basic_farming"));
+        assertTrue(content.startsWith(
+                "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects"));
 
-        // Nodes should be present
         UpgradeNode basic = UpgradeRegistry.get("basic_settlement");
         assertNotNull(basic);
-        assertEquals("basic_settlement", basic.getId());
         assertEquals("Basic Settlement", basic.getDisplayName());
         assertEquals(0f, basic.getResearchMinutes(), 1e-6f);
         assertTrue(basic.getCosts().isEmpty());
-        assertFalse(basic.getEffects().isEmpty()); // at least the 6 from default line
+        assertFalse(basic.getEffects().isEmpty());
 
         UpgradeNode farm = UpgradeRegistry.get("farming_basic");
         assertNotNull(farm);
-        assertEquals(1f, farm.getResearchMinutes(), 1e-6f);
         assertEquals(1, farm.getCosts().size());
-        // Hand-computed from default: wood:10
-        ResourceAmount cost = farm.getCosts().get(0);
-        assertEquals("wood", cost.resourceId);
-        assertEquals(10, cost.amount);
+        assertEquals("food", farm.getCosts().get(0).resourceId);
+        assertEquals(100, farm.getCosts().get(0).amount);
+        // the old hardcoded fallback ids no longer exist
+        assertNull(UpgradeRegistry.get("basic_taxes"));
     }
 
     @Test
-    void load_defaultGivesExpectedPrereqsAndEffects() throws Exception {
+    void load_existingFile_isNeverOverwritten() throws Exception {
         Path bcDir = tempDir.resolve("businesscraft");
         Files.createDirectories(bcDir);
+        Path csv = bcDir.resolve("upgrades.csv");
+        String custom = "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects\n"
+                + "mine,cat,Mine,,,d,1,,e:1\n";
+        Files.writeString(csv, custom);
+
+        UpgradeRegistry.load();
+
+        assertEquals(custom, Files.readString(csv));
+        assertEquals(1, UpgradeRegistry.getAll().size());
+    }
+
+    @Test
+    void load_bundledPrereqsAndEffects() throws Exception {
         UpgradeRegistry.load();
 
         UpgradeNode farm = UpgradeRegistry.get("farming_basic");
         assertNotNull(farm);
-        // prereqs parsed from "basic_settlement"
-        assertEquals(1, farm.getPrereqNodes().size());
-        assertEquals("basic_settlement", farm.getPrereqNodes().get(0));
+        assertEquals(List.of("basic_settlement"), farm.getPrereqNodes());
+        assertEquals(1, farm.getEffects().size());
+        assertEquals("farming", farm.getEffects().get(0).getTarget());
 
-        // effects parsed; we don't re-test DataParser here (T-021) but assert count + sample
-        // default line ends with "basic_farming" as a single effect token (no value in this row)
-        assertFalse(farm.getEffects().isEmpty());
+        UpgradeNode border = UpgradeRegistry.get("border_expansion");
+        assertEquals(5, border.getMaxRepeats(), "max level is the repeat column, not a code constant");
+        assertEquals(2f, border.getCostMultiplier(), 1e-6f);
+        assertEquals(2f, border.getBenefitMultiplier(), 1e-6f);
+        assertEquals(-1, UpgradeRegistry.get("pop_cap_upgrade").getMaxRepeats(), "other infinite nodes stay infinite");
     }
 
     // --- get / getAll ---
@@ -170,7 +181,7 @@ class UpgradeRegistryTest {
         Files.createDirectories(bcDir);
         UpgradeRegistry.load();
         Collection<UpgradeNode> all = UpgradeRegistry.getAll();
-        assertTrue(all.size() >= 2);
+        assertEquals(12, all.size());
         Set<String> ids = new HashSet<>();
         for (UpgradeNode n : all) ids.add(n.getId());
         assertTrue(ids.contains("basic_settlement"));
@@ -187,9 +198,9 @@ class UpgradeRegistryTest {
         String custom =
                 "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects\n" +
                 "good_one,housing,Good Node,, ,Desc,2.5,iron:5,pop_cap:3\n" +
-                "bad_short,only,three,fields\n" +                    // <9 parts -> skipped
+                "bad_short,only,three,fields\n" +                    // <9 columns -> skipped with a warning
                 "weird_minutes,housing,Weird Min,, ,Desc,not_a_float, ,happiness:10\n" +  // bad minutes -> 0
-                "empty_id,,Name,, , ,1, ,effect:1\n" +               // empty id after trim -> still stored (edge)
+                ",,Name,, , ,1, ,effect:1\n" +                       // empty id -> skipped with a warning
                 "good_two,farming,Good Two,basic,good_one, ,0,wood:2, \n"; // prereqs + costs + empty effects ok
         Files.writeString(csv, custom);
 
@@ -261,7 +272,7 @@ class UpgradeRegistryTest {
         Files.writeString(csv,
                 "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects\n" +
                 "multi_prereq,cat,MP,,a;b;c ,d,1, ,e:2\n" +
-                "no_prereq,cat,NP,,,,0,,effect:0\n");  // 9th field present so split keeps >=9 tokens (trailing empties dropped by String.split)
+                "no_prereq,cat,NP,,,,0,,effect:0\n");
         UpgradeRegistry.load();
 
         UpgradeNode mp = UpgradeRegistry.get("multi_prereq");
@@ -276,5 +287,66 @@ class UpgradeRegistryTest {
         // effects/costs may be empty lists from DataParser on blank
         assertNotNull(np.getEffects());
         assertNotNull(np.getCosts());
+    }
+
+    // --- A3: same row rules as productions.csv ---
+
+    private static final String UP_HEADER =
+            "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects\n";
+
+    @Test
+    void load_rowWithEmptyEffectsColumn_isKept() throws Exception {
+        Files.createDirectories(tempDir.resolve("businesscraft"));
+        // trailing empty effects column: 9 columns, the last one empty
+        Files.writeString(tempDir.resolve("businesscraft").resolve("upgrades.csv"),
+                UP_HEADER + "no_effects,cat,No Effects,,,Just a marker,1,wood:5,\n");
+
+        UpgradeRegistry.load();
+
+        UpgradeNode n = UpgradeRegistry.get("no_effects");
+        assertNotNull(n, "a node with an empty effects column must not be dropped");
+        assertTrue(n.getEffects().isEmpty());
+        assertEquals(1, n.getCosts().size());
+    }
+
+    @Test
+    void load_quotedDescriptionWithComma_doesNotShiftColumns() throws Exception {
+        Files.createDirectories(tempDir.resolve("businesscraft"));
+        Files.writeString(tempDir.resolve("businesscraft").resolve("upgrades.csv"),
+                UP_HEADER + "quoted,cat,Quoted,,,\"Bigger, better farms\",2.5,wood:5,pop_cap:3\n");
+
+        UpgradeRegistry.load();
+
+        UpgradeNode n = UpgradeRegistry.get("quoted");
+        assertNotNull(n);
+        assertEquals("Bigger, better farms", n.getDescription());
+        assertEquals(2.5f, n.getResearchMinutes(), 1e-6f);
+        assertEquals("pop_cap", n.getEffects().get(0).getTarget());
+    }
+
+    @Test
+    void load_commentAndBlankLinesAreSkipped() throws Exception {
+        Files.createDirectories(tempDir.resolve("businesscraft"));
+        Files.writeString(tempDir.resolve("businesscraft").resolve("upgrades.csv"),
+                UP_HEADER + "# === housing ===\n\nn1,cat,One,,,d,1,,pop_cap:1\n   # trailing note\n");
+
+        UpgradeRegistry.load();
+
+        assertEquals(1, UpgradeRegistry.getAll().size());
+        assertTrue(com.quackers29.businesscraft.config.ConfigWarnings.all().isEmpty());
+    }
+
+    @Test
+    void load_repeatColumnParsedIntoNode() throws Exception {
+        Files.createDirectories(tempDir.resolve("businesscraft"));
+        Files.writeString(tempDir.resolve("businesscraft").resolve("upgrades.csv"),
+                UP_HEADER + "rep,cat,Rep,5:1.1:1.2,,d,1,,pop_cap:1\n");
+
+        UpgradeRegistry.load();
+
+        UpgradeNode n = UpgradeRegistry.get("rep");
+        assertEquals(5, n.getMaxRepeats());
+        assertEquals(1.1f, n.getCostMultiplier(), 1e-6f);
+        assertEquals(1.2f, n.getBenefitMultiplier(), 1e-6f);
     }
 }

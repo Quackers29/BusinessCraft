@@ -2,7 +2,8 @@
 # Playable multiplayer showcase: bring up a dedicated dev server with a built-out BusinessCraft
 # world, join it from your own launcher (or an opt-in dev client), then shut everything down.
 #
-#   bash tools/showcase-play.sh start [forge|fabric] [--client] [--production]
+#   bash tools/showcase-play.sh start [forge|fabric] [--client]   # server only; --client also opens one
+#   bash tools/showcase-play.sh start --production [forge|fabric] # production world, event log on
 #   bash tools/showcase-play.sh client                            # open a dev client on the running server
 #   bash tools/showcase-play.sh status                            # running? loader, port, how to join, logs
 #   bash tools/showcase-play.sh stop                              # save and stop what this script launched
@@ -11,8 +12,17 @@
 # with tourists, contracts, signs, a guide chest), waits for the server's "Done (" line, prints
 # the address to join and leaves the server running. No client is started unless you pass
 # --client (or run 'client' later); join from your own launcher, or with ./gradlew runClient.
-# --production turns production, research, and contracts on for that server only and writes
-# the event CSV into showcase-output/<run>/production/.
+# --production builds a different world: [production], [research] and [contracts] are switched
+# on in this server's own config (<loader>/run-play-server/config), never in your normal config.
+# Four towns 20 blocks apart show the states: Starterton (biome starting kit only), Farmstead
+# (full stores, recipes run), Highmark (many upgrades, research AI active), Hungerford (starving:
+# low happiness, min-stock recipe conditions fail). Each has a sign. It also replaces that
+# server's items.csv, productions.csv, upgrades.csv and biomes.csv with the bundled copies, and
+# writes the production event CSV into showcase-output/<run>/production/. The game never
+# overwrites an existing CSV; this start does, because a run dir created before the bundled
+# install still has the old generated files (different biomes column order, and no
+# farming_advanced). A plain 'start' restores the tour world and removes the production toml
+# marker. The event log stays off unless you pass --production or set [debug] productionEventLog.
 # stop ends only the processes recorded in the session file. A client you started yourself is
 # left alone. Both are safe to repeat, with or without a client.
 #
@@ -23,7 +33,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 # shellcheck source=tools/showcase-output-lib.sh
 source "$ROOT/tools/showcase-output-lib.sh"
@@ -33,7 +43,7 @@ PLAY_NAME="${BC_PLAY_NAME:-BC_Player}"
 READY_TIMEOUT=480
 
 usage() {
-    sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//' >&2
+    sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//' >&2
     exit 2
 }
 
@@ -76,7 +86,7 @@ save_session() {
     mkdir -p "$(dirname "$SESSION_FILE")"
     {
         for key in LOADER PORT RUN_DIR SERVER_DIR CLIENT_DIR SERVER_PID SERVER_START CLIENT_PID CLIENT_START \
-                STARTED_AT READY_SECONDS DETAIL PLAYER PRODUCTION LOG_DIR; do
+                STARTED_AT READY_SECONDS DETAIL PLAYER SCENARIO PRODUCTION LOG_DIR; do
             printf '%s=%q\n' "$key" "${!key:-}"
         done
     } >"$SESSION_FILE.tmp"
@@ -85,7 +95,7 @@ save_session() {
 
 load_session() {
     LOADER="" PORT="" RUN_DIR="" SERVER_DIR="" CLIENT_DIR="" SERVER_PID="" SERVER_START=""
-    CLIENT_PID="" CLIENT_START="" STARTED_AT="" READY_SECONDS="" DETAIL="" PLAYER="" PRODUCTION="" LOG_DIR=""
+    CLIENT_PID="" CLIENT_START="" STARTED_AT="" READY_SECONDS="" DETAIL="" PLAYER="" SCENARIO="" PRODUCTION="" LOG_DIR=""
     [[ -f "$SESSION_FILE" ]] || return 1
     # shellcheck disable=SC1090
     source "$SESSION_FILE"
@@ -163,6 +173,52 @@ write_server_properties() {
     sed -i -e 's/^view-distance=.*/view-distance=10/' \
         -e 's/^simulation-distance=.*/simulation-distance=10/' \
         -e 's/^motd=.*/motd=BusinessCraft showcase tour/' "$file"
+}
+
+# Config of the production world. The server's own config dir is the only place it is written;
+# it is the bundled businesscraft.toml with [production], [research] and [contracts] switched on,
+# and general.defaultBorderRadius set to the showcase spacing (ShowcaseProductionLayout.BORDER_RADIUS).
+# A marker lets a later plain start remove that file. The four CSVs are copied over whatever is
+# already there: CsvConfig.ensureInstalled leaves an existing file alone, so a pre-bundled run dir
+# would otherwise keep feeding the seeder the old ids. Bundled defaults and CSVs are not edited.
+PRODUCTION_CONFIG_MARKER="# showcase-play: production scenario"
+BUNDLED_CONFIG_DIR="$ROOT/common/src/main/resources/assets/businesscraft/config"
+BUNDLED_TOML="$BUNDLED_CONFIG_DIR/businesscraft.toml"
+BUNDLED_CSVS=(items.csv productions.csv upgrades.csv biomes.csv)
+
+install_bundled_csvs() {
+    local dest="$1/config/businesscraft" name
+    mkdir -p "$dest"
+    for name in "${BUNDLED_CSVS[@]}"; do
+        if [[ ! -f "$BUNDLED_CONFIG_DIR/$name" ]]; then
+            echo "Bundled config file is missing: $BUNDLED_CONFIG_DIR/$name" >&2
+            return 1
+        fi
+        cp -f "$BUNDLED_CONFIG_DIR/$name" "$dest/$name"
+    done
+    echo "Installed bundled CSVs into $dest"
+}
+
+write_server_config() {
+    local scenario="$1" file="$2/config/businesscraft.toml"
+    if [[ "$scenario" == "production" ]]; then
+        mkdir -p "$2/config"
+        {
+            echo "$PRODUCTION_CONFIG_MARKER"
+            awk '/^\[/ { section = $0 }
+                (section == "[production]" || section == "[research]" || section == "[contracts]") \
+                    && /^[ \t]*enabled[ \t]*=/ {
+                    sub(/=.*/, "= true")
+                }
+                section == "[general]" && /^[ \t]*defaultBorderRadius[ \t]*=/ {
+                    sub(/=.*/, "= 10")
+                }
+                { print }' "$BUNDLED_TOML"
+        } >"$file"
+        install_bundled_csvs "$2"
+    elif [[ -f "$file" ]] && head -n 1 "$file" | grep -qxF "$PRODUCTION_CONFIG_MARKER"; then
+        rm -f "$file"
+    fi
 }
 
 prepare_client_dir() {
@@ -245,11 +301,11 @@ start_abort() {
 }
 
 do_start() {
-    local loader="forge" want_client=0 want_production=0 arg
+    local loader="forge" want_client=0 scenario="tour" arg
     for arg in "$@"; do
         case "$arg" in
             --client) want_client=1 ;;
-            --production) want_production=1 ;;
+            --production) scenario="production" ;;
             forge | fabric) loader="$arg" ;;
             *)
                 echo "Unknown argument: $arg (use forge or fabric, and optionally --client or --production)" >&2
@@ -277,6 +333,7 @@ do_start() {
     RUN_DIR="$SHOWCASE_RUN_DIR"
     LOADER="$loader"
     PLAYER="$PLAY_NAME"
+    SCENARIO="$scenario"
     echo "Output: $RUN_DIR"
 
     local template wanted
@@ -309,10 +366,13 @@ do_start() {
     SERVER_DIR="$ROOT/$loader/run-play-server"
     CLIENT_DIR="$ROOT/$loader/run-play-client"
     local server_spec="$RUN_DIR/server-command.json"
-    dump_command "$loader" runServer "$server_spec" -PmpSmoke=play
+    local smoke_mode="play"
+    [[ "$scenario" == "production" ]] && smoke_mode="play-production"
+    dump_command "$loader" runServer "$server_spec" -PmpSmoke="$smoke_mode"
 
     mkdir -p "$SERVER_DIR"
     printf 'eula=true\n' >"$SERVER_DIR/eula.txt"
+    write_server_config "$scenario" "$SERVER_DIR"
     write_server_properties "$SERVER_DIR/server.properties" "$PORT"
     rm -rf "$SERVER_DIR/world"
     cp -a "$template" "$SERVER_DIR/world"
@@ -324,14 +384,11 @@ do_start() {
     local -a prod_props=()
     PRODUCTION=0
     LOG_DIR=""
-    if [[ "$want_production" -eq 1 ]]; then
+    if [[ "$scenario" == "production" ]]; then
         PRODUCTION=1
         LOG_DIR="$RUN_DIR/production"
         mkdir -p "$LOG_DIR"
         prod_props=(
-            --sysprop businesscraft.production.enabled=true
-            --sysprop businesscraft.research.enabled=true
-            --sysprop businesscraft.contracts.enabled=true
             --sysprop businesscraft.debug.productionEventLog=true
             --sysprop "businesscraft.debug.productionEventLogDir=$LOG_DIR"
         )
@@ -444,7 +501,7 @@ print_status_body() {
     if [[ -n "${CLIENT_PID:-}" ]]; then
         if client_running; then client_note="running (pid ${CLIENT_PID}, player ${PLAYER})"; else client_note="not running"; fi
     fi
-    echo "  Loader:   ${LOADER}   Port: ${PORT}"
+    echo "  Loader:   ${LOADER}   Port: ${PORT}   Scenario: ${SCENARIO:-tour}"
     echo "  Server:   running (pid ${SERVER_PID})   Client: ${client_note}"
     [[ -n "${STARTED_AT:-}" ]] && echo "  Started:  ${STARTED_AT}   ready after ${READY_SECONDS:-?}s"
     print_join
@@ -523,6 +580,11 @@ do_stop() {
 }
 
 # ---- main -----------------------------------------------------------------------------------
+
+# Sourced by ShowcaseProductionLayoutTest so it can call write_server_config. A normal run falls through.
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+    return 0
+fi
 
 case "${1:-}" in
     start) shift; do_start "$@" ;;

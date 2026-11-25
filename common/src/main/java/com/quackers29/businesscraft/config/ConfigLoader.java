@@ -88,7 +88,6 @@ public class ConfigLoader {
 
     // Production config
     public static boolean productionEnabled = false;
-    public static int productionTickInterval = 100;
     public static int dailyTickInterval = 24000;
     public static int minStockPercent = 60;
     public static int excessStockPercent = 80;
@@ -278,7 +277,6 @@ public class ConfigLoader {
 
                 // Production settings
                 productionEnabled = config.getOrElse("production.enabled", false);
-                productionTickInterval = config.getIntOrElse("production.tickInterval", 100);
                 dailyTickInterval = config.getIntOrElse("production.dailyTickInterval", 24000);
                 minStockPercent = config.getIntOrElse("production.minStockPercent", 60);
                 excessStockPercent = config.getIntOrElse("production.excessStockPercent", 80);
@@ -376,11 +374,13 @@ public class ConfigLoader {
     }
 
     private static void loadRegistries() {
+        ConfigWarnings.clear();
         // Load registries for both integrated servers and display mapping
         com.quackers29.businesscraft.economy.ResourceRegistry.load();
         com.quackers29.businesscraft.production.ProductionRegistry.load();
         com.quackers29.businesscraft.production.UpgradeRegistry.load();
         com.quackers29.businesscraft.world.BiomeRegistry.load();
+        ConfigValidator.validate();
     }
 
     private static List<String> getDefaultTownNames() {
@@ -559,15 +559,13 @@ public class ConfigLoader {
 
                 // Production settings
                 config.set("production.enabled", productionEnabled);
-                config.setComment("production.enabled", " Enable automatic production system");
-                config.set("production.tickInterval", productionTickInterval);
-                config.setComment("production.tickInterval", " Ticks between production cycles");
+                config.setComment("production.enabled", " Run the production recipes in productions.csv for every town");
                 config.set("production.dailyTickInterval", dailyTickInterval);
-                config.setComment("production.dailyTickInterval", " Daily tick interval for consumption");
+                config.setComment("production.dailyTickInterval", " Ticks that count as one day. Sets how long the research AI waits for resources before settling for a cheaper upgrade, and the per-hour rates shown in the Resources tab");
                 config.set("production.minStockPercent", minStockPercent);
-                config.setComment("production.minStockPercent", " Minimum stock percentage before buying");
+                config.setComment("production.minStockPercent", " Stock level (percent of storage cap) a town tries to keep. Food at this level gives full base happiness, the min recipe condition tests against it, and contracts treat stock below it as a need");
                 config.set("production.excessStockPercent", excessStockPercent);
-                config.setComment("production.excessStockPercent", " Excess stock percentage for selling");
+                config.setComment("production.excessStockPercent", " Stock level (percent of storage cap) above which stock counts as excess. Used by the excess recipe condition and when contracts decide what a town can sell");
 
                 // Trading settings
                 config.set("trading.enabled", tradingEnabled);
@@ -590,7 +588,7 @@ public class ConfigLoader {
                 config.setComment("player.townBoundaryMessages", " Show town boundary entry/exit messages");
 
                 config.set("research.enabled", researchEnabled);
-                config.setComment("research.enabled", "Enable research/upgrade system");
+                config.setComment("research.enabled", " Let towns research upgrades from upgrades.csv automatically (research is chosen by the town AI, not by players)");
 
                 config.set("debug.productionEventLog", productionEventLog);
                 config.setComment("debug.productionEventLog",

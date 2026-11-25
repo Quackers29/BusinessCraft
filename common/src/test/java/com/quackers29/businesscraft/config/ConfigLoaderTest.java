@@ -52,7 +52,7 @@ class ConfigLoaderTest {
     private int savedMaxPlatformSearchRadius;
     private int savedMaxTouristsPerTown, savedPopulationPerTourist, savedMaxPopBasedTourists;
     private int savedMinPopForTourists, savedMetersPerEmerald, savedTradingTickInterval;
-    private int savedProductionTickInterval, savedDailyTickInterval, savedMinStockPercent, savedExcessStockPercent;
+    private int savedDailyTickInterval, savedMinStockPercent, savedExcessStockPercent;
     private double savedTouristExpiryMinutes, savedMinecartStopThreshold;
     private double savedContractAuctionDurationMinutes, savedContractCourierAcceptanceMinutes;
     private double savedContractCourierDeliveryMinutesPerMeter, savedContractSnailMailDeliveryMinutesPerMeter;
@@ -107,7 +107,6 @@ class ConfigLoaderTest {
         savedTradingDefaultMaxStock = ConfigLoader.tradingDefaultMaxStock;
 
         savedProductionEnabled = ConfigLoader.productionEnabled;
-        savedProductionTickInterval = ConfigLoader.productionTickInterval;
         savedDailyTickInterval = ConfigLoader.dailyTickInterval;
         savedMinStockPercent = ConfigLoader.minStockPercent;
         savedExcessStockPercent = ConfigLoader.excessStockPercent;
@@ -174,7 +173,6 @@ class ConfigLoaderTest {
         ConfigLoader.tradingDefaultMaxStock = savedTradingDefaultMaxStock;
 
         ConfigLoader.productionEnabled = savedProductionEnabled;
-        ConfigLoader.productionTickInterval = savedProductionTickInterval;
         ConfigLoader.dailyTickInterval = savedDailyTickInterval;
         ConfigLoader.minStockPercent = savedMinStockPercent;
         ConfigLoader.excessStockPercent = savedExcessStockPercent;
@@ -279,7 +277,6 @@ class ConfigLoaderTest {
         assertEquals(1000.0f, ConfigLoader.tradingDefaultMaxStock, 1e-6f);
 
         assertFalse(ConfigLoader.productionEnabled);
-        assertEquals(100, ConfigLoader.productionTickInterval);
         assertEquals(24000, ConfigLoader.dailyTickInterval);
         assertEquals(60, ConfigLoader.minStockPercent);
         assertEquals(80, ConfigLoader.excessStockPercent);
@@ -483,7 +480,6 @@ class ConfigLoaderTest {
 
             [production]
             enabled = true
-            tickInterval = 50
             dailyTickInterval = 12000
             minStockPercent = 40
             excessStockPercent = 90
@@ -495,7 +491,6 @@ class ConfigLoaderTest {
         assertEquals(0.75f, ConfigLoader.tradingRestockRate, 1e-6f);
         assertEquals(2500.0f, ConfigLoader.tradingDefaultMaxStock, 1e-6f);
 
-        assertEquals(50, ConfigLoader.productionTickInterval);
         assertEquals(12000, ConfigLoader.dailyTickInterval);
         assertEquals(40, ConfigLoader.minStockPercent);
         assertEquals(90, ConfigLoader.excessStockPercent);

@@ -1,17 +1,15 @@
 package com.quackers29.businesscraft.world;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.config.ConfigWarnings;
+import com.quackers29.businesscraft.config.CsvConfig;
 import com.quackers29.businesscraft.data.parsers.DataParser;
 import com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 
 public class BiomeRegistry {
@@ -48,95 +46,58 @@ public class BiomeRegistry {
         GEN_KITS.clear();
         GLOBAL_KITS.clear();
 
-        Path configDir = PlatformAccess.platform.getConfigDirectory();
-        File configFile = configDir.resolve("businesscraft").resolve(CONFIG_FILE_NAME).toFile();
+        File configFile = CsvConfig.ensureInstalled(PlatformAccess.platform.getConfigDirectory(), CONFIG_FILE_NAME);
 
-        if (!configFile.exists()) {
-            createDefaultConfig(configFile);
-        }
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(configFile))) {
-            String line;
-            boolean firstLine = true;
-            while ((line = reader.readLine()) != null) {
-                if (firstLine) {
-                    firstLine = false;
-                    continue; // Skip header
+        try {
+            // biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values
+            for (CsvConfig.Row row : CsvConfig.readRows(configFile)) {
+                String[] parts = row.columns();
+                if (parts.length < 7) {
+                    ConfigWarnings.warn(CONFIG_FILE_NAME, row.lineNumber(),
+                            "expected 7 columns, found " + parts.length + "; row skipped");
+                    continue;
                 }
 
-                line = line.trim();
-                if (line.isEmpty() || line.startsWith("#"))
-                    continue; // Skip comments/empty
+                String biomeIdsRaw = parts[0];
+                String variantId = parts[1];
+                String variantName = parts[2];
+                String desc = parts[3];
+                int weight = parseWeight(parts[4], row.lineNumber());
+                String nodesRaw = parts[5];
+                String valuesRaw = parts[6];
 
-                // Parse CSV - simplified split (assuming no commas in descriptions/values for
-                // now,
-                // but user used quotes in description. A proper CSV parser is better,
-                // but we can start with simple split if we respect the format).
-                // User format:
-                // biome_ids,variant_id,variant_name,weight,starting_nodes,starting_values,description
-
-                // We'll use a regex split that respects quotes or just basic split if
-                // description is last.
-                // Since description is last and quoted, we can limit split.
-                String[] parts = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
-
-                if (parts.length >= 7) {
-                    String biomeIdsRaw = parts[0].trim();
-                    String variantId = parts[1].trim();
-                    String variantName = parts[2].trim().replace("\"", "");
-                    // Bundled biomes.csv puts description before weight. The generated stub puts
-                    // the weight there. A numeric fourth field is the stub.
-                    boolean stubOrder = parts[3].trim().replace("\"", "").matches("\\d+");
-                    String desc;
-                    int weight;
-                    String nodesRaw;
-                    String valuesRaw;
-                    if (stubOrder) {
-                        weight = parseWeight(parts[3].trim());
-                        nodesRaw = parts[4].trim();
-                        valuesRaw = parts[5].trim();
-                        desc = parts[6].trim().replace("\"", "");
-                    } else {
-                        desc = parts[3].trim().replace("\"", "");
-                        weight = parseWeight(parts[4].trim());
-                        nodesRaw = parts[5].trim();
-                        valuesRaw = parts[6].trim();
+                List<String> biomeIds = new ArrayList<>();
+                if (biomeIdsRaw.equals("*")) {
+                    biomeIds.add("*");
+                } else {
+                    for (String b : biomeIdsRaw.split(";")) {
+                        if (!b.trim().isEmpty())
+                            biomeIds.add(b.trim());
                     }
+                }
 
-                    List<String> biomeIds = new ArrayList<>();
-                    if (biomeIdsRaw.equals("*")) {
-                        biomeIds.add("*");
-                    } else {
-                        Collections.addAll(biomeIds, biomeIdsRaw.split(";"));
+                List<String> startingNodes = new ArrayList<>();
+                for (String n : nodesRaw.split(";")) {
+                    if (!n.trim().isEmpty())
+                        startingNodes.add(n.trim());
+                }
+
+                Map<String, Float> startingValues = new HashMap<>();
+                for (ResourceAmount ra : DataParser.parseResources(valuesRaw)) {
+                    startingValues.put(ra.resourceId, ra.amount);
+                }
+
+                BiomeKit kit = new BiomeKit(biomeIds, variantId, variantName, weight, startingNodes, startingValues,
+                        desc);
+
+                if (biomeIds.contains("*")) {
+                    GLOBAL_KITS.add(kit);
+                    LOGGER.info("Registered GLOBAL variant: {} ({})", variantId, variantName);
+                } else {
+                    for (String bid : biomeIds) {
+                        GEN_KITS.computeIfAbsent(bid, k -> new ArrayList<>()).add(kit);
                     }
-
-                    List<String> startingNodes = new ArrayList<>();
-                    if (!nodesRaw.isEmpty()) {
-                        for (String n : nodesRaw.split(";")) {
-                            if (!n.trim().isEmpty())
-                                startingNodes.add(n.trim());
-                        }
-                    }
-
-                    Map<String, Float> startingValues = new HashMap<>();
-                    List<ResourceAmount> valueList = DataParser.parseResources(valuesRaw);
-                    for (ResourceAmount ra : valueList) {
-                        startingValues.put(ra.resourceId, ra.amount);
-                    }
-
-                    BiomeKit kit = new BiomeKit(biomeIds, variantId, variantName, weight, startingNodes, startingValues,
-                            desc);
-
-                    if (biomeIds.contains("*")) {
-                        GLOBAL_KITS.add(kit);
-                        LOGGER.info("Registered GLOBAL variant: {} ({})", variantId, variantName);
-                    } else {
-                        for (String bid : biomeIds) {
-                            String cleanedId = bid.trim();
-                            GEN_KITS.computeIfAbsent(cleanedId, k -> new ArrayList<>()).add(kit);
-                        }
-                        LOGGER.info("Registered variant {} for biomes: {}", variantId, biomeIds);
-                    }
+                    LOGGER.info("Registered variant {} for biomes: {}", variantId, biomeIds);
                 }
             }
         } catch (IOException e) {
@@ -144,22 +105,22 @@ public class BiomeRegistry {
         }
     }
 
-    private static int parseWeight(String s) {
+    /** Every loaded kit once: biome-specific kits first, then the global ones. */
+    public static List<BiomeKit> getAllKits() {
+        Set<BiomeKit> seen = new LinkedHashSet<>();
+        for (List<BiomeKit> kits : GEN_KITS.values()) {
+            seen.addAll(kits);
+        }
+        seen.addAll(GLOBAL_KITS);
+        return new ArrayList<>(seen);
+    }
+
+    private static int parseWeight(String s, int line) {
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
+            ConfigWarnings.warn(CONFIG_FILE_NAME, line, "invalid weight '" + s + "'; using 10");
             return 10;
-        }
-    }
-
-    private static void createDefaultConfig(File file) {
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write("biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values\n");
-            writer.write(
-                    "minecraft:plains,farming,Farming Village,\"Strong farming\",60,basic_settlement;farming_basic,population:6;food:140;wood:70;money:60;happiness:72\n");
-            // ... truncated defaults
-        } catch (IOException e) {
-            LOGGER.error("Failed to create default {}", CONFIG_FILE_NAME, e);
         }
     }
 
@@ -200,6 +161,29 @@ public class BiomeRegistry {
         }
 
         return candidates.get(0); // Fallback
+    }
+
+    /**
+     * The kit whose variant name matches, or null. Does not roll a random kit.
+     * Used when a rule needs the town's own starting pop and border.
+     */
+    public static BiomeKit findExactKit(String biomeId, String variantName) {
+        if (variantName == null) {
+            return null;
+        }
+        if (biomeId != null && GEN_KITS.containsKey(biomeId)) {
+            for (BiomeKit kit : GEN_KITS.get(biomeId)) {
+                if (variantName.equals(kit.variantName)) {
+                    return kit;
+                }
+            }
+        }
+        for (BiomeKit kit : GLOBAL_KITS) {
+            if (variantName.equals(kit.variantName)) {
+                return kit;
+            }
+        }
+        return null;
     }
 
     /**

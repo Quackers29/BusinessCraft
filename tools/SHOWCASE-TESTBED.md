@@ -131,8 +131,8 @@ Use `context.townAPos()`, `context.townBPos()`, `context.townAId()`, and `contex
 
 ```bash
 bash tools/showcase-play.sh start            # server only, Forge (default); `start fabric` for Fabric
-bash tools/showcase-play.sh start --production   # also enable production, research, contracts, and the event log
 bash tools/showcase-play.sh start --client   # also open one dev client (or run `client` later)
+bash tools/showcase-play.sh start --production   # production world (Starterton, Farmstead, Highmark, Hungerford) and the event log
 bash tools/showcase-play.sh client           # open a dev client on the running server (`./gradlew runClient` also works)
 bash tools/showcase-play.sh status           # running? loader, port, join addresses, logs
 bash tools/showcase-play.sh stop             # save the world, stop the server and any dev client it opened
@@ -144,7 +144,7 @@ Join from elsewhere: `localhost:<port>` (WSL2 forwards it to Windows), or the LA
 
 The pid/start-time record lives in `showcase-output/play-session.env`. `stop` signals only those pids (start time must match, so a reused pid is never touched), is safe to repeat, and leaves a client you started yourself alone. Logs: `showcase-output/<timestamp>_play_<loader>/logs`.
 
-`--production` is only for that process. It passes `-Dbusinesscraft.production.enabled`, `research.enabled`, `contracts.enabled`, and `debug.productionEventLog`, and sets the log directory to `showcase-output/<run>/production/`. The toml file is not rewritten, so the next start without the flag stays off. Start and stop print the CSV path. The dedicated server log line is `Production event log: <path>`. A headless run of the same four towns, without a server, is `./gradlew productionSim` (output `common/build/production-sim/`) or the shorter case inside `./gradlew test`.
+`--production` builds the production world described below and turns the event log on for that process only. It sets `-Dbusinesscraft.debug.productionEventLog` and writes the CSV into `showcase-output/<run>/production/`. Start and stop print that path. The dedicated server log line is `Production event log: <path>`. A headless run of the same four towns and the same seed, without a server, is `./gradlew productionSim` (output `common/build/production-sim/`) or the shorter case inside `./gradlew test`. The live world still rolls a biome kit at the platform; the headless run fixes Farming Village and then applies `ShowcaseProductionSeed`.
 
 ### What the world holds
 
@@ -156,3 +156,20 @@ Four towns from `ShowcasePlayLayout`: Oakvale (0,0), Hillcrest (0,-120), Riverto
 - Five named tourists by the spawn, a chest with the Conductor's Clipboard and a guide book, 13 signs. Noon, no daylight or weather cycle.
 
 Code: `ShowcasePlayServer` (build and dispatcher), `ShowcasePlayLayout` (plan, unit tested). It is selected with `-PmpSmoke=play` and hooked from `MultiplayerSmokeServer`. It is not part of targeted showcase selection (`showcase-targets.json` ignores it).
+
+### Production world: `start --production`
+
+`bash tools/showcase-play.sh start --production [forge|fabric]` builds a different world for trying the production and research systems. It writes the bundled `businesscraft.toml` into `<loader>/run-play-server/config/` only (your normal config is not touched) with `[production]`, `[research]` and `[contracts]` enabled, and `general.defaultBorderRadius` set to 10, then boots with `-PmpSmoke=play-production`. Contracts only auto-list and auto-bid while `contracts.enabled` is on; the bundled file leaves it off, which is why a production world used to sit with an empty contract board even when a town was over 80% stock. The same start also copies the bundled `items.csv`, `productions.csv`, `upgrades.csv` and `biomes.csv` over whatever is already in that server's `config/businesscraft/` folder. The game itself never replaces an existing CSV, and a folder created by an older build still has the generated defaults: biomes columns in a different order (so `food:140` is read as an upgrade node) and an upgrades file with no `farming_advanced`. A plain `start` removes the production toml again, so the default tour world is unchanged. The copied CSVs stay. Everything else (server only by default, `--client`, ports, `status`, `stop`) works as above.
+
+Four towns on a 20-block square, each with a sign 3 east and 6 south of its Town Centre (inside the 10-block border). Placement still requires `defaultBorderRadius` plus the existing town's border. The kits grant `border:10`, and this run's default is 10, so the required gap is 20 and the circles meet without overlapping. The bundled default of 50 is not changed. Stock is set as a percentage of each town's storage cap and upgrades are unlocked through the normal APIs, so the numbers follow `upgrades.csv` and `[production]` `minStockPercent` / `excessStockPercent`. A town over the excess level lists a sell contract on its own; a town under the minimum bids if it has the emeralds. Open the Resources tab to see stock, rates and happiness, and the contract board for the auctions. The server logs `PRODUCTION_STATUS contracts=<n>` once a minute.
+
+| Town | Position | State | What it shows |
+|---|---|---|---|
+| Starterton | (0, 0) | Biome starting kit only | The kit's upgrades and stock for the biome (random variant), nothing seeded. Food and money tick with the starting recipes; research AI picks cheap upgrades |
+| Farmstead | (20, 0) | Farming plus wood | Food, wood and money stocked at or above the min stock level, work units banked. Farming, woodcutting, sawmill and taxes all run; planks and food climb. Food and wood are over the excess level, so this town lists sell contracts |
+| Highmark | (0, -20) | Mid-game | Many upgrades (higher farming and cap levels, research, tourism, work units), larger storage, high stock. The research AI keeps starting new upgrades (see the research bar) |
+| Hungerford | (20, -20) | Starving | Food about 6% of cap, farming and woodcutting stopped, wood below the min level. Happiness drops to the 50 base, the sawmill (`wood:>min`) never runs, population growth stays blocked. Food is under the minimum, so this town bids when it can pay |
+
+The server logs one `PRODUCTION_TOWN` line per town after the build and a `PRODUCTION_STATUS` line each minute (population, happiness, work units, upgrades, stock/cap per resource, current research). Starterton's biome is random, so its kit changes between runs. The build fails (`PLAY_FAILED`) if the config flags are off or a town spec names an unknown node, recipe or resource.
+
+Code: `ShowcaseProductionLayout` (plan, unit tested in `ShowcaseProductionLayoutTest`) and `ShowcaseProductionWorld` (seeding), driven from `ShowcasePlayServer`.

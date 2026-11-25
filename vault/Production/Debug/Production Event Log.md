@@ -19,7 +19,7 @@ The file is `production-events-<stamp>.csv`. Columns are `real_time`, `game_tick
 
 An empty directory setting uses `<server run dir>/businesscraft-debug`. `bash tools/showcase-play.sh start --production` writes straight into `showcase-output/<run>/production/` and prints the path on start and stop. `/bc debug production [town]` appends one snapshot row per town while the log is already open.
 
-The headless run uses the same listener and the same town tick. It seeds the four showcase towns from `ShowcasePlayLayout` and the bundled CSVs, with the plains Farming Village kit so the result does not depend on the random kit the play world rolls. `./gradlew test` runs 1000 ticks. `./gradlew productionSim` runs 6000 ticks into `common/build/production-sim/`. `-Dbusinesscraft.productionSim.ticks`, `.dir`, and `.seed` change that.
+The headless run uses the same listener and the same town tick. It seeds `ShowcaseProductionLayout` (Starterton at 0,0, Farmstead at 20,0, Highmark at 0,-20, Hungerford at 20,-20, border 10, contracts on) through `ShowcaseProductionSeed`, after a fixed plains Farming Village kit so the result does not depend on the random kit the production world rolls. `./gradlew test` runs 1000 ticks. `./gradlew productionSim` runs 6000 ticks into `common/build/production-sim/`. `-Dbusinesscraft.productionSim.ticks`, `.dir`, and `.seed` change that.
 
 ---
 > [!info]- Deep reference
@@ -32,7 +32,7 @@ The headless run uses the same listener and the same town tick. It seeds the fou
 | `ProductionEventBus` | `common/src/main/java/com/quackers29/businesscraft/debug/production/ProductionEventBus.java` | The only listener list. Does not call the supplier when the list is empty. |
 | `ProductionEventLog` | `common/src/main/java/com/quackers29/businesscraft/debug/production/ProductionEventLog.java` | The sink. Opens the CSV, flushes each row, fsyncs every 25 rows, writes the summary on close. |
 | `ProductionSimulation.run` | `common/src/main/java/com/quackers29/businesscraft/debug/production/ProductionSimulation.java` | Headless ticks. Copies the bundled CSVs, seeds the showcase towns, ticks, closes the same log. |
-| `ShowcaseTownSeed.apply` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcaseTownSeed.java` | Shared stock and population seed for the play world and the simulation. |
+| `ShowcaseProductionSeed.apply` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcaseProductionSeed.java` | The production-world unlocks, stock, population, work units and stalled recipes. The simulation calls the same method. |
 | `ConfigLoader.applyRunOverrides` | `common/src/main/java/com/quackers29/businesscraft/config/ConfigLoader.java` | `-Dbusinesscraft.production.enabled`, `research.enabled`, `contracts.enabled`, `debug.productionEventLog`, and `debug.productionEventLogDir` override the toml for that process only. |
 
 ## Rules & formulas (exact)
@@ -42,7 +42,8 @@ The headless run uses the same listener and the same town tick. It seeds the fou
 - Contract rows use the issuer for listed, expired, and cancelled, the bidder for a bid, the winner for won and delivered, and the issuer for courier dispatched. Snail mail's counterpart name is `snail_mail`.
 - The summary counts `research_bought` from `research_started` rows and sums `outputs`, `inputs`, and `cost` from the detail field.
 - The simulation clock is 50 ms per tick from a fixed zero. Contract and research randomness use `BcRandom` after `reseed`. Town ids are `UUID.nameUUIDFromBytes("businesscraft:showcase:" + name)`. Towns are ticked in layout order. The default seed is 29.
-- Live servers keep wall-clock time and `UUID.randomUUID()` for contract ids. The play world's biome kit is still the random kit for that chunk; the simulation always uses Farming Village.
+- Live servers keep wall-clock time and `UUID.randomUUID()` for contract ids. The production world's biome kit is still the random kit for that chunk; the simulation always applies Farming Village and then `ShowcaseProductionSeed`.
+- The four production towns are 20 blocks apart. Snail mail can finish inside `productionSim`'s 6000 ticks because that distance is short. The tour world (Oakvale, Hillcrest, Rivertown, Pinewood) is a different scenario and is not what `--production` builds.
 
 ## Edge cases & behaviors
 - Joining a world does not emit a border row per loaded town. Load sets a flag, then baselines the radius already in the save.
@@ -54,11 +55,10 @@ The headless run uses the same listener and the same town tick. It seeds the fou
 - Test file: `common/src/test/java/com/quackers29/businesscraft/debug/production/ProductionEventLogTest.java`
 - CSV quoting, toggle off writes nothing and does not build the row, summary totals match the rows, a one-tick recipe logs one completion per cycle, and a full output logs one stall across ten ticks.
 - Test file: `common/src/test/java/com/quackers29/businesscraft/debug/production/ProductionSimulationTest.java`
-- Events exist, including town creation and a recipe completion. No two rows share tick, town, type, subject, and details. Summary totals recomputed from the CSV match the summary file. Two runs with seed 29 match apart from `real_time`.
+- Events exist for Starterton, Farmstead, Highmark and Hungerford, including town creation and a recipe completion. No two rows share tick, town, type, subject, and details. Summary totals recomputed from the CSV match the summary file. Two runs with seed 29 match apart from `real_time`.
 
 ## Open questions
-- The generated biome stub used to put the weight before the description. The loader accepts that order and the bundled order. A numeric fourth column is the stub.
-- Snail-mail delivery time is distance times `contractSnailMailDeliveryMinutesPerMeter`. The Oakvale–Hillcrest gap is 120 blocks, so a delivered row needs a longer run than `productionSim`'s 6000 ticks.
+- None.
 
 ## Related
 - [[Production/Production Overview]]

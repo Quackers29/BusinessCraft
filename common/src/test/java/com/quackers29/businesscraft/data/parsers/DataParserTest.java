@@ -47,6 +47,18 @@ class DataParserTest {
         List<Effect> effects = DataParser.parseEffects("population_maintenance");
         assertEquals(1, effects.size());
         assertEffect(effects.get(0), "population_maintenance", 1.0f, false);
+        assertTrue(effects.get(0).isUnlock(), "a bare name is an unlock, not a scaled bonus");
+    }
+
+    @Test
+    void parseEffects_starAndColonForms_areNotUnlocks() {
+        Effect mult = DataParser.parseEffects("farming*0.5").get(0);
+        Effect stat = DataParser.parseEffects("border:2").get(0);
+        Effect explicitOne = DataParser.parseEffects("border:1").get(0);
+        assertFalse(mult.isUnlock());
+        assertFalse(stat.isUnlock());
+        assertFalse(explicitOne.isUnlock());
+        assertEquals(0.5f, mult.getValue(), 0.0001f);
     }
 
     @Test

@@ -1,16 +1,14 @@
 package com.quackers29.businesscraft.economy;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.config.ConfigWarnings;
+import com.quackers29.businesscraft.config.CsvConfig;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,48 +20,43 @@ public class ResourceRegistry {
 
     public static void load() {
         RESOURCES.clear();
-        Path configDir = PlatformAccess.platform.getConfigDirectory();
-        File configFile = configDir.resolve("businesscraft").resolve(CONFIG_FILE_NAME).toFile();
+        File configFile = CsvConfig.ensureInstalled(PlatformAccess.platform.getConfigDirectory(), CONFIG_FILE_NAME);
 
-        if (!configFile.exists()) {
-            configFile.getParentFile().mkdirs();
-            createDefaultConfig(configFile);
-        }
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(configFile))) {
-            String line;
-            boolean firstLine = true;
-            while ((line = reader.readLine()) != null) {
-                if (firstLine) {
-                    firstLine = false;
+        try {
+            // item_id,display_name,mc_item_id[,base_price]
+            for (CsvConfig.Row row : CsvConfig.readRows(configFile)) {
+                String[] parts = row.columns();
+                if (parts.length < 3) {
+                    ConfigWarnings.warn(CONFIG_FILE_NAME, row.lineNumber(),
+                            "expected at least 3 columns, found " + parts.length + "; row skipped");
                     continue;
                 }
+                String id = parts[0];
+                String mcItemIdStr = parts[2];
+                if (id.isEmpty() || mcItemIdStr.isEmpty()) {
+                    ConfigWarnings.warn(CONFIG_FILE_NAME, row.lineNumber(), "empty item_id or mc_item_id; row skipped");
+                    continue;
+                }
+                if (RESOURCES.containsKey(id)) {
+                    ConfigWarnings.warn(CONFIG_FILE_NAME, row.lineNumber(),
+                            "duplicate item_id '" + id + "'; later row replaces the earlier one");
+                }
 
-                String[] parts = line.split(",");
-                if (parts.length >= 3) {
-                    String id = parts[0].trim();
-                    String displayName = parts[1].trim();
-                    String mcItemIdStr = parts[2].trim();
-
-                    if (id.isEmpty() || mcItemIdStr.isEmpty())
-                        continue;
-
-                    try {
-                        ResourceLocation itemId = new ResourceLocation(mcItemIdStr);
-                        float basePrice = 1.0f;
-                        if (parts.length >= 4) {
-                            try {
-                                basePrice = Float.parseFloat(parts[3].trim());
-                            } catch (NumberFormatException e) {
-                                LOGGER.warn("Invalid base price for item {}: {}, using default 1.0", id, parts[3]);
-                            }
+                try {
+                    ResourceLocation itemId = new ResourceLocation(mcItemIdStr);
+                    float basePrice = 1.0f;
+                    if (parts.length >= 4 && !parts[3].isEmpty()) {
+                        try {
+                            basePrice = Float.parseFloat(parts[3]);
+                        } catch (NumberFormatException e) {
+                            ConfigWarnings.warn(CONFIG_FILE_NAME, row.lineNumber(),
+                                    "invalid base price '" + parts[3] + "' for " + id + "; using 1.0");
                         }
-
-                        ResourceType type = new ResourceType(id, itemId, basePrice);
-                        RESOURCES.put(id, type);
-                    } catch (Exception e) {
-                        LOGGER.error("Invalid item ID in {}: {}", CONFIG_FILE_NAME, mcItemIdStr);
                     }
+                    RESOURCES.put(id, new ResourceType(id, itemId, basePrice));
+                } catch (Exception e) {
+                    ConfigWarnings.warn(CONFIG_FILE_NAME, row.lineNumber(),
+                            "invalid mc_item_id '" + mcItemIdStr + "'");
                 }
             }
         } catch (IOException e) {
@@ -75,18 +68,6 @@ public class ResourceRegistry {
         }
     }
 
-    private static void createDefaultConfig(File file) {
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write("item_id,display_name,mc_item_id,base_price\n");
-            writer.write("wood,Wood,minecraft:oak_log,0.5\n");
-            writer.write("iron,Iron Ingot,minecraft:iron_ingot,2.0\n");
-            writer.write("coal,Coal,minecraft:coal,1.0\n");
-            writer.write("food,Food,minecraft:bread,1.5\n");
-            writer.write("money,Emeralds,minecraft:emerald,5.0\n");
-        } catch (IOException e) {
-            LOGGER.error("Failed to create default {}", CONFIG_FILE_NAME, e);
-        }
-    }
     public static ResourceType get(String id) {
         return RESOURCES.get(id);
     }

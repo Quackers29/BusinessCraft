@@ -90,6 +90,8 @@ public class TownProductionComponent implements TownComponent {
     }
 
     private int tickCounter = 0;
+    /** Set while a surplus check is adding up recipes, so a nested surplus condition cannot recurse. */
+    private boolean evaluatingSurplus = false;
 
     @Override
     public void tick() {
@@ -309,58 +311,15 @@ public class TownProductionComponent implements TownComponent {
         }
 
         // Check Space for Outputs (Stalling logic)
-        for (ResourceAmount output : recipe.getOutputs()) {
-            ResolvedResource resolved = resolveDynamicAmount(output.resourceId, output.amountExpression);
-            String resId = resolved.id();
-            float amount = resolved.amount();
-
-            if (resId.equals("pop"))
-                continue;
-
-            float current = 0f;
-            float cap;
-
-            // Non-item outputs first: tourist/wu are not in ResourceRegistry; checking them
-            // after a null-type continue made tourist_cap / wu_cap stall dead code.
-            if (resId.equals("tourist")) {
-                if (!town.isTouristSpawningEnabled()) {
-                    if (shouldLog)
-                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
-                                "Recipe {} tourist production stalled: Spawning Disabled", recipe.getId());
-                    float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
-                    recipeProgress.put(recipe.getId(), currentProgress);
-                    transitionStall(recipe.getId(), "spawning_disabled");
-                    return;
-                }
-                current = town.getTouristCount() + town.getPendingTouristSpawns();
-                cap = town.getUpgrades().getModifier("tourist_cap");
-            } else if (resId.equals("wu")) {
-                current = town.getWorkUnits();
-                cap = town.getUpgrades().getModifier("wu_cap");
-            } else {
-                com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
-                        .get(resId);
-                if (type == null) {
-                    // Stat output (border, happiness, etc.) — no inventory stall
-                    continue;
-                }
-                net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
-                        .getItem(type.getMcItemId());
-                if (item != null) {
-                    current = town.getTotalResourceCount(item) + town.getInTransitResourceCount(item);
-                }
-                cap = town.getTrading().getStorageCap(resId);
-            }
-
-            if (current + amount > cap) {
-                if (shouldLog)
-                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
-                            "Recipe {} output full: {} (Need space for {})", recipe.getId(), resId, amount);
-                float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
-                recipeProgress.put(recipe.getId(), currentProgress);
-                transitionStall(recipe.getId(), "output_full:" + resId);
-                return; // Stall
-            }
+        String blocked = outputBlockReason(recipe);
+        if (blocked != null) {
+            if (shouldLog)
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                        "Recipe {} stalled: {}", recipe.getId(), blocked);
+            float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
+            recipeProgress.put(recipe.getId(), currentProgress);
+            transitionStall(recipe.getId(), blocked);
+            return; // Stall
         }
 
         // Advance Progress
@@ -433,7 +392,11 @@ public class TownProductionComponent implements TownComponent {
             long applied = (long) amount;
 
             if (resId.equals("pop")) {
-                town.setPopulation((int) (town.getPopulation() + applied));
+                int add = populationRoom(amount);
+                applied = add;
+                if (add > 0) {
+                    town.setPopulation((int) town.getPopulation() + add);
+                }
             } else if (resId.equals("tourist")) {
                 town.addPendingTouristSpawns((int) applied);
             } else if (resId.equals("wu")) {
@@ -473,14 +436,25 @@ public class TownProductionComponent implements TownComponent {
                 targetValue = town.getHappiness();
             else if (target.equals("pop"))
                 targetValue = town.getPopulation();
+            else if (target.equals("crowding"))
+                targetValue = crowdingRatio();
             else if (target.equals("surplus")) {
-                // General surplus condition: target="surplus", value="resource_id"
+                // General surplus condition: target="surplus", value="resource_id".
+                // A recipe that is locked, missing inputs, or stalled at a full output
+                // is not a surplus. The public rate methods stay theoretical.
+                if (evaluatingSurplus) {
+                    continue;
+                }
                 String resourceId = valStr;
-
-                float prod = getProductionRate(resourceId);
-                float cons = getConsumptionRate(resourceId);
-
-                boolean pass = prod > cons;
+                boolean pass;
+                evaluatingSurplus = true;
+                try {
+                    float prod = runnableRate(resourceId, true);
+                    float cons = runnableRate(resourceId, false);
+                    pass = prod > cons;
+                } finally {
+                    evaluatingSurplus = false;
+                }
                 if (!pass)
                     return false;
                 continue;
@@ -715,5 +689,165 @@ public class TownProductionComponent implements TownComponent {
             return Float.MAX_VALUE; // Effectively stopped
 
         return baseTime / modifier;
+    }
+
+    /**
+     * How many people this output may add without passing {@code pop_cap}.
+     * A cap of 0 or less means the CSV did not set one, so the output is not clamped.
+     */
+    private int populationRoom(float amount) {
+        int add = (int) amount;
+        if (add <= 0) {
+            return 0;
+        }
+        float cap = town.getUpgrades().getModifier("pop_cap");
+        if (cap <= 0f) {
+            return add;
+        }
+        int room = (int) Math.floor(cap) - (int) town.getPopulation();
+        if (room <= 0) {
+            return 0;
+        }
+        return Math.min(add, room);
+    }
+
+    /**
+     * False when an output cannot be applied: population already at {@code pop_cap},
+     * tourist or work-unit cap full, storage full, or tourist spawning switched off.
+     * A {@code pop_cap} of 0 is "no cap in the data", not a cap of zero people.
+     */
+    private boolean outputsHaveRoom(ProductionRecipe recipe) {
+        return outputBlockReason(recipe) == null;
+    }
+
+    /**
+     * Why this recipe cannot apply an output, or null when every output fits.
+     * A {@code pop_cap} of 0 is "no cap in the data", not a cap of zero people.
+     */
+    private String outputBlockReason(ProductionRecipe recipe) {
+        for (ResourceAmount output : recipe.getOutputs()) {
+            ResolvedResource resolved = resolveDynamicAmount(output.resourceId, output.amountExpression);
+            String resId = resolved.id();
+            float amount = resolved.amount();
+
+            if (resId.equals("pop")) {
+                float cap = town.getUpgrades().getModifier("pop_cap");
+                if (cap > 0f && town.getPopulation() >= (int) Math.floor(cap)) {
+                    return "output_full:pop";
+                }
+                continue;
+            }
+
+            float current = 0f;
+            float cap;
+
+            // Non-item outputs first: tourist/wu are not in ResourceRegistry; checking them
+            // after a null-type continue made tourist_cap / wu_cap stall dead code.
+            if (resId.equals("tourist")) {
+                if (!town.isTouristSpawningEnabled()) {
+                    return "spawning_disabled";
+                }
+                current = town.getTouristCount() + town.getPendingTouristSpawns();
+                cap = town.getUpgrades().getModifier("tourist_cap");
+            } else if (resId.equals("wu")) {
+                current = town.getWorkUnits();
+                cap = town.getUpgrades().getModifier("wu_cap");
+            } else {
+                com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                        .get(resId);
+                if (type == null) {
+                    // Stat output (border, happiness, etc.) — no inventory stall
+                    continue;
+                }
+                net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
+                        .getItem(type.getMcItemId());
+                if (item != null) {
+                    current = town.getTotalResourceCount(item) + town.getInTransitResourceCount(item);
+                }
+                cap = town.getTrading().getStorageCap(resId);
+            }
+
+            if (current + amount > cap) {
+                return "output_full:" + resId;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * A recipe counts toward a surplus when it is unlocked, its conditions pass, and its
+     * output still fits. A recipe stalled on a full barn is not a surplus. Missing inputs
+     * are ignored here, matching the rate methods: the check is about room to run, not
+     * whether the stock has already moved this tick.
+     */
+    private boolean countsTowardSurplus(ProductionRecipe recipe) {
+        if (town.getUpgrades().getModifier(recipe.getId()) <= 0f) {
+            return false;
+        }
+        if (!checkConditions(recipe)) {
+            return false;
+        }
+        return outputsHaveRoom(recipe);
+    }
+
+    private float runnableRate(String resourceId, boolean production) {
+        float total = 0f;
+        for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
+            if (!countsTowardSurplus(recipe)) {
+                continue;
+            }
+            java.util.List<com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount> amounts = production
+                    ? recipe.getOutputs()
+                    : recipe.getInputs();
+            for (com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount amount : amounts) {
+                ResolvedResource resolved = resolveDynamicAmount(amount.resourceId, amount.amountExpression);
+                if (!resolved.id().equals(resourceId) || resolved.amount() <= 0f) {
+                    continue;
+                }
+                float cycleTime = getEffectiveCycleTime(recipe);
+                if (cycleTime > 0f && cycleTime < Float.MAX_VALUE) {
+                    total += resolved.amount() / cycleTime;
+                }
+            }
+        }
+        return total;
+    }
+
+    /**
+     * Current population density divided by the town's starting density.
+     * Above 1 the town is more crowded than the biome kit it started as
+     * (or the configured default pop and border, when no kit matches).
+     * The comparison threshold lives in the recipe, for example {@code crowding:>1}.
+     */
+    private float crowdingRatio() {
+        float startPop = ConfigLoader.defaultStartingPopulation;
+        float startBorder = ConfigLoader.defaultBorderRadius;
+        com.quackers29.businesscraft.world.BiomeRegistry.BiomeKit kit = com.quackers29.businesscraft.world.BiomeRegistry
+                .findExactKit(town.getBiome(), town.getBiomeVariant());
+        if (kit != null && kit.startingValues != null) {
+            if (kit.startingValues.containsKey("pop")) {
+                startPop = kit.startingValues.get("pop");
+            }
+            if (kit.startingValues.containsKey("border")) {
+                startBorder = kit.startingValues.get("border");
+            }
+        }
+        if (startPop < 1f) {
+            startPop = 1f;
+        }
+        if (startBorder < 1f) {
+            startBorder = 1f;
+        }
+
+        double baseline = startPop / (startBorder * startBorder);
+        float currentBorder = town.getBoundaryRadius();
+        if (currentBorder < 1f) {
+            currentBorder = 1f;
+        }
+        double current = town.getPopulation() / (currentBorder * currentBorder);
+        if (baseline <= 0d) {
+            return 0f;
+        }
+        return (float) (current / baseline);
     }
 }

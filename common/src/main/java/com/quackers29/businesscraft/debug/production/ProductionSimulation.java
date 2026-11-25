@@ -3,8 +3,8 @@ package com.quackers29.businesscraft.debug.production;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.api.PlatformHelper;
 import com.quackers29.businesscraft.api.RegistryHelper;
-import com.quackers29.businesscraft.client.showcase.ShowcasePlayLayout;
-import com.quackers29.businesscraft.client.showcase.ShowcaseTownSeed;
+import com.quackers29.businesscraft.client.showcase.ShowcaseProductionLayout;
+import com.quackers29.businesscraft.client.showcase.ShowcaseProductionSeed;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.contract.ContractBoard;
 import com.quackers29.businesscraft.economy.GlobalMarket;
@@ -42,6 +42,10 @@ import java.util.UUID;
 
 /**
  * Ticks the live production, research, and contract code with no world.
+ * Towns, border and stalls come from {@link com.quackers29.businesscraft.client.showcase.ShowcaseProductionLayout}
+ * and {@link com.quackers29.businesscraft.client.showcase.ShowcaseProductionSeed}, the same source the
+ * {@code --production} showcase uses. The live world rolls a biome kit at the platform; this run fixes
+ * Farming Village first so the seed is deterministic, then applies that shared seed.
  * Events go through {@link ProductionEvents} into {@link ProductionEventLog}.
  */
 public final class ProductionSimulation {
@@ -86,6 +90,7 @@ public final class ProductionSimulation {
         boolean research = ConfigLoader.researchEnabled;
         boolean contracts = ConfigLoader.contractsEnabled;
         boolean eventLog = ConfigLoader.productionEventLog;
+        int border = ConfigLoader.defaultBorderRadius;
         Map<String, ?> recipes = copyMap(ProductionRegistry.class, "RECIPES");
         Map<String, ?> estimated = copyMap(ProductionRegistry.class, "ESTIMATED_VALUES");
         Map<String, ?> effort = copyMap(ProductionRegistry.class, "EFFORT_VALUES");
@@ -107,6 +112,7 @@ public final class ProductionSimulation {
             ConfigLoader.researchEnabled = true;
             ConfigLoader.contractsEnabled = true;
             ConfigLoader.productionEventLog = true;
+            ConfigLoader.defaultBorderRadius = ShowcaseProductionLayout.BORDER_RADIUS;
 
             BcRandom.reseed(request.seed());
             GlobalMarket.get().reset();
@@ -125,8 +131,7 @@ public final class ProductionSimulation {
                 throw new IllegalStateException("Bundled biomes.csv has no " + KIT_NAME + " kit");
             }
             ProductionEventContext.setGameTick(0L);
-            for (int i = 0; i < ShowcasePlayLayout.TOWNS.size(); i++) {
-                ShowcasePlayLayout.TownSpec spec = ShowcasePlayLayout.TOWNS.get(i);
+            for (ShowcaseProductionLayout.TownSpec spec : ShowcaseProductionLayout.TOWNS) {
                 UUID id = UUID.nameUUIDFromBytes(("businesscraft:showcase:" + spec.name()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 Town town = new Town(id, new BlockPos(spec.dx(), 64, spec.dz()), spec.name());
                 manager.addExistingTown(town);
@@ -134,7 +139,7 @@ public final class ProductionSimulation {
                 town.setBiomeVariant(KIT_NAME);
                 ProductionEvents.townCreated(town);
                 TownManager.applyStartingKit(town, kit);
-                ShowcaseTownSeed.apply(town, i);
+                ShowcaseProductionSeed.apply(town, spec);
                 towns.add(town);
             }
 
@@ -165,6 +170,7 @@ public final class ProductionSimulation {
             ConfigLoader.researchEnabled = research;
             ConfigLoader.contractsEnabled = contracts;
             ConfigLoader.productionEventLog = eventLog;
+            ConfigLoader.defaultBorderRadius = border;
             restoreMap(ProductionRegistry.class, "RECIPES", recipes);
             restoreMap(ProductionRegistry.class, "ESTIMATED_VALUES", estimated);
             restoreMap(ProductionRegistry.class, "EFFORT_VALUES", effort);

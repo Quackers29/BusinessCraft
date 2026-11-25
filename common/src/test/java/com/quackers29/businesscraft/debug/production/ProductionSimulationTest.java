@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.debug.production;
 
+import com.quackers29.businesscraft.client.showcase.ShowcaseProductionLayout;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -34,7 +35,10 @@ class ProductionSimulationTest {
         List<List<String>> summary = dataRows(first.summaryCsv());
         ProductionSimulation.Result second = ProductionSimulation.run(request);
         assertFalse(rows.isEmpty(), "events csv has data rows");
-        assertTrue(rows.stream().anyMatch(row -> ProductionEvent.TOWN_CREATED.equals(row.get(4))));
+        for (ShowcaseProductionLayout.TownSpec spec : ShowcaseProductionLayout.TOWNS) {
+            assertTrue(rows.stream().anyMatch(row -> spec.name().equals(row.get(2))
+                    && ProductionEvent.TOWN_CREATED.equals(row.get(4))), spec.name());
+        }
         assertTrue(rows.stream().anyMatch(row -> ProductionEvent.RECIPE_COMPLETED.equals(row.get(4))));
         assertNoDuplicateTickRows(rows);
         assertSummaryMatches(rows, summary);

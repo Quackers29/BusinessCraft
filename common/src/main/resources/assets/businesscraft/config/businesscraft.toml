@@ -136,15 +136,17 @@
     visibleBids = 2
 
 [production]
-    # Enable automatic production system
+    # Run the production recipes in productions.csv for every town
     enabled = false
-    # Ticks between production cycles
-    tickInterval = 100
-    # Daily tick interval for consumption
+    # Ticks that count as one day. Sets how long the research AI waits for resources before
+    # settling for a cheaper upgrade, and the per-hour rates shown in the Resources tab
     dailyTickInterval = 24000
-    # Minimum stock percentage before buying
+    # Stock level (percent of storage cap) a town tries to keep. Food at this level gives full
+    # base happiness, the min recipe condition tests against it, and contracts treat stock below
+    # it as a need
     minStockPercent = 60
-    # Excess stock percentage for selling
+    # Stock level (percent of storage cap) above which stock counts as excess. Used by the excess
+    # recipe condition and when contracts decide what a town can sell
     excessStockPercent = 80
 
 [trading]
@@ -169,8 +171,9 @@
     townBoundaryMessages = true
 
 [research]
-enabled = false
-# Enable research/upgrade system
+    # Let towns research upgrades from upgrades.csv automatically (research is chosen by the town
+    # AI, not by players)
+    enabled = false
 
 [jade]
     # Jade (WAILA-style) tooltips — only apply when the Jade mod is installed
