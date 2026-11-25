@@ -87,6 +87,9 @@ class TouristTradeCatalogTest {
         assertTrue(pilgrim.stream().anyMatch(def -> def.costItem() == Items.BREAD));
         List<TradeDef> scholar = TouristTradeCatalog.forLook("station_scholar");
         assertEquals(scholar, TouristTradeCatalog.forLook("library_clerk"));
+        assertEquals(scholar, TouristTradeCatalog.forLook("campus_student"));
+        assertEquals(TouristTradeCatalog.forLook("market_shopper"), TouristTradeCatalog.forLook("business_traveller"));
+        assertEquals(pilgrim, TouristTradeCatalog.forLook("spa_guest"));
         assertTrue(scholar.stream().anyMatch(def -> def.costItem() == Items.PAPER && def.resultItem() == Items.BOOK));
     }
 

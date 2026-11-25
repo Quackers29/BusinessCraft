@@ -17,3 +17,21 @@ harbour_skipper
 bazaar_merchant
 canyon_scout
 station_conductor
+
+# Second set. Same four numbers; new palettes and a few new meshes.
+beach_daytripper
+business_traveller
+campus_student
+park_retiree
+field_photographer
+city_cyclist
+summit_hiker
+museum_visitor
+orchard_picker
+rain_commuter
+tea_tourist
+night_painter
+souk_traveller
+rail_surveyor
+spa_guest
+winter_scholar
