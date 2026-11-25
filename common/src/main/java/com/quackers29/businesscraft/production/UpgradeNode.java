@@ -137,6 +137,13 @@ public class UpgradeNode {
         if (level <= 0)
             return 0f;
 
+        // An unlock (bare effect name, value 1) turns a recipe or node on.
+        // Repeating the research must not turn that 1 into benefit^(level-1),
+        // which is what made the unlocked recipe run faster every level.
+        if (effect.isUnlock()) {
+            return effect.getValue();
+        }
+
         // Exponential/Compound: Base * Mult^(Level - 1)
         // Level 1: Mult^0 = 1.0 -> Base Value
         // Level 2: Mult^1 = 1.1 -> Base * 1.1 etc.

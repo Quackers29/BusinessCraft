@@ -164,6 +164,29 @@ public class BiomeRegistry {
     }
 
     /**
+     * The kit whose variant name matches, or null. Does not roll a random kit.
+     * Used when a rule needs the town's own starting pop and border.
+     */
+    public static BiomeKit findExactKit(String biomeId, String variantName) {
+        if (variantName == null) {
+            return null;
+        }
+        if (biomeId != null && GEN_KITS.containsKey(biomeId)) {
+            for (BiomeKit kit : GEN_KITS.get(biomeId)) {
+                if (variantName.equals(kit.variantName)) {
+                    return kit;
+                }
+            }
+        }
+        for (BiomeKit kit : GLOBAL_KITS) {
+            if (variantName.equals(kit.variantName)) {
+                return kit;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Retrieves a specific BiomeKit matching the biome and variant name.
      * Used for retrieving starting stats for AI calculations.
      */

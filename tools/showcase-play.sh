@@ -14,10 +14,13 @@
 # --client (or run 'client' later); join from your own launcher, or with ./gradlew runClient.
 # --production builds a different world: [production] and [research] are switched on in this
 # server's own config (<loader>/run-play-server/config), never in your normal config, and four
-# towns 120 blocks apart show the states: Starterton (biome starting kit only), Farmstead (full
+# towns 20 blocks apart show the states: Starterton (biome starting kit only), Farmstead (full
 # stores, recipes run), Highmark (many upgrades, research AI active), Hungerford (starving: low
-# happiness, min-stock recipe conditions fail). Each has a sign. A plain 'start' restores the
-# tour world and its default config.
+# happiness, min-stock recipe conditions fail). Each has a sign. It also replaces that server's
+# items.csv, productions.csv, upgrades.csv and biomes.csv with the bundled copies. The game
+# never overwrites an existing CSV, and a run dir created before the bundled install still has
+# the old generated files (different biomes column order, and no farming_advanced). A plain
+# 'start' restores the tour world and removes the production toml marker.
 # stop ends only the processes recorded in the session file. A client you started yourself is
 # left alone. Both are safe to repeat, with or without a client.
 #
@@ -28,7 +31,7 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 # shellcheck source=tools/showcase-output-lib.sh
 source "$ROOT/tools/showcase-output-lib.sh"
@@ -171,10 +174,28 @@ write_server_properties() {
 }
 
 # Config of the production world. The server's own config dir is the only place it is written;
-# it is the bundled businesscraft.toml with [production] and [research] switched on, plus a marker
-# so a later plain start knows to remove it.
+# it is the bundled businesscraft.toml with [production], [research] and [contracts] switched on,
+# and general.defaultBorderRadius set to the showcase spacing (ShowcaseProductionLayout.BORDER_RADIUS).
+# A marker lets a later plain start remove that file. The four CSVs are copied over whatever is
+# already there: CsvConfig.ensureInstalled leaves an existing file alone, so a pre-bundled run dir
+# would otherwise keep feeding the seeder the old ids. Bundled defaults and CSVs are not edited.
 PRODUCTION_CONFIG_MARKER="# showcase-play: production scenario"
-BUNDLED_TOML="$ROOT/common/src/main/resources/assets/businesscraft/config/businesscraft.toml"
+BUNDLED_CONFIG_DIR="$ROOT/common/src/main/resources/assets/businesscraft/config"
+BUNDLED_TOML="$BUNDLED_CONFIG_DIR/businesscraft.toml"
+BUNDLED_CSVS=(items.csv productions.csv upgrades.csv biomes.csv)
+
+install_bundled_csvs() {
+    local dest="$1/config/businesscraft" name
+    mkdir -p "$dest"
+    for name in "${BUNDLED_CSVS[@]}"; do
+        if [[ ! -f "$BUNDLED_CONFIG_DIR/$name" ]]; then
+            echo "Bundled config file is missing: $BUNDLED_CONFIG_DIR/$name" >&2
+            return 1
+        fi
+        cp -f "$BUNDLED_CONFIG_DIR/$name" "$dest/$name"
+    done
+    echo "Installed bundled CSVs into $dest"
+}
 
 write_server_config() {
     local scenario="$1" file="$2/config/businesscraft.toml"
@@ -183,11 +204,16 @@ write_server_config() {
         {
             echo "$PRODUCTION_CONFIG_MARKER"
             awk '/^\[/ { section = $0 }
-                (section == "[production]" || section == "[research]") && /^[ \t]*enabled[ \t]*=/ {
+                (section == "[production]" || section == "[research]" || section == "[contracts]") \
+                    && /^[ \t]*enabled[ \t]*=/ {
                     sub(/=.*/, "= true")
+                }
+                section == "[general]" && /^[ \t]*defaultBorderRadius[ \t]*=/ {
+                    sub(/=.*/, "= 10")
                 }
                 { print }' "$BUNDLED_TOML"
         } >"$file"
+        install_bundled_csvs "$2"
     elif [[ -f "$file" ]] && head -n 1 "$file" | grep -qxF "$PRODUCTION_CONFIG_MARKER"; then
         rm -f "$file"
     fi
@@ -526,6 +552,11 @@ do_stop() {
 }
 
 # ---- main -----------------------------------------------------------------------------------
+
+# Sourced by ShowcaseProductionLayoutTest so it can call write_server_config. A normal run falls through.
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+    return 0
+fi
 
 case "${1:-}" in
     start) shift; do_start "$@" ;;

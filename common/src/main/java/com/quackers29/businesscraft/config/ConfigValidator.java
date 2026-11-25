@@ -117,7 +117,7 @@ public final class ConfigValidator {
             return;
         }
         boolean knownTarget = target.equals("happiness") || target.equals("pop") || target.equals("wu")
-                || isItem(target) || isModifierTarget(target);
+                || target.equals("crowding") || isItem(target) || isModifierTarget(target);
         if (!knownTarget) {
             ConfigWarnings.warn(PRODUCTIONS, recipeId, "condition target '" + target + "' is not a resource, pop, "
                     + "happiness, wu or a known stat");

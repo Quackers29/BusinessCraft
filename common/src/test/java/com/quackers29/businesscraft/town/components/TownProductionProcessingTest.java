@@ -497,4 +497,133 @@ class TownProductionProcessingTest {
         comp.load(new CompoundTag());
         assertTrue(comp.getActiveRecipes().isEmpty());
     }
+
+    // --- caps: population, border, stalled surplus ---
+
+    @Test
+    void population_doesNotGrowPastPopCap() throws Exception {
+        recipes("grow,Grow," + SIX + ",,pop:1\n");
+        unlock("grow");
+        town.getUpgrades().addFlatModifier("pop_cap", 12f);
+        town.setPopulation(11);
+
+        tick(6);
+        assertEquals(12, town.getPopulation());
+        tick(12);
+        assertEquals(12, town.getPopulation(), "growth stalls once pop_cap is reached");
+    }
+
+    @Test
+    void population_clampsALargerStepToTheCap() throws Exception {
+        recipes("grow,Grow," + SIX + ",,pop:5\n");
+        unlock("grow");
+        town.getUpgrades().addFlatModifier("pop_cap", 12f);
+        town.setPopulation(10);
+
+        tick(6);
+        assertEquals(12, town.getPopulation(), "a +5 step at 10 stops at the cap of 12");
+        tick(12);
+        assertEquals(12, town.getPopulation());
+    }
+
+    @Test
+    void population_withoutACap_isNotGivenOne() throws Exception {
+        recipes("grow,Grow," + SIX + ",,pop:1\n");
+        unlock("grow");
+        town.setPopulation(3);
+
+        tick(12);
+        assertEquals(5, town.getPopulation());
+    }
+
+    @Test
+    void populationGrowthCondition_stopsAtPopCap() throws Exception {
+        recipes("population_growth,Growth," + SIX + ",happiness:>60;pop:<pop_cap,pop:1\n");
+        unlock("population_growth");
+        town.getUpgrades().addFlatModifier("pop_cap", 12f);
+        town.setPopulation(11);
+        town.setHappiness(80f);
+
+        tick(6);
+        assertEquals(12, town.getPopulation());
+        tick(12);
+        assertEquals(12, town.getPopulation());
+    }
+
+    @Test
+    void surplus_ignoresProducerStalledAtCap() throws Exception {
+        recipes("farm,Farm,1,,food:40\n"
+                + "dep,Dep," + SIX + ",surplus:food,wood:1\n");
+        unlock("farm", "dep");
+        town.getUpgrades().addFlatModifier("storage_cap_all", 10f);
+
+        tick(6);
+        assertEquals(0, count(Items.OAK_LOG), "a barn that cannot take the output is not a surplus");
+
+        town.getUpgrades().addFlatModifier("storage_cap_all", 1000f);
+        tick(6);
+        assertEquals(1, count(Items.OAK_LOG));
+    }
+
+    @Test
+    void expandBorder_runsWhileCrowded_andStopsWhenTheTownHasRoom() throws Exception {
+        recipes("border_expansion_production,Expand," + SIX + ",pop:>80%pop_cap;crowding:>1,border:1\n");
+        env.writeCsv("biomes.csv",
+                "biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values\n"
+                        + "minecraft:plains,test,Test Town,d,10,,pop:10;border:10\n");
+        com.quackers29.businesscraft.world.BiomeRegistry.load();
+        unlock("border_expansion_production");
+        town.setBiome("minecraft:plains");
+        town.setBiomeVariant("Test Town");
+        town.getUpgrades().addFlatModifier("pop_cap", 100f);
+        town.setPopulation(90);
+        town.getUpgrades().addFlatModifier("border", 10f);
+
+        // baseline density 10/100 = 0.1; current 90/100 = 0.9; ratio 9 > 1, and 90 > 80
+        tick(6);
+        assertEquals(11f, town.getUpgrades().getModifier("border"), 1e-4f);
+
+        // 90/40^2 = 0.05625, ratio 0.5625 < 1: the town has its room back
+        town.getUpgrades().addFlatModifier("border", 40f);
+        tick(18);
+        assertEquals(40f, town.getUpgrades().getModifier("border"), 1e-4f);
+    }
+
+    @Test
+    void expandBorder_doesNotRunAtOrBelowEightyPercentOfPopCap() throws Exception {
+        recipes("border_expansion_production,Expand," + SIX + ",pop:>80%pop_cap;crowding:>1,border:1\n");
+        env.writeCsv("biomes.csv",
+                "biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values\n"
+                        + "minecraft:plains,test,Test Town,d,10,,pop:10;border:10\n");
+        com.quackers29.businesscraft.world.BiomeRegistry.load();
+        unlock("border_expansion_production");
+        town.setBiome("minecraft:plains");
+        town.setBiomeVariant("Test Town");
+        town.getUpgrades().addFlatModifier("pop_cap", 100f);
+        town.setPopulation(80);
+        town.getUpgrades().addFlatModifier("border", 10f);
+
+        tick(12);
+        assertEquals(10f, town.getUpgrades().getModifier("border"), 1e-4f);
+    }
+
+    @Test
+    void repeatUnlock_doesNotSpeedTheRecipeItTurnsOn() throws Exception {
+        env.writeCsv("upgrades.csv",
+                "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects\n"
+                        + "expand_node,general,Expand,infinite:2:2,,d,0,,expand\n");
+        com.quackers29.businesscraft.production.UpgradeRegistry.load();
+        recipes("expand,Expand," + SIX + ",,wood:1\n");
+
+        town.getUpgrades().unlockNode("expand_node");
+        town.getUpgrades().unlockNode("expand_node");
+        town.getUpgrades().unlockNode("expand_node");
+        assertEquals(3, town.getUpgrades().getUpgradeLevel("expand_node"));
+        assertEquals(1f, town.getUpgrades().getModifier("expand"), 1e-6f);
+
+        tick(6);
+        assertEquals(1, count(Items.OAK_LOG), "one cycle at the base time, not four");
+        tick(6);
+        assertEquals(2, count(Items.OAK_LOG));
+    }
 }

@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.town.components;
 
 import com.quackers29.businesscraft.production.ProductionRegistry;
 import com.quackers29.businesscraft.production.UpgradeRegistry;
+import com.quackers29.businesscraft.town.ai.TownResearchAI;
 import com.quackers29.businesscraft.testutil.McBootstrap;
 import com.quackers29.businesscraft.testutil.ProductionTestEnv;
 import com.quackers29.businesscraft.town.Town;
@@ -126,6 +127,55 @@ class TownUpgradeModifiersTest {
         up.unlockNode("pop_cap_upgrade");
         assertEquals(400f, up.getModifier("pop_cap"));
         assertEquals(3, up.getUpgradeLevel("pop_cap_upgrade"));
+    }
+
+    @Test
+    void borderExpansion_unlockStaysOne_whileBorderStatCompounds() {
+        bundled();
+        // 5:2:2, effects border:2 and bare border_expansion_production.
+        // Level 3: border = 2 * 2^(3-1) = 8. The unlock must stay 1, not become 4.
+        up.unlockNode("border_expansion");
+        assertEquals(1f, up.getModifier("border_expansion_production"), 1e-6f);
+        assertEquals(2f, up.getModifier("border"), 1e-6f);
+
+        up.unlockNode("border_expansion");
+        up.unlockNode("border_expansion");
+        assertEquals(3, up.getUpgradeLevel("border_expansion"));
+        assertEquals(1f, up.getModifier("border_expansion_production"), 1e-6f);
+        assertEquals(8f, up.getModifier("border"), 1e-4f);
+    }
+
+    @Test
+    void borderExpansion_purchaseStopsAtCsvMax_andBonusStaysAtThatLevel() throws Exception {
+        bundled();
+        assertEquals(5, UpgradeRegistry.get("border_expansion").getMaxRepeats());
+        up.unlockNode("basic_settlement");
+        town.addResource(Items.OAK_LOG, 5000);
+
+        // Costs are 2, 4, 8, 16, 32 wood. Benefit replaces: 2, 4, 8, 16, 32.
+        int[] borderAtLevel = { 2, 4, 8, 16, 32 };
+        int wood = 5000;
+        for (int level = 1; level <= 5; level++) {
+            assertTrue(up.canAffordResearch("border_expansion"), "level " + level + " is still for sale");
+            assertTrue(TownResearchAI.calculatePriorities(town).containsKey("border_expansion"));
+            up.startResearch("border_expansion");
+            assertEquals("border_expansion", up.getCurrentResearchNode());
+            up.completeResearch();
+            wood -= 2 << (level - 1);
+            assertEquals(level, up.getUpgradeLevel("border_expansion"));
+            assertEquals(wood, town.getResourceCount(Items.OAK_LOG));
+            assertEquals(borderAtLevel[level - 1], up.getModifier("border"), 1e-3f);
+            assertEquals(1f, up.getModifier("border_expansion_production"), 1e-6f);
+        }
+
+        assertEquals(32f, up.getModifier("border"), 1e-3f, "2 * 2^(5-1)");
+        assertFalse(up.canAffordResearch("border_expansion"));
+        assertFalse(TownResearchAI.calculatePriorities(town).containsKey("border_expansion"));
+        up.startResearch("border_expansion");
+        assertNull(up.getCurrentResearchNode(), "level 6 is not for sale");
+        assertEquals(5, up.getUpgradeLevel("border_expansion"));
+        assertEquals(wood, town.getResourceCount(Items.OAK_LOG), "a refused purchase deducts nothing");
+        assertEquals(32f, up.getModifier("border"), 1e-3f);
     }
 
     @Test

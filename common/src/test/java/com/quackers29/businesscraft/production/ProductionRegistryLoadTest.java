@@ -58,6 +58,15 @@ class ProductionRegistryLoadTest {
         assertEquals(9, ProductionRegistry.getAll().size());
         assertNotNull(ProductionRegistry.get("tourism"));
         assertNull(ProductionRegistry.get("basic_farming"));
+
+        boolean growthStopsAtCap = ProductionRegistry.get("population_growth").getConditions().stream()
+                .anyMatch(c -> c.getTarget().equals("pop") && "<".equals(c.getOperator())
+                        && "pop_cap".equals(c.getValue()));
+        assertTrue(growthStopsAtCap, "population growth is gated on pop < pop_cap");
+        boolean borderStopsWhenRoom = ProductionRegistry.get("border_expansion_production").getConditions().stream()
+                .anyMatch(c -> c.getTarget().equals("crowding") && ">".equals(c.getOperator())
+                        && "1".equals(c.getValue()));
+        assertTrue(borderStopsWhenRoom, "expand border is gated on crowding > 1");
     }
 
     @Test

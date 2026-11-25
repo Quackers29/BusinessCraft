@@ -19,7 +19,7 @@ Server owners and pack makers tune the economy by editing these files. A clean i
 - After all four registries load, `ConfigValidator` checks the references between them and adds one warning per problem:
   - input, output and cost ids that are not in `items.csv` (outputs may also be `pop`, `wu`, `tourist` or a known stat; costs may also be requirement-only stats such as `tourism`)
   - unknown tokens in an amount expression such as `1*popp` (these evaluate as 0 at runtime)
-  - condition targets and values that cannot be evaluated
+  - condition targets and values that cannot be evaluated (`crowding` is a known target: current density divided by the biome kit's starting density)
   - upgrade effect targets that are not a recipe, a node, or a known stat (`pop_cap`, `tourist_cap`, `wu_cap`, `storage_cap_all`, `storage_cap_<item>`, `border`, `happiness`, `research`)
   - unknown prerequisites and unknown biome starting nodes or starting values
   - a biome variant with weight 0 or less
@@ -44,12 +44,13 @@ Server owners and pack makers tune the economy by editing these files. A clean i
 ## Column layouts
 - `items.csv`: `item_id,display_name,mc_item_id[,base_price]`
 - `productions.csv`: `prod_id,display_name,base_cycle_time_minutes,inputs,outputs` (the inputs column mixes resources, conditions and the global tokens `min`, `excess`, `N%`)
-- `upgrades.csv`: `node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects`
+- `upgrades.csv`: `node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects`. The `repeat` field is `maxLevel:costMultiplier:benefitMultiplier`. `maxLevel` is a number (Border Expansion is `5:2:2`) or `infinite` (Pop Cap Upgrade). Empty means once.
 - `biomes.csv`: `biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values` (starting nodes may carry `:level`)
 
 ## Edge cases & behaviors
 - A fresh install no longer gets the old hardcoded fallbacks (4 recipes, 2 nodes, `basic_taxes`, `basic_farming`). It gets the bundled files, including the `tourism`, `taxes` and `work_unit_production` recipes.
-- Upgrading from an older build keeps whatever files already exist.
+- Upgrading from an older build keeps whatever files already exist. `bash tools/showcase-play.sh start --production` is the exception for its own run directory only: it copies the four bundled CSVs over `<loader>/run-play-server/config/businesscraft/` on every start. A normal `run/config` folder is left alone.
+- An older generated `biomes.csv` has the columns `weight,starting_nodes,starting_values,description`. The current loader reads `description,weight,starting_nodes,starting_values`, so that old file turns `population:6;food:140;wood:70;money:60;happiness:72` into upgrade nodes. The matching old `upgrades.csv` only has `basic_settlement` and `farming_basic`.
 - The validator is read only. It does not drop rows or change runtime behaviour.
 - Warning text for registry-level problems uses `file line N`; validator problems use `file [id]` because the row number is not kept after parsing.
 - `items.csv` `base_price` is optional; the bundled file has none, so every resource has base value 1.0 (nothing reads it today).

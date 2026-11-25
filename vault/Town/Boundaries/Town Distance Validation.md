@@ -6,7 +6,7 @@ tags:
 # Town Distance Validation
 
 **Breadcrumb**: Town > Boundaries > Town Distance Validation
-**TL;DR**: Placement of new towns and border expansion checks reject if euclidean distance to any other town is strictly less than (proposedBorder + other.getBoundaryRadius()). New-town and null sides use `ConfigLoader.defaultBorderRadius` (default **50**). `Town.getBoundaryRadius()` is the border upgrade/kit modifier (same default fallback). Population is **not** a boundary source; optional pop-linked growth is via production CSV (`border_expansion_production` with `pop:>80%pop_cap`).
+**TL;DR**: Placement of new towns and border expansion checks reject if euclidean distance to any other town is strictly less than (proposedBorder + other.getBoundaryRadius()). New-town and null sides use `ConfigLoader.defaultBorderRadius` (default **50**). `Town.getBoundaryRadius()` is the border upgrade/kit modifier (same default fallback). Population is **not** a boundary source; optional pop-linked growth is via production CSV (`border_expansion_production` with `pop:>80%pop_cap;crowding:>1`, so it stops once the town is no more crowded than its biome starting density).
 
 ## What it does
 These two services implement the "founding a town" and "growing a town" spatial and input validation rules. When a player places a Town Interface block, TownManager calls TownBoundaryService.checkTownPlacement to ensure the new settlement is far enough from existing ones given their border radii. `checkBorderExpansion` validates a proposed new border radius against neighbors (for upgrade/production growth paths). TownValidationService is the gate for TownService.createTown and settings updates — it rejects bad names, impossible coordinates, and inconsistent tourist config before any Town is allocated.
@@ -18,6 +18,7 @@ These two services implement the "founding a town" and "growing a town" spatial 
 - Name / position / tourist / resource validation unchanged (TownValidationService).
 - Worked example (placement): defaultBorderRadius=50, two fresh towns both radius 50. Place second town 99 blocks away → required 100 → BOUNDARY_CONFLICT. At 100 or more → allowed.
 - Config values (`defaultBorderRadius`, `minPopForTourists`) are live statics from ConfigLoader and can be overridden in tests (save/restore pattern).
+- The production showcase writes `defaultBorderRadius = 10` into its own `run-play-server` toml and places towns 20 apart. Bundled kits still grant `border:10`, so the placement sum is 20. The bundled default of 50 is unchanged, and the game code has no showcase-only distance constant.
 
 ---
 > [!info]- Deep reference
@@ -72,4 +73,4 @@ Config values read live: `ConfigLoader.defaultBorderRadius`, `ConfigLoader.minPo
 ## Related
 - [[Town/Boundaries/Boundary Geometry Queries]]
 - [[Town/Town Overview]]
-- Production recipe `border_expansion_production` (`productions.csv`) + unlock via `border_expansion` upgrade (`upgrades.csv`)
+- Production recipe `border_expansion_production` (`productions.csv`, `pop:>80%pop_cap;crowding:>1`) + unlock via `border_expansion` (`upgrades.csv`, repeat `5:2:2`, so the research bonus stops at 32)

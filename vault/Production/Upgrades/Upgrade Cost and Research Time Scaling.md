@@ -17,7 +17,7 @@ Upgrades are defined once in a data file with a base cost in resources and a bas
 - A multiplier is computed as costMultiplier ^ currentLevel. For the very first unlock (currentLevel=0) this is always 1.0, so you pay the base amounts listed in the CSV.
 - Each base resource cost is multiplied by the multiplier and then ceiled (rounded up) so you never pay a fraction of an item.
 - Research time is multiplied the same way but stays a float (the research progress accumulator handles fractions of a minute).
-- Before showing or charging a cost, the system also checks repeatability rules: non-repeatable nodes cannot be started once level ≥ 1; repeatable nodes stop after their maxRepeats cap (if set).
+- Before showing or charging a cost, the system also checks repeatability rules: non-repeatable nodes cannot be started once level ≥ 1; repeatable nodes stop after the max level in the repeat column (`5` in `5:2:2`, or no stop when that field is `infinite`). Border Expansion is `5:2:2`, so level 5 is the last one the AI or a player can buy. At that level the `border:2` effect is `2 × 2^(5-1) = 32`. Pop Cap Upgrade stays `infinite`.
 - **Worked example (costMultiplier 1.1, base wood:10, research 5 min)**:
   - Current level 0 → multiplier = 1.1^0 = 1.0 → wood cost = ceil(10 × 1.0) = 10, research = 5 × 1.0 = 5 min.
   - After first unlock (now level 1) → multiplier = 1.1^1 = 1.1 → wood cost = ceil(10 × 1.1) = 11, research = 5 × 1.1 = 5.5 min.

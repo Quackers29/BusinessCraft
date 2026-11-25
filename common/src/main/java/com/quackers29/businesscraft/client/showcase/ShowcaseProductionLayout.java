@@ -6,25 +6,36 @@ import java.util.List;
  * Plan of the production world built by {@code tools/showcase-play.sh start --production}
  * ({@link ShowcaseProductionWorld}). Pure data, so the plan is unit tested without Minecraft.
  *
- * <p>Four towns sit on a square 120 blocks apart, each in a different production state. Nothing here
+ * <p>Four towns sit on a square 20 blocks apart, each in a different production state. Nothing here
  * names a recipe or a resource amount in blocks or items: stock is a percentage of the town's own
  * storage cap, so it follows {@code upgrades.csv}, {@code [production] minStockPercent} and
  * {@code excessStockPercent}. Node and recipe ids are checked against the loaded CSVs when the
- * world is built.
+ * world is built. The production run's own toml sets {@code defaultBorderRadius} to
+ * {@link #BORDER_RADIUS}; the bundled default of 50 is left alone. Biome kits still grant
+ * {@code border:10}, so a placed town's radius is 10 and two towns 20 apart meet without overlapping.
  */
 public final class ShowcaseProductionLayout {
     /** Value of {@code businesscraft.multiplayerSmoke} that selects the production world. */
     public static final String MODE = "play-production";
-    /** Fresh towns use a border of 50, so centres must be at least 100 apart. */
-    public static final int MIN_TOWN_DISTANCE = 100;
+    /**
+     * Showcase-only border, written into this run's {@code general.defaultBorderRadius}.
+     * Placement requires that value plus the existing town's border. Kits set border 10, so the
+     * sum is 20, which is this layout's spacing.
+     */
+    public static final int BORDER_RADIUS = 10;
+    /** Centre-to-centre spacing. About a 20-block walk, and not inside another town's border. */
+    public static final int MIN_TOWN_DISTANCE = 20;
     /** Vanilla signs hold four lines of at most 15 characters in the default font. */
     public static final int SIGN_LINE_MAX = 15;
-    /** Where the sign stands relative to its town centre (south of the pad, readable from the south). */
+    /**
+     * Where the sign stands relative to its town centre (south of the pad, readable from the south).
+     * Kept inside the 10-block showcase border so it does not sit in the next town.
+     */
     public static final int SIGN_DX = 3;
-    public static final int SIGN_DZ = 8;
-    /** Where a joining player stands, relative to the first town, facing north at it. */
+    public static final int SIGN_DZ = 6;
+    /** Where a joining player stands, relative to the first town, facing north at it. Outside the border. */
     public static final int VIEW_DX = 2;
-    public static final int VIEW_DZ = 12;
+    public static final int VIEW_DZ = 14;
 
     /** A resource stocked to {@code percentOfCap} of the town's storage cap for it. */
     public record Stock(String resource, int percentOfCap) {
@@ -48,13 +59,13 @@ public final class ShowcaseProductionLayout {
             new TownSpec("Starterton", 0, 0, 0, "Starter: biome kit only",
                     List.of(), List.of(), -1, List.of(),
                     List.of("STARTERTON", "Starter town", "Biome kit only", "Nothing seeded")),
-            new TownSpec("Farmstead", 120, 0, 40, "Farming: stock for recipes",
+            new TownSpec("Farmstead", 20, 0, 40, "Farming: stock for recipes",
                     List.of(new Unlock("farming_advanced", 2), new Unlock("woodcutting_basic", 1),
                             new Unlock("sawmill_basic", 1), new Unlock("work_units", 1)),
                     List.of(new Stock("food", 90), new Stock("wood", 85), new Stock("money", 50)),
                     60, List.of(),
                     List.of("FARMSTEAD", "Farming + wood", "Full stores:", "recipes run")),
-            new TownSpec("Highmark", 0, -120, 80, "Mid-game: research AI",
+            new TownSpec("Highmark", 0, -20, 80, "Mid-game: research AI",
                     List.of(new Unlock("farming_advanced", 3), new Unlock("woodcutting_basic", 1),
                             new Unlock("sawmill_basic", 1), new Unlock("work_units", 1),
                             new Unlock("work_unit_upgrade", 2), new Unlock("cap_upgrade", 2),
@@ -63,7 +74,7 @@ public final class ShowcaseProductionLayout {
                             new Stock("money", 70)),
                     50, List.of(),
                     List.of("HIGHMARK", "Mid-game town", "Many upgrades,", "research active")),
-            new TownSpec("Hungerford", 120, -120, 60, "Starving: min-stock blocks",
+            new TownSpec("Hungerford", 20, -20, 60, "Starving: min-stock blocks",
                     List.of(new Unlock("sawmill_basic", 1), new Unlock("work_units", 1)),
                     List.of(new Stock("food", 6), new Stock("wood", 12), new Stock("money", 5)),
                     5, List.of("farming", "woodcutting"),

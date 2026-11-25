@@ -14,6 +14,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Unit tests for production and upgrades: CSV parsing, validation, recipe processing over whole cycles, upgrade modifiers and research, research AI choices, and a test that loads the shipped CSVs and expects no warnings.
 
 ### Fixed
+- The production showcase now turns `contracts.enabled` on in that server's own config. Towns only create and bid on contracts while that flag is on, and the showcase previously left the bundled default (`false`) in place, so nothing was listed even when a town was over the excess stock level. The bundled default stays off. Trading stays off.
+- `bash tools/showcase-play.sh start --production` now replaces `items.csv`, `productions.csv`, `upgrades.csv` and `biomes.csv` in that server's own config with the bundled copies. A run directory created before the bundled install kept the old generated files, and those are never overwritten by the game. The old biomes column order turned starting stock into upgrade nodes (`population`, `food`, `wood`, `money`, `happiness`), and the old upgrades file has no `farming_advanced`, so seeding Farmstead failed.
+- Population growth stops at the town's `pop_cap`. A step that would pass the cap is cut back to the cap, and a town with no `pop_cap` is left uncapped. A food surplus no longer counts a recipe that is stalled because its output does not fit.
+- Expand Border (`border_expansion_production`) still runs only while population is over 80% of `pop_cap`, and it now also stops once the town is no more crowded than the biome kit it started as (`crowding:>1`). The threshold and the starting pop and border come from the CSVs and the config. Cycle time and the +1 border output are unchanged.
+- Repeating a research node no longer speeds up the recipe it unlocks. A bare unlock such as `border_expansion_production` stays at 1. A real bonus (`border:2`, `farming*0.5`) still scales with the node's benefit multiplier.
 - The Balanced Hamlet biome variant listed a starting upgrade (`border_basic`) that does not exist. It is removed.
 - `upgrades.csv` rows with an empty effects column were silently dropped, and a comma inside a quoted description shifted every later column. `upgrades.csv` and `items.csv` now read rows the same way as `productions.csv` and `biomes.csv`: quotes are respected, empty trailing columns are kept, and `#` comment lines are skipped.
 - `businesscraft.toml` comments for `[production]` and `[research]` now say what each key does, and the `[research]` comment sits above its key.
@@ -22,6 +27,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `production.tickInterval` is gone from `businesscraft.toml`. Nothing read it. An existing value in a config file is ignored.
 
 ### Changed
+- The production showcase places its four towns 20 blocks apart (Starterton at 0,0, Farmstead at 20,0, Highmark at 0,-20, Hungerford at 20,-20) and sets that run's `defaultBorderRadius` to 10. Signs stand 3 blocks east and 6 south of each centre, inside that border. The bundled default stays 50, and no gameplay spacing rule is hardcoded.
+- Border Expansion research stops at 5 levels. The limit is the first field of the `repeat` column in `upgrades.csv` (`5:2:2`), which is the max level for every node. `infinite` still means no cap, and Pop Cap Upgrade is still infinite. At level 5 the `border:2` bonus is 32. The AI and `startResearch` both refuse another level. Cost multiplier, benefit multiplier, research time, and the wood cost are unchanged.
 - Right-clicking a tourist opens a tourist screen instead of the villager trade window. The title is the tourist's personal name and rank, and the screen shows the origin town, destination, distance, and progress to the next rank.
 - The old barrier "info" row is gone. Locked deals say which rank unlocks them. The Travel Ticket tooltip says it is a paper souvenir and what Any Town means.
 - Tourist deals are a wider, look-themed set (still records in code, not a config file). The distance fare is unchanged. Nothing a tourist sells is worth more than the goods they ask for.

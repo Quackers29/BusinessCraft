@@ -66,6 +66,7 @@ get and getAll are direct:
 - Malformed effects: DataParser skips the bad entry and logs; the node is still registered with what parsed.
 - Duplicate IDs: last one wins, with a warning.
 - Prereq field empty or ";;": empty prereq list.
+- The repeat column is `maxLevel:costMultiplier:benefitMultiplier`. A number is the max level (`border_expansion` is `5:2:2`). `infinite` means no max (`pop_cap_upgrade`). The purchase paths stop at that level; the number is not hardcoded.
 - load() called repeatedly: previous nodes are discarded each time; UpgradeNode instances held by callers become stale.
 - get(nonexistent) returns null (callers must null-check, e.g. TownUpgradeComponent does).
 - `TownUpgradeComponent.unlockNode` still accepts an id that is not in the registry; the validator is what reports bad ids in the CSVs.
