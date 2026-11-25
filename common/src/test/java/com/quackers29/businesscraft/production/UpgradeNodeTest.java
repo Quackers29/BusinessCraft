@@ -162,7 +162,7 @@ class UpgradeNodeTest {
 
     @Test
     void calculateEffectValue_unlock_staysAtBase_whileNumericEffectCompounds() {
-        // border_expansion is infinite:2:2 with effects border:2 and a bare unlock.
+        // border_expansion is 5:2:2 with effects border:2 and a bare unlock.
         // Level 3 used to turn the unlock 1 into 1 * 2^(3-1) = 4, which divided the recipe time by 4.
         UpgradeNode node = nodeWithBenefitMult(2.0f);
         Effect unlock = new Effect("border_expansion_production", 1.0f, false, true);

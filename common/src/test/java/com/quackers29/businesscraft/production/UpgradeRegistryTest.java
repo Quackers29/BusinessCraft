@@ -159,6 +159,12 @@ class UpgradeRegistryTest {
         assertEquals(List.of("basic_settlement"), farm.getPrereqNodes());
         assertEquals(1, farm.getEffects().size());
         assertEquals("farming", farm.getEffects().get(0).getTarget());
+
+        UpgradeNode border = UpgradeRegistry.get("border_expansion");
+        assertEquals(5, border.getMaxRepeats(), "max level is the repeat column, not a code constant");
+        assertEquals(2f, border.getCostMultiplier(), 1e-6f);
+        assertEquals(2f, border.getBenefitMultiplier(), 1e-6f);
+        assertEquals(-1, UpgradeRegistry.get("pop_cap_upgrade").getMaxRepeats(), "other infinite nodes stay infinite");
     }
 
     // --- get / getAll ---

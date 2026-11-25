@@ -44,7 +44,7 @@ Server owners and pack makers tune the economy by editing these files. A clean i
 ## Column layouts
 - `items.csv`: `item_id,display_name,mc_item_id[,base_price]`
 - `productions.csv`: `prod_id,display_name,base_cycle_time_minutes,inputs,outputs` (the inputs column mixes resources, conditions and the global tokens `min`, `excess`, `N%`)
-- `upgrades.csv`: `node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects`
+- `upgrades.csv`: `node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects`. The `repeat` field is `maxLevel:costMultiplier:benefitMultiplier`. `maxLevel` is a number (Border Expansion is `5:2:2`) or `infinite` (Pop Cap Upgrade). Empty means once.
 - `biomes.csv`: `biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values` (starting nodes may carry `:level`)
 
 ## Edge cases & behaviors

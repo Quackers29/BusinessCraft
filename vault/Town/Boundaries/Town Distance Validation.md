@@ -72,4 +72,4 @@ Config values read live: `ConfigLoader.defaultBorderRadius`, `ConfigLoader.minPo
 ## Related
 - [[Town/Boundaries/Boundary Geometry Queries]]
 - [[Town/Town Overview]]
-- Production recipe `border_expansion_production` (`productions.csv`, `pop:>80%pop_cap;crowding:>1`) + unlock via `border_expansion` upgrade (`upgrades.csv`)
+- Production recipe `border_expansion_production` (`productions.csv`, `pop:>80%pop_cap;crowding:>1`) + unlock via `border_expansion` (`upgrades.csv`, repeat `5:2:2`, so the research bonus stops at 32)

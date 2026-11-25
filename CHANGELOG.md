@@ -25,6 +25,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `production.tickInterval` is gone from `businesscraft.toml`. Nothing read it. An existing value in a config file is ignored.
 
 ### Changed
+- Border Expansion research stops at 5 levels. The limit is the first field of the `repeat` column in `upgrades.csv` (`5:2:2`), which is the max level for every node. `infinite` still means no cap, and Pop Cap Upgrade is still infinite. At level 5 the `border:2` bonus is 32. The AI and `startResearch` both refuse another level. Cost multiplier, benefit multiplier, research time, and the wood cost are unchanged.
 - Right-clicking a tourist opens a tourist screen instead of the villager trade window. The title is the tourist's personal name and rank, and the screen shows the origin town, destination, distance, and progress to the next rank.
 - The old barrier "info" row is gone. Locked deals say which rank unlocks them. The Travel Ticket tooltip says it is a paper souvenir and what Any Town means.
 - Tourist deals are a wider, look-themed set (still records in code, not a config file). The distance fare is unchanged. Nothing a tourist sells is worth more than the goods they ask for.

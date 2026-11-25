@@ -14,7 +14,7 @@ Upgrade nodes define "effects" (e.g. +10 to pop_cap, +2 to tourist_cap, +50 to h
 ## How it works (process view)
 - Each UpgradeNode carries a benefitMultiplier (parsed from the repeat column in upgrades.csv as the third ":" segment, defaults to 1.0).
 - When the town's upgrade level for that node is queried (e.g. in TownUpgradeComponent or viewmodel builders), the node is asked: "what is the effective value of this Effect at level L?"
-- If the effect is an unlock (a bare name in the effects column, `Effect.isUnlock()`), any level above 0 returns the base value unchanged. Level 1 and level 5 of Border Expansion both leave `border_expansion_production` at 1. A written number (`border:2`, `farming*0.5`, `research:0.25`) is not an unlock and still scales.
+- If the effect is an unlock (a bare name in the effects column, `Effect.isUnlock()`), any level above 0 returns the base value unchanged. Level 1 and level 5 of Border Expansion both leave `border_expansion_production` at 1. A written number (`border:2`, `farming*0.5`, `research:0.25`) is not an unlock and still scales. Border Expansion can only be bought 5 times (`5:2:2`), so the `border:2` sequence a town can reach is 2, 4, 8, 16, 32.
 - If benefitMultiplier is 1.0 (within 0.0001 tolerance), a numeric effect uses simple linear scaling: the base value is multiplied by the integer level.
 - Otherwise a numeric effect uses compound/exponential scaling: base × (mult raised to level-1). Level 1 always yields exactly the base (any mult ^ 0 = 1).
 - **Worked example (exponential)**: Effect value=10, benefitMult=1.5, level=3 → 10 × (1.5 ^ 2) = 10 × 2.25 = 22.5. At level 1: 10 × 1.0 = 10. At level 2: 10 × 1.5 = 15.
