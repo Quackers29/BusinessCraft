@@ -92,6 +92,10 @@ public class ConfigLoader {
     public static int dailyTickInterval = 24000;
     public static int minStockPercent = 60;
     public static int excessStockPercent = 80;
+    /** Writes the production event CSV. Off unless the toml key or a run override turns it on. */
+    public static boolean productionEventLog = false;
+    /** Empty uses {@code <server run dir>/businesscraft-debug}. */
+    public static String productionEventLogDir = "";
 
     // Contract Timing Config
     public static double contractAuctionDurationMinutes = 1.0;
@@ -279,6 +283,8 @@ public class ConfigLoader {
                 minStockPercent = config.getIntOrElse("production.minStockPercent", 60);
                 excessStockPercent = config.getIntOrElse("production.excessStockPercent", 80);
                 researchEnabled = config.getOrElse("research.enabled", false);
+                productionEventLog = config.getOrElse("debug.productionEventLog", false);
+                productionEventLogDir = config.getOrElse("debug.productionEventLogDir", "");
 
                 // Trading settings
                 tradingEnabled = config.getOrElse("trading.enabled", false);
@@ -310,7 +316,29 @@ public class ConfigLoader {
         } catch (Exception e) {
             LOGGER.error("Failed to load config: {}", e.getMessage(), e);
             // Use defaults on error
+        } finally {
+            applyRunOverrides();
         }
+    }
+
+    /**
+     * System properties set for one process (the showcase launcher) win over the toml file
+     * and are not written back, so the next run stays at the file's values.
+     */
+    private static void applyRunOverrides() {
+        productionEnabled = flag("businesscraft.production.enabled", productionEnabled);
+        researchEnabled = flag("businesscraft.research.enabled", researchEnabled);
+        contractsEnabled = flag("businesscraft.contracts.enabled", contractsEnabled);
+        productionEventLog = flag("businesscraft.debug.productionEventLog", productionEventLog);
+        String dir = System.getProperty("businesscraft.debug.productionEventLogDir");
+        if (dir != null) {
+            productionEventLogDir = dir;
+        }
+    }
+
+    private static boolean flag(String key, boolean current) {
+        String value = System.getProperty(key);
+        return value == null ? current : Boolean.parseBoolean(value);
     }
 
     private static void copyDefaultConfig(Path targetPath) {
@@ -563,6 +591,13 @@ public class ConfigLoader {
 
                 config.set("research.enabled", researchEnabled);
                 config.setComment("research.enabled", "Enable research/upgrade system");
+
+                config.set("debug.productionEventLog", productionEventLog);
+                config.setComment("debug.productionEventLog",
+                        " Write a CSV of production, research, and contract stage changes");
+                config.set("debug.productionEventLogDir", productionEventLogDir);
+                config.setComment("debug.productionEventLogDir",
+                        " Directory for the event CSV. Empty uses <run dir>/businesscraft-debug");
 
                 config.set("jade.platformInterface", jadePlatformInterfaceTooltip);
                 config.setComment("jade.platformInterface",

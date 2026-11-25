@@ -131,6 +131,7 @@ Use `context.townAPos()`, `context.townBPos()`, `context.townAId()`, and `contex
 
 ```bash
 bash tools/showcase-play.sh start            # server only, Forge (default); `start fabric` for Fabric
+bash tools/showcase-play.sh start --production   # also enable production, research, contracts, and the event log
 bash tools/showcase-play.sh start --client   # also open one dev client (or run `client` later)
 bash tools/showcase-play.sh client           # open a dev client on the running server (`./gradlew runClient` also works)
 bash tools/showcase-play.sh status           # running? loader, port, join addresses, logs
@@ -142,6 +143,8 @@ bash tools/showcase-play.sh stop             # save the world, stop the server a
 Join from elsewhere: `localhost:<port>` (WSL2 forwards it to Windows), or the LAN address `status` prints. Port 25565 (Forge) or 25566 (Fabric), the next free one when busy. Minecraft 1.20.1, offline mode, any username, BusinessCraft for that loader installed.
 
 The pid/start-time record lives in `showcase-output/play-session.env`. `stop` signals only those pids (start time must match, so a reused pid is never touched), is safe to repeat, and leaves a client you started yourself alone. Logs: `showcase-output/<timestamp>_play_<loader>/logs`.
+
+`--production` is only for that process. It passes `-Dbusinesscraft.production.enabled`, `research.enabled`, `contracts.enabled`, and `debug.productionEventLog`, and sets the log directory to `showcase-output/<run>/production/`. The toml file is not rewritten, so the next start without the flag stays off. Start and stop print the CSV path. The dedicated server log line is `Production event log: <path>`. A headless run of the same four towns, without a server, is `./gradlew productionSim` (output `common/build/production-sim/`) or the shorter case inside `./gradlew test`.
 
 ### What the world holds
 

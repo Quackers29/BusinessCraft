@@ -164,7 +164,13 @@ public class BusinessCraftFabric implements ModInitializer {
             FabricModMessages.setServer(server);
         });
 
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            com.quackers29.businesscraft.debug.production.ProductionEventLog.onServerStarted(
+                    server.getServerDirectory().toPath());
+        });
+
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            com.quackers29.businesscraft.debug.production.ProductionEventLog.onServerStopping();
             FabricModMessages.setServer(null);
             com.quackers29.businesscraft.contract.ContractBoard.clearInstances();
             com.quackers29.businesscraft.town.TownManager.clearInstances();

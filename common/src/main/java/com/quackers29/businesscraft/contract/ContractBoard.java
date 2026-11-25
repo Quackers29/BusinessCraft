@@ -20,10 +20,33 @@ public class ContractBoard {
 
     private final ContractSavedData savedData;
     private final ServerLevel level;
+    private final List<Contract> contracts;
+    private final TownResolver towns;
+
+    /** Town lookup that does not need a {@link ServerLevel}. The simulation uses this. */
+    @FunctionalInterface
+    public interface TownResolver {
+        com.quackers29.businesscraft.town.Town town(UUID id);
+    }
 
     private ContractBoard(ServerLevel level) {
         this.level = level;
         this.savedData = ContractSavedData.get(level);
+        this.contracts = this.savedData.getContracts();
+        this.towns = id -> id == null ? null
+                : com.quackers29.businesscraft.town.TownManager.get(level).getTown(id);
+    }
+
+    private ContractBoard(TownResolver towns) {
+        this.level = null;
+        this.savedData = null;
+        this.contracts = new ArrayList<>();
+        this.towns = towns == null ? id -> null : towns;
+    }
+
+    /** In-memory board for the headless production simulation. Not stored on a world. */
+    public static ContractBoard headless(TownResolver towns) {
+        return new ContractBoard(towns);
     }
 
     public static ContractBoard get(ServerLevel level) {
@@ -35,23 +58,46 @@ public class ContractBoard {
     }
 
     public void addContract(Contract contract) {
-        savedData.getContracts().add(contract);
-        savedData.setDirty();
+        contracts.add(contract);
+        markDirty();
         broadcastUpdate();
+        if (contract instanceof SellContract sc) {
+            com.quackers29.businesscraft.town.Town issuer = town(sc.getIssuerTownId());
+            com.quackers29.businesscraft.debug.production.ProductionEvents.contract(
+                    issuer, sc.getIssuerTownName(), sc.getIssuerTownId().toString(),
+                    com.quackers29.businesscraft.debug.production.ProductionEvent.CONTRACT_LISTED,
+                    sc.getId().toString(), sc.getResourceId(), sc.getQuantity(), sc.getPricePerUnit(),
+                    "", "");
+        }
     }
 
     public void removeContract(UUID contractId) {
-        savedData.getContracts().removeIf(c -> c.getId().equals(contractId));
-        savedData.setDirty();
+        Contract existing = getContract(contractId);
+        boolean removed = contracts.removeIf(c -> c.getId().equals(contractId));
+        if (!removed) {
+            return;
+        }
+        markDirty();
         broadcastUpdate();
+        if (existing instanceof SellContract sc && !sc.isCompleted()) {
+            com.quackers29.businesscraft.town.Town issuer = town(sc.getIssuerTownId());
+            String type = sc.isExpired() && sc.getWinningTownId() == null
+                    ? com.quackers29.businesscraft.debug.production.ProductionEvent.CONTRACT_EXPIRED
+                    : com.quackers29.businesscraft.debug.production.ProductionEvent.CONTRACT_CANCELLED;
+            com.quackers29.businesscraft.debug.production.ProductionEvents.contract(
+                    issuer, sc.getIssuerTownName(),
+                    sc.getIssuerTownId() == null ? "" : sc.getIssuerTownId().toString(),
+                    type, sc.getId().toString(), sc.getResourceId(), sc.getQuantity(), sc.getPricePerUnit(),
+                    "", "");
+        }
     }
 
     public void updateContract(Contract contract) {
-        savedData.setDirty();
+        markDirty();
     }
 
     public Contract getContract(UUID contractId) {
-        for (Contract c : savedData.getContracts()) {
+        for (Contract c : contracts) {
             if (c.getId().equals(contractId)) {
                 return c;
             }
@@ -59,8 +105,21 @@ public class ContractBoard {
         return null;
     }
 
+    private com.quackers29.businesscraft.town.Town town(UUID id) {
+        if (id == null || towns == null) {
+            return null;
+        }
+        return towns.town(id);
+    }
+
+    private void markDirty() {
+        if (savedData != null) {
+            savedData.setDirty();
+        }
+    }
+
     public List<Contract> getContracts() {
-        return Collections.unmodifiableList(savedData.getContracts());
+        return Collections.unmodifiableList(contracts);
     }
 
     public float getMarketPrice(String resourceId) {
@@ -89,7 +148,7 @@ public class ContractBoard {
     public void tick(ServerLevel level) {
         closeAuctions();
 
-        for (Contract contract : savedData.getContracts()) {
+        for (Contract contract : contracts) {
             if (contract instanceof SellContract sc) {
                 if (sc.isCompleted() && !sc.isDelivered()) {
                     processContractDelivery(sc, level);
@@ -103,12 +162,10 @@ public class ContractBoard {
 
         if (contract instanceof SellContract sc) {
             sc.addDeliveredAmount(amount);
-            savedData.setDirty();
+            markDirty();
             broadcastUpdate();
 
-            com.quackers29.businesscraft.town.TownManager manager = com.quackers29.businesscraft.town.TownManager
-                    .get(level);
-            com.quackers29.businesscraft.town.Town destination = manager.getTown(sc.getWinningTownId());
+            com.quackers29.businesscraft.town.Town destination = town(sc.getWinningTownId());
 
             if (destination != null && sc.getResourceId() != null) {
                 net.minecraft.world.item.Item resourceItem = com.quackers29.businesscraft.util.ContractItemHelper
@@ -121,12 +178,10 @@ public class ContractBoard {
             if (sc.isDeliveryComplete() && !sc.isCompleted()) {
                 sc.complete();
                 sc.expireNow();
-                savedData.setDirty();
+                markDirty();
                 broadcastUpdate();
 
-                com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
-                        .get(level);
-                com.quackers29.businesscraft.town.Town destTown = townManager.getTown(sc.getWinningTownId());
+                com.quackers29.businesscraft.town.Town destTown = town(sc.getWinningTownId());
 
                 if (destTown != null && sc.getCourierId() != null) {
                     if (sc.isSnailMail()) {
@@ -157,12 +212,10 @@ public class ContractBoard {
         }
         else if (contract instanceof CourierContract cc) {
             cc.addDeliveredAmount(amount);
-            savedData.setDirty();
+            markDirty();
             broadcastUpdate();
 
-            com.quackers29.businesscraft.town.TownManager manager = com.quackers29.businesscraft.town.TownManager
-                    .get(level);
-            com.quackers29.businesscraft.town.Town destination = manager.getTown(cc.getDestinationTownId());
+            com.quackers29.businesscraft.town.Town destination = town(cc.getDestinationTownId());
 
             if (destination != null && cc.getResourceId() != null) {
                 net.minecraft.world.item.Item resourceItem = com.quackers29.businesscraft.util.ContractItemHelper
@@ -174,12 +227,10 @@ public class ContractBoard {
 
             if (cc.isDelivered()) {
                 cc.complete();
-                savedData.setDirty();
+                markDirty();
                 broadcastUpdate();
 
-                com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
-                        .get(level);
-                com.quackers29.businesscraft.town.Town destTown = townManager.getTown(cc.getDestinationTownId());
+                com.quackers29.businesscraft.town.Town destTown = town(cc.getDestinationTownId());
 
                 if (destTown != null && cc.getCourierId() != null) {
                     int rewardAmount = (int) cc.getReward();
@@ -212,9 +263,7 @@ public class ContractBoard {
             return;
         }
 
-        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
-                .get(level);
-        com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
+        com.quackers29.businesscraft.town.Town sellerTown = town(sc.getIssuerTownId());
 
         if (sellerTown == null) {
             LOGGER.warn("Cannot accept courier job: seller town {} not found", sc.getIssuerTownId());
@@ -230,11 +279,10 @@ public class ContractBoard {
         }
 
         sc.setCourierId(courierId);
-        sc.setCourierAcceptedTime(System.currentTimeMillis());
-        sc.setCourierAcceptedTime(System.currentTimeMillis());
+        sc.setCourierAcceptedTime(com.quackers29.businesscraft.util.GameClock.millis());
 
         double distance = 0;
-        com.quackers29.businesscraft.town.Town destTown = townManager.getTown(sc.getWinningTownId());
+        com.quackers29.businesscraft.town.Town destTown = town(sc.getWinningTownId());
         if (destTown != null) {
             distance = Math.sqrt(sellerTown.getPosition().distSqr(destTown.getPosition()));
         }
@@ -242,8 +290,14 @@ public class ContractBoard {
                 * com.quackers29.businesscraft.config.ConfigLoader.contractCourierDeliveryMinutesPerMeter * 60000L);
 
         sc.extendExpiry(deliveryDuration);
-
         String destTownName = sc.getWinningTownName() != null ? sc.getWinningTownName() : "Unknown";
+        com.quackers29.businesscraft.debug.production.ProductionEvents.contract(
+                sellerTown, sellerTown.getName(), sellerTown.getId().toString(),
+                com.quackers29.businesscraft.debug.production.ProductionEvent.CONTRACT_COURIER_DISPATCHED,
+                sc.getId().toString(), sc.getResourceId(), sc.getQuantity(), sc.getPricePerUnit(),
+                sc.getWinningTownId() == null ? courierId.toString() : sc.getWinningTownId().toString(),
+                destTown == null ? destTownName : destTown.getName());
+
         net.minecraft.world.item.ItemStack contractItem = com.quackers29.businesscraft.util.ContractItemHelper
                 .createContractItem(
                         sc.getResourceId(),
@@ -266,15 +320,12 @@ public class ContractBoard {
             });
         }
 
-        savedData.setDirty();
+        markDirty();
         broadcastUpdate();
     }
 
     private void closeAuctions() {
-        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
-                .get(level);
-
-        List<Contract> contractsCopy = new ArrayList<>(savedData.getContracts());
+        List<Contract> contractsCopy = new ArrayList<>(contracts);
 
         for (Contract contract : contractsCopy) {
             if (contract instanceof SellContract sc) {
@@ -284,7 +335,7 @@ public class ContractBoard {
                         float highestBid = sc.getHighestBid();
 
                         if (highestBidder != null) {
-                            com.quackers29.businesscraft.town.Town winnerTown = townManager.getTown(highestBidder);
+                            com.quackers29.businesscraft.town.Town winnerTown = town(highestBidder);
                             if (winnerTown != null) {
                                 sc.setWinningTown(highestBidder, winnerTown.getName());
                             } else {
@@ -298,8 +349,7 @@ public class ContractBoard {
                                 updateMarketPrice(sc.getResourceId(), (float) sc.getQuantity(), transactionPrice);
                             }
 
-                            com.quackers29.businesscraft.town.Town sellerTown = townManager
-                                    .getTown(sc.getIssuerTownId());
+                            com.quackers29.businesscraft.town.Town sellerTown = town(sc.getIssuerTownId());
 
                             if (winnerTown != null && sellerTown != null) {
                                 int cost = (int) highestBid;
@@ -324,10 +374,18 @@ public class ContractBoard {
                                     (long) (com.quackers29.businesscraft.config.ConfigLoader.contractCourierAcceptanceMinutes
                                             * 60000L));
 
-                            savedData.setDirty();
+                            markDirty();
+                            com.quackers29.businesscraft.debug.production.ProductionEvents.contract(
+                                    winnerTown, winnerTown == null ? "" : winnerTown.getName(),
+                                    highestBidder.toString(),
+                                    com.quackers29.businesscraft.debug.production.ProductionEvent.CONTRACT_WON,
+                                    sc.getId().toString(), sc.getResourceId(), sc.getQuantity(),
+                                    sc.getQuantity() == 0 ? 0 : highestBid / sc.getQuantity(),
+                                    sc.getIssuerTownId() == null ? "" : sc.getIssuerTownId().toString(),
+                                    sellerTown == null ? sc.getIssuerTownName() : sellerTown.getName());
                         }
                     } else {
-                        com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
+                        com.quackers29.businesscraft.town.Town sellerTown = town(sc.getIssuerTownId());
                         if (sellerTown != null) {
                             net.minecraft.world.item.Item item = com.quackers29.businesscraft.util.ContractItemHelper
                                     .getBaseItemForResource(sc.getResourceId());
@@ -345,16 +403,16 @@ public class ContractBoard {
                             }
                         }
                         removeContract(sc.getId());
-                        savedData.setDirty();
+                        markDirty();
                     }
                 }
                 else if (sc.isAuctionClosed() && !sc.isCourierAssigned() && sc.isExpired() && !sc.isCompleted()) {
                     sc.setCourierId(SellContract.SNAIL_MAIL_UUID);
-                    sc.setCourierAcceptedTime(System.currentTimeMillis());
+                    sc.setCourierAcceptedTime(com.quackers29.businesscraft.util.GameClock.millis());
 
                     double distance = 0;
-                    com.quackers29.businesscraft.town.Town seller = townManager.getTown(sc.getIssuerTownId());
-                    com.quackers29.businesscraft.town.Town winner = townManager.getTown(sc.getWinningTownId());
+                    com.quackers29.businesscraft.town.Town seller = town(sc.getIssuerTownId());
+                    com.quackers29.businesscraft.town.Town winner = town(sc.getWinningTownId());
                     if (seller != null && winner != null) {
                         distance = Math.sqrt(seller.getPosition().distSqr(winner.getPosition()));
                     }
@@ -364,32 +422,37 @@ public class ContractBoard {
 
                     sc.extendExpiry(smDuration);
 
+                    com.quackers29.businesscraft.debug.production.ProductionEvents.contract(
+                            seller, seller == null ? sc.getIssuerTownName() : seller.getName(),
+                            sc.getIssuerTownId() == null ? "" : sc.getIssuerTownId().toString(),
+                            com.quackers29.businesscraft.debug.production.ProductionEvent.CONTRACT_COURIER_DISPATCHED,
+                            sc.getId().toString(), sc.getResourceId(), sc.getQuantity(), sc.getPricePerUnit(),
+                            SellContract.SNAIL_MAIL_UUID.toString(), "snail_mail");
+
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                             "Contract {} assigned to Snail Mail (courier acceptance expired)", sc.getId());
-                    savedData.setDirty();
+                    markDirty();
                     broadcastUpdate();
                 }
                 else if (sc.isSnailMail() && sc.isExpired() && !sc.isCompleted()) {
                     sc.complete();
-                    savedData.setDirty();
+                    markDirty();
                     broadcastUpdate();
                 }
             }
         }
     }
 
-    private void processContractDelivery(SellContract sc, ServerLevel level) {
+    private void processContractDelivery(SellContract sc, ServerLevel ignoredLevel) {
         sc.setDelivered(true);
-        savedData.setDirty();
-
-        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
-                .get(level);
+        markDirty();
 
         if (sc.getWinningTownId() == null) {
             return;
         }
 
-        com.quackers29.businesscraft.town.Town buyerTown = townManager.getTown(sc.getWinningTownId());
+        com.quackers29.businesscraft.town.Town buyerTown = town(sc.getWinningTownId());
+        com.quackers29.businesscraft.town.Town sellerTown = town(sc.getIssuerTownId());
 
         if (buyerTown != null) {
             net.minecraft.world.item.Item item = com.quackers29.businesscraft.util.ContractItemHelper
@@ -403,22 +466,29 @@ public class ContractBoard {
                 }
             }
         }
+        com.quackers29.businesscraft.debug.production.ProductionEvents.contract(
+                buyerTown, buyerTown == null ? "" : buyerTown.getName(),
+                sc.getWinningTownId().toString(),
+                com.quackers29.businesscraft.debug.production.ProductionEvent.CONTRACT_DELIVERED,
+                sc.getId().toString(), sc.getResourceId(), sc.getQuantity(), sc.getPricePerUnit(),
+                sc.getIssuerTownId() == null ? "" : sc.getIssuerTownId().toString(),
+                sellerTown == null ? sc.getIssuerTownName() : sellerTown.getName());
     }
 
     public void addBid(UUID contractId, UUID bidder, float amount, ServerLevel level) {
         Contract contract = getContract(contractId);
         if (contract != null) {
             if (contract instanceof SellContract sc) {
-                com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
-                        .get(level);
-
                 if (sc.getWinningTownId() != null && !sc.isCourierAssigned() && !sc.isExpired()) {
+                    if (level == null) {
+                        return;
+                    }
                     handleCourierAcceptance(sc, contractId, bidder, level);
                     return;
                 }
 
-                com.quackers29.businesscraft.town.Town bidderTown = townManager.getTown(bidder);
-                com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
+                com.quackers29.businesscraft.town.Town bidderTown = town(bidder);
+                com.quackers29.businesscraft.town.Town sellerTown = town(sc.getIssuerTownId());
 
                 if (bidderTown == null) {
                     LOGGER.warn("Cannot place bid: bidder town {} not found", bidder);
@@ -444,7 +514,7 @@ public class ContractBoard {
                 bidderTown.addEscrowResource(net.minecraft.world.item.Items.EMERALD, totalCost);
 
                 if (previousHighestBidder != null) {
-                    com.quackers29.businesscraft.town.Town previousTown = townManager.getTown(previousHighestBidder);
+                    com.quackers29.businesscraft.town.Town previousTown = town(previousHighestBidder);
                     if (previousTown != null) {
                         int prevBid = (int) Math.ceil(previousHighestBid);
                         int prevCourierCost = calculateCourierCost(previousTown, sellerTown);
@@ -455,10 +525,19 @@ public class ContractBoard {
                     }
                 }
 
-                savedData.setDirty();
+                markDirty();
                 broadcastUpdate();
+                com.quackers29.businesscraft.debug.production.ProductionEvents.contract(
+                        bidderTown, bidderTown.getName(), bidderTown.getId().toString(),
+                        com.quackers29.businesscraft.debug.production.ProductionEvent.CONTRACT_BID,
+                        sc.getId().toString(), sc.getResourceId(), sc.getQuantity(), roundedAmount / Math.max(1L, sc.getQuantity()),
+                        sc.getIssuerTownId() == null ? "" : sc.getIssuerTownId().toString(),
+                        sellerTown == null ? sc.getIssuerTownName() : sellerTown.getName());
             } else if (contract instanceof CourierContract cc) {
                 if (!cc.isAccepted() && !cc.isExpired()) {
+                    if (level == null) {
+                        return;
+                    }
                     net.minecraft.server.level.ServerPlayer player = level.getServer().getPlayerList()
                             .getPlayer(bidder);
                     if (player == null) {
@@ -466,9 +545,7 @@ public class ContractBoard {
                         return;
                     }
 
-                    com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
-                            .get(level);
-                    com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(cc.getIssuerTownId());
+                    com.quackers29.businesscraft.town.Town sellerTown = town(cc.getIssuerTownId());
 
                     if (sellerTown == null) {
                         LOGGER.warn("Cannot accept courier contract: seller town {} not found", cc.getIssuerTownId());
@@ -484,10 +561,10 @@ public class ContractBoard {
                     }
 
                     cc.setCourierId(bidder);
-                    cc.setAcceptedTime(System.currentTimeMillis());
+                    cc.setAcceptedTime(com.quackers29.businesscraft.util.GameClock.millis());
 
                     double distance = 0;
-                    com.quackers29.businesscraft.town.Town destTown = townManager.getTown(cc.getDestinationTownId());
+                    com.quackers29.businesscraft.town.Town destTown = town(cc.getDestinationTownId());
                     if (destTown != null) {
                         distance = Math.sqrt(sellerTown.getPosition().distSqr(destTown.getPosition()));
                     }
@@ -529,7 +606,7 @@ public class ContractBoard {
                         }
                     }
 
-                    savedData.setDirty();
+                    markDirty();
                     broadcastUpdate();
                 }
             }
@@ -547,11 +624,11 @@ public class ContractBoard {
 
     private void broadcastUpdate() {
         try {
-            if (PlatformAccess.getNetworkMessages() != null) {
+            if (PlatformAccess.networkMessages != null) {
                 Map<String, Float> prices = getAllMarketPrices();
                 PlatformAccess.getNetworkMessages().sendToAllPlayers(
                         new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
-                                savedData.getContracts(), prices));
+                                contracts, prices));
             }
         } catch (Exception e) {
             LOGGER.error("Failed to broadcast contract update", e);

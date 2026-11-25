@@ -36,6 +36,26 @@ test {
     }
 }
 
+tasks.register('productionSim', Test) {
+    group = 'verification'
+    description = 'Headless production simulation. -Dbusinesscraft.productionSim.ticks and .dir override the length and output.'
+    useJUnitPlatform()
+    filter {
+        includeTestsMatching 'com.quackers29.businesscraft.debug.production.ProductionSimulationTest'
+    }
+    systemProperty 'businesscraft.productionSim.ticks',
+            System.getProperty('businesscraft.productionSim.ticks', '6000')
+    systemProperty 'businesscraft.productionSim.dir',
+            System.getProperty('businesscraft.productionSim.dir',
+                    layout.buildDirectory.dir('production-sim').get().asFile.absolutePath)
+    systemProperty 'businesscraft.productionSim.seed',
+            System.getProperty('businesscraft.productionSim.seed', '29')
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+    }
+}
+
 // Configure jar to exclude Forge runtime classes
 jar {
     manifest {

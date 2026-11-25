@@ -8,6 +8,7 @@ import com.quackers29.businesscraft.production.ProductionRegistry;
 import com.quackers29.businesscraft.production.UpgradeNode;
 import com.quackers29.businesscraft.production.UpgradeRegistry;
 import com.quackers29.businesscraft.town.Town;
+import com.quackers29.businesscraft.util.BcRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,7 +130,7 @@ public class TownResearchAI {
 
             if (town.getUpgrades().canAffordResearch(id)) {
                 // Bias
-                double biased = rawScore + (Math.random() * 2.0);
+                double biased = rawScore + (BcRandom.nextDouble() * 2.0);
                 if (biased > bestBiasedScore) {
                     bestBiasedScore = biased;
                     bestNode = id;

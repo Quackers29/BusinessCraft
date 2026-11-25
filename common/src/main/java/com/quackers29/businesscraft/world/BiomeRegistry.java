@@ -83,11 +83,25 @@ public class BiomeRegistry {
                 if (parts.length >= 7) {
                     String biomeIdsRaw = parts[0].trim();
                     String variantId = parts[1].trim();
-                    String variantName = parts[2].trim();
-                    String desc = parts[3].trim().replace("\"", "");
-                    int weight = parseWeight(parts[4].trim());
-                    String nodesRaw = parts[5].trim();
-                    String valuesRaw = parts[6].trim();
+                    String variantName = parts[2].trim().replace("\"", "");
+                    // Bundled biomes.csv puts description before weight. The generated stub puts
+                    // the weight there. A numeric fourth field is the stub.
+                    boolean stubOrder = parts[3].trim().replace("\"", "").matches("\\d+");
+                    String desc;
+                    int weight;
+                    String nodesRaw;
+                    String valuesRaw;
+                    if (stubOrder) {
+                        weight = parseWeight(parts[3].trim());
+                        nodesRaw = parts[4].trim();
+                        valuesRaw = parts[5].trim();
+                        desc = parts[6].trim().replace("\"", "");
+                    } else {
+                        desc = parts[3].trim().replace("\"", "");
+                        weight = parseWeight(parts[4].trim());
+                        nodesRaw = parts[5].trim();
+                        valuesRaw = parts[6].trim();
+                    }
 
                     List<String> biomeIds = new ArrayList<>();
                     if (biomeIdsRaw.equals("*")) {
@@ -140,9 +154,9 @@ public class BiomeRegistry {
 
     private static void createDefaultConfig(File file) {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write("biome_ids,variant_id,variant_name,weight,starting_nodes,starting_values,description\n");
+            writer.write("biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values\n");
             writer.write(
-                    "minecraft:plains,farming,Farming Village,60,basic_settlement;farming_basic,population:6;food:140;wood:70;money:60;happiness:72,\"Strong farming\"\n");
+                    "minecraft:plains,farming,Farming Village,\"Strong farming\",60,basic_settlement;farming_basic,population:6;food:140;wood:70;money:60;happiness:72\n");
             // ... truncated defaults
         } catch (IOException e) {
             LOGGER.error("Failed to create default {}", CONFIG_FILE_NAME, e);

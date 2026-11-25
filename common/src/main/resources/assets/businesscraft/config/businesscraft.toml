@@ -179,3 +179,9 @@ enabled = false
     tourist = true
     # Top learned towns listed on Platform Interface tooltips in AUTO mode
     maxLearnedRoutesInTooltip = 3
+
+[debug]
+    # CSV of production, research, and contract stage changes. Off by default.
+    productionEventLog = false
+    # Directory for that CSV. Empty uses <server run dir>/businesscraft-debug
+    productionEventLogDir = ""

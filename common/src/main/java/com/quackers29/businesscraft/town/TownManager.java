@@ -66,11 +66,50 @@ public class TownManager {
         return INSTANCES.computeIfAbsent(level, key -> new TownManager(level));
     }
 
-    /** Test-only manager that is not attached to a world. */
+    /** Test and simulation manager that is not attached to a world. */
     TownManager(TownSavedData savedData) {
         this.level = null;
         this.savedData = savedData;
         this.boundaryService = new TownBoundaryService();
+    }
+
+    private com.quackers29.businesscraft.contract.ContractBoard headlessContracts;
+
+    /**
+     * Board used by town contract ticks. A live world uses {@link com.quackers29.businesscraft.contract.ContractBoard#get}.
+     * The headless simulation attaches its own board.
+     */
+    public com.quackers29.businesscraft.contract.ContractBoard activeContractBoard() {
+        if (headlessContracts != null) {
+            return headlessContracts;
+        }
+        if (level != null) {
+            return com.quackers29.businesscraft.contract.ContractBoard.get(level);
+        }
+        return null;
+    }
+
+    public void attachHeadlessContracts(com.quackers29.businesscraft.contract.ContractBoard board) {
+        this.headlessContracts = board;
+    }
+
+    public void addExistingTown(Town town) {
+        if (town == null) {
+            return;
+        }
+        savedData.getTowns().put(town.getId(), town);
+        markDirty();
+    }
+
+    /** Applies a biome kit the same way a newly registered town does. */
+    public static void applyStartingKit(Town town, com.quackers29.businesscraft.world.BiomeRegistry.BiomeKit kit) {
+        applyBiomeKit(town, kit);
+    }
+
+    public static TownManager createHeadless() {
+        TownManager manager = new TownManager(TownSavedData.create());
+        INSTANCES.put(null, manager);
+        return manager;
     }
 
     static void installForTest(TownManager manager) {
@@ -108,6 +147,10 @@ public class TownManager {
                 townId, name, pos);
         Town town = new Town(townId, pos, name);
         savedData.getTowns().put(townId, town);
+        if (level != null) {
+            com.quackers29.businesscraft.debug.production.ProductionEventContext.setGameTick(level.getGameTime());
+        }
+        com.quackers29.businesscraft.debug.production.ProductionEvents.townCreated(town);
 
         if (level != null) {
             String biomeIdString = level.getBiome(pos).unwrapKey().map(k -> k.location().toString())
@@ -355,6 +398,9 @@ public class TownManager {
         // make the two clients disagree. The property is set only on that dedicated server.
         if ("setup".equals(System.getProperty("businesscraft.multiplayerSmoke"))) {
             return;
+        }
+        if (level != null) {
+            com.quackers29.businesscraft.debug.production.ProductionEventContext.setGameTick(level.getGameTime());
         }
         for (Town town : savedData.getTowns().values()) {
             town.tick();

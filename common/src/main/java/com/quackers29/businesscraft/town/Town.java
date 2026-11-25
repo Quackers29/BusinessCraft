@@ -50,7 +50,11 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     }
 
     public void setWorkUnits(long amount) {
+        long before = this.workUnits;
         this.workUnits = Math.max(0, amount);
+        if (!loading && this.workUnits != before) {
+            com.quackers29.businesscraft.debug.production.ProductionEvents.workUnits(this, before, this.workUnits);
+        }
         markDirty();
     }
 
@@ -59,6 +63,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
      * Clamps to 0 and Cap.
      */
     public void addWorkUnits(long amount) {
+        long before = this.workUnits;
         long cap = getWorkUnitCap();
         try {
             this.workUnits = Math.addExact(this.workUnits, amount);
@@ -71,6 +76,9 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         if (cap > 0 && this.workUnits > cap)
             this.workUnits = cap;
 
+        if (!loading && this.workUnits != before) {
+            com.quackers29.businesscraft.debug.production.ProductionEvents.workUnits(this, before, this.workUnits);
+        }
         markDirty();
     }
 
@@ -117,16 +125,23 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         this.upgrades = new TownUpgradeComponent(this);
         this.contracts = new TownContractComponent(this);
 
-        // Initialize with default starting population
+        // Initialize with default starting population. Direct write: the first real
+        // change after this is what the event log records.
         economy.setPopulation(ConfigLoader.defaultStartingPopulation);
+        upgrades.baselineBorder();
     }
 
     // Stats
     private float happiness = 50.0f; // 0-100
     private float happinessModifier = 0f; // Calculated from upgrades
     private boolean legacyVisitHistoryMigrated;
+    private boolean loading;
     /** Bumps on every {@link #markDirty()} so block entities can sync only after a real change. */
     private int revision;
+
+    public boolean isLoading() {
+        return loading;
+    }
 
     public TownUpgradeComponent getUpgrades() {
         return upgrades;
@@ -658,6 +673,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                 tag.getInt("posZ"));
 
         Town town = new Town(id, pos, name);
+        town.loading = true;
 
         // Load tourist count
         if (tag.contains("touristCount")) {
@@ -875,6 +891,8 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                 }
             });
         }
+        town.loading = false;
+        town.upgrades.baselineBorder();
         return town;
     }
 
@@ -896,7 +914,12 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     }
 
     public void setPopulation(int population) {
+        long before = economy.getPopulation();
         economy.setPopulation(population);
+        long after = economy.getPopulation();
+        if (!loading && before != after) {
+            com.quackers29.businesscraft.debug.production.ProductionEvents.population(this, before, after);
+        }
     }
 
     public UUID getId() {

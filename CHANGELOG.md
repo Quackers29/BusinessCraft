@@ -6,7 +6,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- Biome kit CSV loading accepts both column orders. The bundled file puts the description before the weight, and the generated stub used to put the weight first, so starting values such as `food:140` were unlocked as upgrade nodes. New stub files use the bundled column order.
+
 ### Added
+- Production debug event log. One listener writes a CSV when a recipe completes or changes stall, research starts or finishes, an upgrade level is gained, population, border, or work units change, a contract changes stage, or a town is created. Per-tick progress is not logged. The file is `<run>/businesscraft-debug/production-events-<stamp>.csv` unless `[debug] productionEventLogDir` is set, and a per-town summary is written beside it when the server stops. `[debug] productionEventLog` defaults to false. `/bc debug production [town]` adds one snapshot row while the log is open. `bash tools/showcase-play.sh start --production` turns production, research, contracts, and the log on for that run and writes into `showcase-output/<run>/production/`. The same log runs headless: `./gradlew test --tests '*ProductionSimulation*'` (1000 ticks) or `./gradlew productionSim` (6000 ticks) into `common/build/production-sim/`.
 - Sixteen more tourist looks. The builtin catalog is the list in `data/businesscraft/tourist_looks` (32 files). Each new look has its own skin and outfit colours. New hat shapes are a visor, bucket hat, turban, cycling helmet, and fedora. New held or worn items are binoculars, a briefcase, a canteen, a newspaper, and a tote. The other new hats and items are recolours of meshes that were already there. Spawn gives every catalog entry an equal chance and syncs the same packed int. The umbrella index stays empty. See `docs/TOURIST_MODELS.md`.
 
 ### Changed

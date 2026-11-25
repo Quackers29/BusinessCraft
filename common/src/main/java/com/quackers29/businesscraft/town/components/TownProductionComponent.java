@@ -27,6 +27,8 @@ public class TownProductionComponent implements TownComponent {
 
     private final Town town;
     private final Map<String, Float> recipeProgress = new HashMap<>(); // recipeId -> days accumulated
+    /** Last stall reason per recipe. In memory only; a reload logs the stall once. */
+    private final Map<String, String> stallState = new HashMap<>();
 
     public TownProductionComponent(Town town) {
         this.town = town;
@@ -148,13 +150,31 @@ public class TownProductionComponent implements TownComponent {
         processRecipe(recipe);
     }
 
+    private void transitionStall(String recipeId, String reason) {
+        String previous = stallState.get(recipeId);
+        if (reason == null) {
+            if (previous != null) {
+                stallState.remove(recipeId);
+                com.quackers29.businesscraft.debug.production.ProductionEvents.recipeStall(
+                        town, recipeId, previous, null);
+            }
+            return;
+        }
+        if (reason.equals(previous)) {
+            return;
+        }
+        stallState.put(recipeId, reason);
+        com.quackers29.businesscraft.debug.production.ProductionEvents.recipeStall(
+                town, recipeId, previous, reason);
+    }
+
     private void processRecipe(ProductionRecipe recipe) {
         boolean shouldLog = (tickCounter % 100 == 0);
 
         // Check conditions
         if (!checkConditions(recipe)) {
-            // LOGGER.debug("Recipe {} conditions not met", recipe.getId());
             recipeProgress.put(recipe.getId(), 0f);
+            transitionStall(recipe.getId(), "conditions");
             return;
         }
 
@@ -167,6 +187,7 @@ public class TownProductionComponent implements TownComponent {
 
         // Check Stocks for Inputs
         boolean hasInputs = true;
+        String missingInput = null;
         for (ResourceAmount input : recipe.getInputs()) {
             ResolvedResource resolved = resolveDynamicAmount(input.resourceId, input.amountExpression);
             String resourceId = resolved.id();
@@ -181,6 +202,7 @@ public class TownProductionComponent implements TownComponent {
                                 "Recipe {} missing input: {} (Need {}, Have {})",
                                 recipe.getId(), resourceId, required, town.getWorkUnits());
                     hasInputs = false;
+                    missingInput = resourceId;
                     break;
                 }
             } else {
@@ -191,6 +213,7 @@ public class TownProductionComponent implements TownComponent {
                     if (shouldLog)
                         LOGGER.warn("Recipe {} input resource type not found: {}", recipe.getId(), resourceId);
                     hasInputs = false;
+                    missingInput = resourceId;
                     break;
                 }
 
@@ -200,6 +223,7 @@ public class TownProductionComponent implements TownComponent {
                     if (shouldLog)
                         LOGGER.warn("Recipe {} input item not found for type: {}", recipe.getId(), resourceId);
                     hasInputs = false;
+                    missingInput = resourceId;
                     break;
                 }
 
@@ -209,6 +233,7 @@ public class TownProductionComponent implements TownComponent {
                                 "Recipe {} missing input: {} (Need {}, Have {})",
                                 recipe.getId(), resourceId, required, town.getResourceCount(item));
                     hasInputs = false;
+                    missingInput = resourceId;
                     break;
                 }
             }
@@ -216,6 +241,7 @@ public class TownProductionComponent implements TownComponent {
 
         if (!hasInputs) {
             if (recipe.getId().equals("population_maintenance")) {
+                transitionStall(recipe.getId(), null);
                 // Starvation Logic: Advance progress anyway
                 float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
                 float tickIncrement = 1.0f / 1200.0f;
@@ -226,9 +252,11 @@ public class TownProductionComponent implements TownComponent {
                             "STARVATION: Town {} missed {} cycle. No food available.", town.getName(),
                             recipe.getId());
 
-                    // Apply Population Penalty
+                    Map<String, Long> consumed = new java.util.LinkedHashMap<>();
+                    Map<String, Long> produced = new java.util.LinkedHashMap<>();
                     if (town.getPopulation() > 0) {
                         town.setPopulation((int) (town.getPopulation() - 1L));
+                        produced.put("pop", -1L);
 
                         // Notification
                         net.minecraft.server.level.ServerLevel level = com.quackers29.businesscraft.town.utils.TownNotificationUtils
@@ -256,6 +284,7 @@ public class TownProductionComponent implements TownComponent {
                                 long available = town.getResourceCount(item);
                                 if (available > 0) {
                                     town.addResource(item, -available); // Consume all
+                                    consumed.merge(resourceId, available, Long::sum);
                                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                                             "STARVATION: Consumed remaining partial stack of {} {}", available,
                                             resourceId);
@@ -264,13 +293,17 @@ public class TownProductionComponent implements TownComponent {
                         }
                     }
 
+                    com.quackers29.businesscraft.debug.production.ProductionEvents.recipeCompleted(
+                            town, recipe.getId(), produced.values().stream().mapToLong(Long::longValue).sum(),
+                            consumed, produced);
                     currentProgress = 0f;
                     town.markDirty();
                 }
                 recipeProgress.put(recipe.getId(), currentProgress);
             } else {
-                // Can't run, report 0 progress
                 recipeProgress.put(recipe.getId(), 0f);
+                transitionStall(recipe.getId(),
+                        "missing_input:" + (missingInput == null ? "unknown" : missingInput));
             }
             return;
         }
@@ -296,6 +329,7 @@ public class TownProductionComponent implements TownComponent {
                                 "Recipe {} tourist production stalled: Spawning Disabled", recipe.getId());
                     float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
                     recipeProgress.put(recipe.getId(), currentProgress);
+                    transitionStall(recipe.getId(), "spawning_disabled");
                     return;
                 }
                 current = town.getTouristCount() + town.getPendingTouristSpawns();
@@ -324,11 +358,13 @@ public class TownProductionComponent implements TownComponent {
                             "Recipe {} output full: {} (Need space for {})", recipe.getId(), resId, amount);
                 float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
                 recipeProgress.put(recipe.getId(), currentProgress);
+                transitionStall(recipe.getId(), "output_full:" + resId);
                 return; // Stall
             }
         }
 
         // Advance Progress
+        transitionStall(recipe.getId(), null);
         float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
         float tickIncrement = 1.0f / 1200.0f;
 
@@ -350,6 +386,8 @@ public class TownProductionComponent implements TownComponent {
     }
 
     private void consumeAndProduce(ProductionRecipe recipe) {
+        Map<String, Long> consumed = new java.util.LinkedHashMap<>();
+        Map<String, Long> produced = new java.util.LinkedHashMap<>();
         // Consume Inputs
         for (ResourceAmount input : recipe.getInputs()) {
             ResolvedResource resolved = resolveDynamicAmount(input.resourceId, input.amountExpression);
@@ -367,7 +405,9 @@ public class TownProductionComponent implements TownComponent {
                 // consuming pop?
                 continue;
             } else if (resourceId.equals("wu")) {
-                town.addWorkUnits(-(int) amount);
+                long taken = (long) amount;
+                town.addWorkUnits(-taken);
+                consumed.merge(resourceId, taken, Long::sum);
                 continue;
             }
 
@@ -377,23 +417,27 @@ public class TownProductionComponent implements TownComponent {
                 net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
                         .getItem(type.getMcItemId());
                 if (item != null) {
-                    town.addResource(item, -(int) amount);
+                    long taken = (long) amount;
+                    town.addResource(item, -taken);
+                    consumed.merge(resourceId, taken, Long::sum);
                 }
             }
         }
 
         // Produce Outputs
+        long outputUnits = 0L;
         for (ResourceAmount output : recipe.getOutputs()) {
             ResolvedResource resolved = resolveDynamicAmount(output.resourceId, output.amountExpression);
             String resId = resolved.id();
             float amount = resolved.amount();
+            long applied = (long) amount;
 
             if (resId.equals("pop")) {
-                town.setPopulation((int) (town.getPopulation() + (long) amount));
+                town.setPopulation((int) (town.getPopulation() + applied));
             } else if (resId.equals("tourist")) {
-                town.addPendingTouristSpawns((int) amount);
+                town.addPendingTouristSpawns((int) applied);
             } else if (resId.equals("wu")) {
-                town.addWorkUnits((int) amount);
+                town.addWorkUnits(applied);
             } else {
                 com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
                         .get(resId);
@@ -401,7 +445,7 @@ public class TownProductionComponent implements TownComponent {
                     net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
                             .getItem(type.getMcItemId());
                     if (item != null) {
-                        town.addResource(item, (int) amount);
+                        town.addResource(item, applied);
                     }
                 } else {
                     // Generic Stat Output (e.g. border, etc.)
@@ -409,8 +453,12 @@ public class TownProductionComponent implements TownComponent {
                     town.getUpgrades().accumulateFlatModifier(resId, amount);
                 }
             }
+            produced.merge(resId, applied, Long::sum);
+            outputUnits += applied;
         }
 
+        com.quackers29.businesscraft.debug.production.ProductionEvents.recipeCompleted(
+                town, recipe.getId(), outputUnits, consumed, produced);
         town.markDirty();
     }
 
