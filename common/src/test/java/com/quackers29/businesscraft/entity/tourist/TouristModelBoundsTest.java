@@ -13,6 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -39,6 +41,9 @@ class TouristModelBoundsTest {
 
     @BeforeAll
     static void bake() {
+        assertEquals(TouristParts.HEADWEAR_MAX + 1, TouristModel.headwearCount(), "hat names");
+        assertEquals(TouristParts.ACCESSORY_MAX + 1, TouristModel.accessoryCount(), "accessory names");
+        assertFalse(TouristParts.knownAccessory(5), "retired umbrella index");
         model = new TouristModel(TouristModel.createBodyLayer().bakeRoot());
     }
 
@@ -198,6 +203,23 @@ class TouristModelBoundsTest {
             int index = i;
             checkPart("accessory " + i, TouristModel.accessoryBone(i),
                     () -> boxes(model.accessoryPart(index), null), problems);
+        }
+        assertTrue(problems.isEmpty(), String.join("\n", problems));
+    }
+
+    @Test
+    void everyBuiltinLook_staysInItsRegion() {
+        List<String> problems = new ArrayList<>();
+        for (TouristLook look : TouristLooks.loadFromClasspath()) {
+            if (look.headwear() > TouristParts.HEADWEAR_NONE) {
+                String name = TouristModel.headwearName(look.headwear());
+                checkPart(look.id() + " hat " + name, "head", () -> boxes(model.headwearPart(), name), problems);
+            }
+            if (look.accessory() > TouristParts.ACCESSORY_NONE) {
+                int index = look.accessory();
+                checkPart(look.id() + " accessory " + index, TouristModel.accessoryBone(index),
+                        () -> boxes(model.accessoryPart(index), null), problems);
+            }
         }
         assertTrue(problems.isEmpty(), String.join("\n", problems));
     }

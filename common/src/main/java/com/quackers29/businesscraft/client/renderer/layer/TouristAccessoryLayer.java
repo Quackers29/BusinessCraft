@@ -11,7 +11,7 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 
-/** Camera, suitcase, backpack, or map. Index 0 draws nothing. */
+/** One accessory mesh. Index 0 and unknown indices draw nothing. */
 public class TouristAccessoryLayer extends RenderLayer<TouristEntity, TouristModel> {
     public TouristAccessoryLayer(RenderLayerParent<TouristEntity, TouristModel> parent) {
         super(parent);
