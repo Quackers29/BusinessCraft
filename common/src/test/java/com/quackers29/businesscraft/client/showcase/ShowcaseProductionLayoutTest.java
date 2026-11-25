@@ -8,15 +8,52 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class ShowcaseProductionLayoutTest {
     @Test
-    void townsAreLegalDistanceApart() {
-        assertTrue(ShowcaseProductionLayout.minDistance() >= ShowcaseProductionLayout.MIN_TOWN_DISTANCE,
-                "closest pair is " + ShowcaseProductionLayout.minDistance());
+    void townsAreAShortWalkApartAndDoNotOverlap() {
+        assertEquals(20, ShowcaseProductionLayout.minDistance());
+        assertTrue(ShowcaseProductionLayout.minDistance() >= ShowcaseProductionLayout.MIN_TOWN_DISTANCE);
+        int radius = ShowcaseProductionLayout.BORDER_RADIUS;
+        assertEquals(10, radius);
+        assertTrue(ShowcaseProductionLayout.minDistance() >= radius * 2,
+                "two showcase borders would overlap");
+        var farm = ShowcaseProductionLayout.TOWNS.get(ShowcaseProductionLayout.FARM);
+        var high = ShowcaseProductionLayout.TOWNS.get(ShowcaseProductionLayout.MIDGAME);
+        var hungry = ShowcaseProductionLayout.TOWNS.get(ShowcaseProductionLayout.STARVING);
+        assertEquals(20, farm.dx());
+        assertEquals(0, farm.dz());
+        assertEquals(0, high.dx());
+        assertEquals(-20, high.dz());
+        assertEquals(20, hungry.dx());
+        assertEquals(-20, hungry.dz());
+    }
+
+    @Test
+    void signsStayInsideTheirOwnBorder() {
+        int radius = ShowcaseProductionLayout.BORDER_RADIUS;
+        int signDx = ShowcaseProductionLayout.SIGN_DX;
+        int signDz = ShowcaseProductionLayout.SIGN_DZ;
+        assertTrue(signDx * signDx + signDz * signDz <= radius * radius, "sign is outside its town");
+        for (var town : ShowcaseProductionLayout.TOWNS) {
+            int sx = town.dx() + signDx;
+            int sz = town.dz() + signDz;
+            for (var other : ShowcaseProductionLayout.TOWNS) {
+                if (other == town) {
+                    continue;
+                }
+                int dx = sx - other.dx();
+                int dz = sz - other.dz();
+                assertTrue(dx * dx + dz * dz > radius * radius,
+                        town.name() + " sign sits inside " + other.name());
+            }
+        }
     }
 
     @Test
@@ -76,6 +113,54 @@ class ShowcaseProductionLayoutTest {
             }
             return ids;
         }
+    }
+
+    @Test
+    void productionConfigEnablesContractsAndShowcaseBorderOnly() throws Exception {
+        Path root = Path.of("").toAbsolutePath();
+        if (!Files.exists(root.resolve("tools/showcase-play.sh"))) {
+            root = root.getParent();
+        }
+        assertTrue(Files.exists(root.resolve("tools/showcase-play.sh")), "repo root");
+        Path dir = Files.createTempDirectory("bc-prod-config");
+        Process process = new ProcessBuilder("bash", "-c",
+                "source tools/showcase-play.sh && write_server_config production '" + dir + "'")
+                .directory(root.toFile())
+                .redirectErrorStream(true)
+                .start();
+        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        assertTrue(process.waitFor(30, TimeUnit.SECONDS), output);
+        assertEquals(0, process.exitValue(), output);
+
+        String toml = Files.readString(dir.resolve("config/businesscraft.toml"));
+        assertEquals("true", sectionValue(toml, "contracts", "enabled"));
+        assertEquals("true", sectionValue(toml, "production", "enabled"));
+        assertEquals("true", sectionValue(toml, "research", "enabled"));
+        assertEquals("false", sectionValue(toml, "trading", "enabled"));
+        assertEquals("10", sectionValue(toml, "general", "defaultBorderRadius"));
+
+        String bundled = Files.readString(root.resolve(
+                "common/src/main/resources/assets/businesscraft/config/businesscraft.toml"));
+        assertEquals("false", sectionValue(bundled, "contracts", "enabled"));
+        assertEquals("50", sectionValue(bundled, "general", "defaultBorderRadius"));
+    }
+
+    private static String sectionValue(String toml, String section, String key) {
+        String current = "";
+        for (String line : toml.split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("[") && trimmed.endsWith("]") && !trimmed.startsWith("[[")) {
+                current = trimmed.substring(1, trimmed.length() - 1);
+            }
+            if (current.equals(section) && trimmed.startsWith(key + " ") || current.equals(section)
+                    && trimmed.startsWith(key + "=")) {
+                int eq = trimmed.indexOf('=');
+                if (eq > 0) {
+                    return trimmed.substring(eq + 1).trim();
+                }
+            }
+        }
+        return "";
     }
 
     @Test

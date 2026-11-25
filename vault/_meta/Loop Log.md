@@ -59,3 +59,4 @@ One line per completed iteration: `YYYY-MM-DD | ID | STATUS | summary`. Use the 
 2026-11-25 | prod-step1 | DONE | Population growth stops at pop_cap; Expand Border stops once crowding is back to the biome starting density; bare unlocks no longer compound into recipe speed. CSV times and costs unchanged.
 2026-11-25 | border-max | DONE | Border Expansion repeat column is 5:2:2. Max level is that first field for every node; only this node's data changed. Level 5 border bonus is 32 and further purchases are refused.
 2026-11-25 | showcase-csv | DONE | `--production` copies the bundled CSVs into the play-server config. A pre-bundled biomes.csv was read with the new column order, so stock became upgrade nodes and Farmstead's farming_advanced was unknown.
+2026-11-25 | showcase-near | DONE | Production showcase enables contracts for that run and places the four towns 20 apart with defaultBorderRadius 10. Bundled defaults stay 50 and contracts off.

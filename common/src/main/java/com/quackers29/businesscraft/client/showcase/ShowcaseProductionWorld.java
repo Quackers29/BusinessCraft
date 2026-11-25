@@ -3,6 +3,8 @@ package com.quackers29.businesscraft.client.showcase;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.contract.Contract;
+import com.quackers29.businesscraft.contract.ContractBoard;
 import com.quackers29.businesscraft.economy.ResourceRegistry;
 import com.quackers29.businesscraft.economy.ResourceType;
 import com.quackers29.businesscraft.production.ProductionRegistry;
@@ -101,6 +103,7 @@ final class ShowcaseProductionWorld {
     private static String describe(Town town) {
         StringBuilder out = new StringBuilder(town.getName()).append(" pop=").append(town.getPopulation())
                 .append(" happiness=").append(Math.round(town.getHappiness()))
+                .append(" border=").append(town.getBoundaryRadius())
                 .append(" wu=").append(town.getWorkUnits()).append(" nodes=")
                 .append(town.getUpgrades().getUpgradeLevels());
         for (ResourceType type : ResourceRegistry.getAll()) {
@@ -112,7 +115,13 @@ final class ShowcaseProductionWorld {
 
     /** One line per town: the numbers that show recipes ticking, happiness moving and research running. */
     void report(ServerLevel level) {
-        StringBuilder out = new StringBuilder();
+        int contracts = 0;
+        for (Contract contract : ContractBoard.get(level).getContracts()) {
+            if (!contract.isExpired() && !contract.isCompleted()) {
+                contracts++;
+            }
+        }
+        StringBuilder out = new StringBuilder("contracts=").append(contracts).append(' ');
         for (UUID id : ids) {
             Town town = TownManager.get(level).getTown(id);
             if (town != null) {

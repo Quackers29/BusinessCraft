@@ -18,6 +18,7 @@ These two services implement the "founding a town" and "growing a town" spatial 
 - Name / position / tourist / resource validation unchanged (TownValidationService).
 - Worked example (placement): defaultBorderRadius=50, two fresh towns both radius 50. Place second town 99 blocks away → required 100 → BOUNDARY_CONFLICT. At 100 or more → allowed.
 - Config values (`defaultBorderRadius`, `minPopForTourists`) are live statics from ConfigLoader and can be overridden in tests (save/restore pattern).
+- The production showcase writes `defaultBorderRadius = 10` into its own `run-play-server` toml and places towns 20 apart. Bundled kits still grant `border:10`, so the placement sum is 20. The bundled default of 50 is unchanged, and the game code has no showcase-only distance constant.
 
 ---
 > [!info]- Deep reference
